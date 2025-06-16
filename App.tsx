@@ -1,9 +1,12 @@
 import React from 'react';
-import SplashScreenComponent from './src/screens/SplashScreen';
+import { NavigationContainer } from '@react-navigation/native';
+import StackNavigation from './src/navigation/StackNavigation';
 
 const App = () => {
   return (
-    <SplashScreenComponent/>
+    <NavigationContainer>
+      <StackNavigation />
+    </NavigationContainer>
   );
 };
 

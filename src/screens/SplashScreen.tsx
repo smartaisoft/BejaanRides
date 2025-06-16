@@ -1,8 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {View, StyleSheet, Image} from 'react-native';
 
+import { useNavigation } from '@react-navigation/native';  // Import useNavigation hook
+
 const SplashScreenComponent = () => {
-  return (
+  const navigation = useNavigation();  // Get the navigation object
+
+  useEffect(() => {
+    // Navigate to the Home screen after 3 seconds
+    const timer = setTimeout(() => {
+      navigation.replace('Home');  // Navigate to Home screen after 3 seconds
+    }, 3000);
+
+    // Clean up the timer on component unmount
+    return () => clearTimeout(timer);
+  }, [navigation]);  return (
     <View style={styles.container}>
       <Image
         source={require('../../assets/images/BeejanLogo.png')}

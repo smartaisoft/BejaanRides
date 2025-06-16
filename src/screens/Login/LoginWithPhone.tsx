@@ -1,0 +1,232 @@
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Modal,
+  Image,
+} from 'react-native';
+import PhoneNumberInput from '../../components/PhoneNumberInput';
+import Button from '../../components/Button';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'; // Import the correct navigation prop
+import { RootStackParamList } from '../../navigation/StackNavigation';
+
+// Define the navigation prop type for this screen
+type LoginWithPhoneNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'PhoneLogin'
+>;
+
+// Validation Schema using Yup
+const validationSchema = Yup.object().shape({
+  phone: Yup.string().required('Please enter phone number'),
+});
+
+const LoginWithPhone = () => {
+  const navigation = useNavigation<LoginWithPhoneNavigationProp>(); // Type the navigation object
+
+  const [modalVisible, setModalVisible] = React.useState(false);
+  const [phone, setPhone] = useState(''); // State to save phone number
+
+  const handleGoBack = () => {
+    navigation.goBack();
+  };
+
+  const handlePhonePress = (values: { phone: string }) => {
+    console.log('Phone Button Pressed');
+    setPhone(values.phone); // Save phone number to state
+    console.log('Phone number saved:', values.phone); // Log phone number
+    setModalVisible(true); // Show modal when the Next button is pressed
+  };
+
+  const handleOptionPress = (method: string) => {
+    console.log(`Send code via ${method} and ${phone}`);
+    setModalVisible(false); // Close the modal after selecting an option
+
+    // Navigate to OTP screen, passing both method and phone as params
+    navigation.navigate('Otp', { method, phone });
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false); // Close modal on cross icon click
+  };
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      {/* Dismiss keyboard when tapping outside */}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.innerContainer}>
+          {/* Go Back text */}
+          <TouchableOpacity onPress={handleGoBack}>
+            <Text style={styles.goBackText}>{'<'}</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.title}>Join us Via phone number</Text>
+          <Text>We’ll send a code to verify your phone.</Text>
+
+          {/* Formik Form */}
+          <Formik
+            initialValues={{ phone: '' }}
+            validationSchema={validationSchema}
+            onSubmit={handlePhonePress}>
+            {({
+              handleChange,
+              handleSubmit,
+              values,
+              errors,
+              touched,
+            }) => (
+              <>
+                {/* Phone number input */}
+                <View style={styles.inputContainer}>
+                  <PhoneNumberInput
+                    value={values.phone}
+                    onChange={handleChange('phone')}
+                    error={touched.phone && errors.phone ? errors.phone : ''}
+                  />
+                </View>
+
+                {/* Button to submit form */}
+                <Button
+                  title="Next"
+                  onPress={handleSubmit} // Use Formik's submit handler
+                  style={styles.button}
+                />
+              </>
+            )}
+          </Formik>
+        </View>
+      </TouchableWithoutFeedback>
+
+      {/* Modal for selecting method (WhatsApp or SMS) */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={handleCloseModal}>
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            {/* Close icon */}
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={handleCloseModal}>
+              <Image
+                source={require('../../../assets/images/close.png')}
+                style={styles.closeIcon}
+              />
+            </TouchableOpacity>
+
+            <Text style={styles.modalTitle}>
+              How would you like to get the code?
+            </Text>
+
+            <TouchableOpacity
+              style={styles.optionButton}
+              onPress={() => handleOptionPress('WhatsApp')}>
+              <Image source={require('../../../assets/images/Whatsapp.png')} />
+              <Text style={styles.optionText}>WhatsApp</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.optionButton}
+              onPress={() => handleOptionPress('SMS')}>
+              <Image source={require('../../../assets/images/sms.png')} />
+              <Text style={styles.optionText}>SMS</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </KeyboardAvoidingView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 20,
+  },
+  innerContainer: {
+    flex: 1,
+    paddingTop: 50,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginTop: 20,
+    color: '#333',
+  },
+  goBackText: {
+    color: '#333',
+    fontSize: 20,
+    marginTop: 10,
+  },
+  inputContainer: {
+    marginTop: 30,
+  },
+  button: {
+    width: '100%',
+    marginTop: 20,
+    position: 'absolute',
+    bottom: 30,
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+  },
+  modalContainer: {
+    width: '100%',
+    padding: 20,
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    alignItems: 'center',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+  closeIcon: {
+    width: 15, // Width of the icon
+    height: 30, // Height of the icon
+    resizeMode: 'contain', // Ensures the image keeps its aspect ratio
+    position: 'absolute', // Position it absolutely
+    top: 5, // 10 units from the top
+    right: 5, // 10 units from the right
+    zIndex: 1, // Ensure the icon is above other components
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    textAlign: 'center', // Horizontally center the text
+    marginBottom: 40, // Space below the title
+    width: '70%',
+    color: '#000000', // Text color
+  },
+
+  optionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    width: '80%',
+  },
+  optionText: {
+    fontSize: 16,
+    marginLeft: 10,
+  },
+});
+
+export default LoginWithPhone;

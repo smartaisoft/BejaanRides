@@ -22,8 +22,12 @@ const NameScreen = () => {
   // Handle Next button press and navigate to LocationScreen
   const handlePress = () => {
     console.log('Next Button Pressed');
-    navigation.navigate('Location', { name }); // Navigate to Location screen, passing name as parameter
+    // navigation.navigate('Location', { name }); // Navigate to Location screen, passing name as parameter
+        navigation.navigate('DriverPersonalInfo'); // Navigate to Location screen, passing name as parameter
+
+
   };
+
 
   return (
     <View style={styles.container}>
@@ -33,10 +37,10 @@ const NameScreen = () => {
       </TouchableOpacity>
 
       {/* Header */}
-      <Text style={styles.header}>Are you a passenger or a driver?</Text>
+      <Text style={styles.header}>Welcome to Bejaan Ride!</Text>
 
       {/* Subtitle */}
-      <Text style={styles.subtitle}>You can change the mode</Text>
+      <Text style={styles.subtitle}>Please introduce yourself</Text>
 
       {/* Name Input Section */}
       <Text style={styles.label}>Enter your name</Text>

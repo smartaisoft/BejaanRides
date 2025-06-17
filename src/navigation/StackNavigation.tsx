@@ -7,6 +7,7 @@ import OTPScreen from '../screens/Login/OtpScreen';
 import RoleScreen from '../screens/Login/RoleScreen';
 import NameScreen from '../screens/Login/NameScreen';
 import LocationPick from '../screens/Login/LocationPick';
+import DriverPersonalInfo from '../screens/Driver/DriverPersonalInfo';
 
 // Define types for the screen names and parameters
 export type RootStackParamList = {
@@ -16,7 +17,8 @@ export type RootStackParamList = {
   Otp: {method: string; phone: string}; // Include phone and method
   Role: undefined; // Assuming RoleScreen does not require params
   Name: undefined; // Assuming NameScreen does not require params
-  Location: { name: string }; // Name is passed as a parameter
+  Location: {name: string}; // Name is passed as a parameter
+  DriverPersonalInfo: undefined;
 };
 
 // Create a Stack Navigator
@@ -58,6 +60,11 @@ const StackNavigation = () => {
       <Stack.Screen
         name="Location"
         component={LocationPick}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="DriverPersonalInfo"
+        component={DriverPersonalInfo}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

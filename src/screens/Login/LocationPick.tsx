@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useCallback, useRef} from 'react';
 import {
   View,
   Text,
@@ -19,72 +19,122 @@ import MapView, {
 import Geolocation from '@react-native-community/geolocation';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Menu from '../../../assets/SVG/Menu';
+import Locate from '../../../assets/SVG/Locate';
+
 const SUGGESTIONS = [
-  'Jinnah park',
+  'Jinnah parks',
   'Badshahi Mosque, Lahore',
   'Data Darbar',
   'Punjab university',
 ];
 
+const INITIAL_DELTA = {
+  latitudeDelta: 0.015,
+  longitudeDelta: 0.0121,
+};
+
 const LocationPick = () => {
-  const [region, setRegion] = useState<Region>({
-    latitude: 31.5204,
-    longitude: 74.3587,
-    latitudeDelta: 0.015,
-    longitudeDelta: 0.0121,
-  });
+  const [region, setRegion] = useState<Region | null>(null);
+  const mapRef = useRef<MapView | null>(null);
 
-  const [locationLoaded, setLocationLoaded] = useState(false);
-
-  const requestLocationPermission = async () => {
+  const requestPermissions = async () => {
     if (Platform.OS === 'android') {
-      const granted = await PermissionsAndroid.request(
+      const fine = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
       );
-      if (granted !== PermissionsAndroid.RESULTS.GRANTED) return;
+      const coarse = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+      );
+      return (
+        fine === PermissionsAndroid.RESULTS.GRANTED ||
+        coarse === PermissionsAndroid.RESULTS.GRANTED
+      );
     }
-    Geolocation.getCurrentPosition(
-      pos => {
-        const {latitude, longitude} = pos.coords;
-        setRegion({...region, latitude, longitude});
-        setLocationLoaded(true);
-      },
-      error => console.error(error),
-      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
-    );
+    return true;
   };
 
-  useEffect(() => {
-    requestLocationPermission();
+  const getCurrentLocation = useCallback(async () => {
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) {
+      console.warn('Location permission not granted');
+      return;
+    }
+
+    Geolocation.getCurrentPosition(
+      position => {
+        const {latitude, longitude} = position.coords;
+        const newRegion = {
+          latitude,
+          longitude,
+          ...INITIAL_DELTA,
+        };
+        setRegion(newRegion);
+        mapRef.current?.animateToRegion(newRegion, 1000);
+      },
+      error => {
+        console.error('Location Error:', error);
+        if (error.code === 3) {
+          alert('Location request timed out. Please ensure GPS is on.');
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 30000,
+        maximumAge: 0,
+        distanceFilter: 0,
+        forceRequestLocation: true,
+        showLocationDialog: true,
+      },
+    );
   }, []);
 
-  const renderSuggestion = ({item}: {item: string}) => (
-    <TouchableOpacity style={styles.suggestion}>
-      <Icon name="location-pin" size={22} color="#555" />
-      <Text style={styles.suggestionText}>{item}</Text>
-    </TouchableOpacity>
+  useEffect(() => {
+    setTimeout(() => {
+      getCurrentLocation();
+    }, 500); // slight delay helps on some devices
+  }, []);
+
+  const renderSuggestion = useCallback(
+    ({item}: {item: string}) => (
+      <TouchableOpacity style={styles.suggestion}>
+        <Icon name="location-pin" size={22} color="#555" />
+        <Text style={styles.suggestionText}>{item}</Text>
+      </TouchableOpacity>
+    ),
+    [],
   );
 
   return (
     <View style={styles.container}>
-      <MapView
-        provider={PROVIDER_GOOGLE}
-        style={StyleSheet.absoluteFill}
-        region={region}
-        showsUserLocation={true}
-        onRegionChangeComplete={setRegion}>
-        <Marker coordinate={region}>
-          <Icon name="navigation" size={28} color="#fff" />
-        </Marker>
-        <Circle center={region} radius={300} fillColor="rgba(139,0,255,0.1)" />
-      </MapView>
+      {region ? (
+        <MapView
+          ref={ref => (mapRef.current = ref)}
+          provider={PROVIDER_GOOGLE}
+          style={StyleSheet.absoluteFill}
+          region={region}
+          showsUserLocation
+          onRegionChangeComplete={setRegion}>
+          <Marker coordinate={region}>
+            <Icon name="navigation" size={28} color="#fff" />
+          </Marker>
+          <Circle
+            center={region}
+            radius={300}
+            fillColor="rgba(139,0,255,0.1)"
+          />
+        </MapView>
+      ) : (
+        <View style={[StyleSheet.absoluteFill, styles.center]}>
+          <Text>Fetching your current location...</Text>
+        </View>
+      )}
 
       <View style={styles.overlay}>
         <View style={styles.topBar}>
           <Menu size={28} color="#444" />
           <Image
             source={require('../../../assets/images/Avatar.png')}
-            style={{width: 80, height: 80}}
+            style={styles.avatar}
           />
         </View>
 
@@ -104,6 +154,12 @@ const LocationPick = () => {
           style={styles.suggestionsList}
         />
       </View>
+
+      <TouchableOpacity
+        style={styles.locateButton}
+        onPress={getCurrentLocation}>
+        <Locate style={styles.locateIcon} />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -128,9 +184,9 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   avatar: {
-    backgroundColor: '#803be4',
-    borderRadius: 30,
-    padding: 4,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   searchBox: {
     flexDirection: 'row',
@@ -167,6 +223,32 @@ const styles = StyleSheet.create({
   suggestionText: {
     fontSize: 16,
     marginLeft: 8,
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  locateButton: {
+    position: 'absolute',
+    bottom: 250,
+    right: 20,
+    backgroundColor: '#fff',
+    borderRadius: 25,
+    width: 50,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 5,
+  },
+  locateIcon: {
+    width: 24,
+    height: 24,
+    tintColor: '#9b2fc2',
   },
 });
 

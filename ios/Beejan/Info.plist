@@ -37,6 +37,13 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs access to your camera to upload photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to upload images.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app needs access to save images to your library.</string>
+
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We need access to your location to find nearby rides and show your current position on the map.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Beejan</string>
+    <string name="location_permission_title">Location Permission</string>
+    <string name="location_permission_message">We need your location to find nearby rides and update your location on the map.</string>
 </resources>

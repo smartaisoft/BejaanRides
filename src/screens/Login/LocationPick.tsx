@@ -1,6 +1,7 @@
 import React from 'react';
 import {StyleSheet, Text, View} from 'react-native';
 import {useRoute} from '@react-navigation/native';
+import MapView, {Marker, Region, PROVIDER_GOOGLE} from 'react-native-maps';
 
 const LocationPick = () => {
   const route = useRoute();
@@ -9,26 +10,30 @@ const LocationPick = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Location Screen</Text>
-      <Text style={styles.subText}>Hello, {name}!</Text>
+      <MapView
+        provider={PROVIDER_GOOGLE} // remove if not using Google Maps
+        style={styles.map}
+        region={{
+          latitude: 31.4532538,
+          longitude: 74.1919391,
+          latitudeDelta: 0.015,
+          longitudeDelta: 0.0121,
+        }}></MapView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  subText: {
-    fontSize: 18,
-    marginTop: 10,
-  },
+ container: {
+   ...StyleSheet.absoluteFillObject,
+   height: '100%',
+   width: '100%',
+   justifyContent: 'flex-end',
+   alignItems: 'center',
+ },
+ map: {
+   ...StyleSheet.absoluteFillObject,
+ },
 });
 
 export default LocationPick;

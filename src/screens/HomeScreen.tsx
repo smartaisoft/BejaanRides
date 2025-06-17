@@ -5,6 +5,7 @@ import Button from '../components/Button';
 import {useNavigation} from '@react-navigation/native'; // Import useNavigation hook
 import {RootStackParamList} from '../navigation/StackNavigation'; // Import your param list
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'; // Import the correct type
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Import Icon from MaterialIcons
 
 // Define navigation prop type
 type HomeScreenNavigationProp = NativeStackNavigationProp<

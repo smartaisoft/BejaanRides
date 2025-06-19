@@ -9,6 +9,7 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
+  Alert,
 } from 'react-native';
 import MapView, {
   Marker,
@@ -20,6 +21,7 @@ import Geolocation from '@react-native-community/geolocation';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Menu from '../../../assets/SVG/Menu';
 import Locate from '../../../assets/SVG/Locate';
+import {updateUser, getUser} from '../../services/userService';
 
 const SUGGESTIONS = [
   'Jinnah parks',
@@ -53,6 +55,24 @@ const LocationPick = () => {
     return true;
   };
 
+  const testUpdateAndFetchUser = async () => {
+    const uid = '1shbKBPjwMShAPn0BbNsoVAqwoT2';
+
+    try {
+      // 🔄 Update user
+      await updateUser(uid, {
+        lastName: 'Mokoena',
+        address: 'New Street 123, Cape Town',
+      });
+
+      // ✅ Get updated data
+      const updatedUser = await getUser(uid);
+      console.log('🔥 Updated user:', updatedUser);
+    } catch (error) {
+      console.error('❌ Error updating user:', error);
+    }
+  };
+
   const getCurrentLocation = useCallback(async () => {
     const hasPermission = await requestPermissions();
     if (!hasPermission) {
@@ -74,25 +94,28 @@ const LocationPick = () => {
       error => {
         console.error('Location Error:', error);
         if (error.code === 3) {
-          alert('Location request timed out. Please ensure GPS is on.');
+          Alert.alert('Location Timeout', 'Please ensure GPS is turned on.');
         }
       },
       {
         enableHighAccuracy: true,
-        timeout: 30000,
-        maximumAge: 0,
+        timeout: 10000, // 10 seconds
+        maximumAge: 1000, // Accept location not older than 1 sec
         distanceFilter: 0,
-        forceRequestLocation: true,
-        showLocationDialog: true,
       },
     );
   }, []);
 
   useEffect(() => {
-    setTimeout(() => {
-      getCurrentLocation();
-    }, 500); // slight delay helps on some devices
-  }, []);
+    const init = async () => {
+      await testUpdateAndFetchUser();
+      setTimeout(() => {
+        getCurrentLocation();
+      }, 500);
+    };
+
+    init();
+  }, [getCurrentLocation]);
 
   const renderSuggestion = useCallback(
     ({item}: {item: string}) => (
@@ -108,7 +131,9 @@ const LocationPick = () => {
     <View style={styles.container}>
       {region ? (
         <MapView
-          ref={ref => (mapRef.current = ref)}
+          ref={ref => {
+            mapRef.current = ref;
+          }}
           provider={PROVIDER_GOOGLE}
           style={StyleSheet.absoluteFill}
           region={region}

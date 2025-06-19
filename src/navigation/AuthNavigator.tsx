@@ -7,7 +7,7 @@ import RoleScreen from '../screens/Login/RoleScreen';
 import NameScreen from '../screens/Login/NameScreen';
 import HomeScreen from '../screens/HomeScreen';
 import DriverPersonalInfo from '../screens/Driver/DriverPersonalInfo';
-import LocationPick from '../screens/Login/LocationPick';
+import LocationPick from '../screens/Passenger/LocationPick';
 
 export type AuthStackParamList = {
   Splash: undefined;

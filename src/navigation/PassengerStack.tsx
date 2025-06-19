@@ -1,6 +1,6 @@
 import React from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
-import LocationPick from '../screens/Login/LocationPick';
+import LocationPick from '../screens/Passenger/LocationPick';
 
 export type PassengerStackParamList = {
   Location: {name: string};

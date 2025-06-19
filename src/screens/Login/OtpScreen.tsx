@@ -17,7 +17,6 @@ import {useSelector, useDispatch} from 'react-redux';
 import {RootState, AppDispatch} from '../../redux/store';
 import {setOtp} from '../../redux/actions/authActions';
 
-// Navigation & Route Types
 type OTPScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
   'Otp'
@@ -29,20 +28,11 @@ const OTPScreen = () => {
   const phone = useSelector((state: RootState) => state.auth.phone);
   const navigation = useNavigation<OTPScreenNavigationProp>();
   const route = useRoute<OTPScreenRouteProp>();
-  const {confirmation, method} = route.params;
+  const {method} = route.params;
 
   const [otp, setOtpInput] = useState<string>('');
 
   const handleGoBack = () => navigation.goBack();
-
-  // const handleOtpChange = (text: string) => {
-  //   setOtpInput(text);
-  //   dispatch(setOtp(text));
-
-  //   if (text.length === 6) {
-  //     navigation.navigate('Role');
-  //   }
-  // };
 
   const handleOtpChange = async (text: string) => {
     setOtpInput(text);
@@ -50,10 +40,6 @@ const OTPScreen = () => {
 
     if (text.length === 6) {
       try {
-        const userCredential = await confirmation.confirm(text);
-        console.log('✅ OTP verified:', userCredential.user);
-
-        // Navigate to next screen (e.g., Role selection)
         navigation.navigate('Role');
       } catch (error) {
         console.error('❌ Invalid OTP:', error);
@@ -65,29 +51,34 @@ const OTPScreen = () => {
     }
   };
 
-  // Handle Resend OTP
   const handleResendCode = () => {
     Alert.alert('Resend Code', 'A new OTP code has been sent to your number.');
-    // You can add further logic to actually resend the code here
   };
 
-  // Handle Open WhatsApp
-  const handleOpenWhatsApp = () => {
+  const handleOpenCommunicationApp = () => {
     const message = 'I did not receive the OTP code. Please help.';
-    const url = `whatsapp://send?phone=${phone}&text=${message}`;
-    Linking.openURL(url).catch(() =>
-      Alert.alert('Error', 'Please make sure WhatsApp is installed.'),
-    );
+
+    if (method === 'WhatsApp') {
+      const whatsappURL = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(
+        message,
+      )}`;
+      Linking.openURL(whatsappURL).catch(() =>
+        Alert.alert('Error', 'Please make sure WhatsApp is installed.'),
+      );
+    } else if (method === 'SMS') {
+      const smsURL = `sms:${phone}?body=${encodeURIComponent(message)}`;
+      Linking.openURL(smsURL).catch(() =>
+        Alert.alert('Error', 'SMS app could not be opened.'),
+      );
+    }
   };
 
   return (
     <View style={styles.container}>
-      {/* Go Back Button */}
       <TouchableOpacity onPress={handleGoBack} style={styles.goBackButton}>
         <Text style={styles.goBackText}>{'<'}</Text>
       </TouchableOpacity>
 
-      {/* Title */}
       <View style={styles.textContainer}>
         <Text style={styles.title}>Enter the code</Text>
         <Text style={styles.subText}>
@@ -95,7 +86,6 @@ const OTPScreen = () => {
         </Text>
       </View>
 
-      {/* OTP Input */}
       <TextInput
         style={styles.otpInput}
         value={otp}
@@ -103,19 +93,17 @@ const OTPScreen = () => {
         maxLength={6}
         keyboardType="number-pad"
         placeholder="Enter OTP"
-        secureTextEntry
+        secureTextEntry={false}
         autoFocus
       />
 
-      {/* Resend Code */}
       <TouchableOpacity onPress={handleResendCode}>
         <Text style={styles.resendText}>Resend code</Text>
       </TouchableOpacity>
 
-      {/* Open WhatsApp Button */}
       <Button
         title={`Open ${method}`}
-        onPress={handleOpenWhatsApp}
+        onPress={handleOpenCommunicationApp}
         backgroundColor="#E4E4E4"
         textColor="white"
         style={styles.button}

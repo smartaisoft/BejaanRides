@@ -8,11 +8,16 @@ import NameScreen from '../screens/Login/NameScreen';
 import HomeScreen from '../screens/HomeScreen';
 import DriverPersonalInfo from '../screens/Driver/DriverPersonalInfo';
 import LocationPick from '../screens/Passenger/LocationPick';
+import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 
 export type AuthStackParamList = {
   Splash: undefined;
   PhoneLogin: undefined;
-  Otp: { method: string; phone: string };
+  // Otp: { method: string; phone: string };
+  Otp: {
+    method: string;
+    confirmation: FirebaseAuthTypes.ConfirmationResult;
+  };
   Role: undefined;
   Name: undefined;
   Home: undefined;

@@ -1,19 +1,27 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
-  StyleSheet, Text, View, TouchableOpacity,
-  TextInput, Platform, Alert,
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  TextInput,
+  Platform,
+  Alert,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { Linking } from 'react-native';
+import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
+import {Linking} from 'react-native';
 import Button from '../../components/Button';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { AuthStackParamList } from '../../navigation/AuthNavigator';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '../../redux/store';
-import { setOtp } from '../../redux/actions/authActions';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {AuthStackParamList} from '../../navigation/AuthNavigator';
+import {useSelector, useDispatch} from 'react-redux';
+import {RootState, AppDispatch} from '../../redux/store';
+import {setOtp} from '../../redux/actions/authActions';
 
 // Navigation & Route Types
-type OTPScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Otp'>;
+type OTPScreenNavigationProp = NativeStackNavigationProp<
+  AuthStackParamList,
+  'Otp'
+>;
 type OTPScreenRouteProp = RouteProp<AuthStackParamList, 'Otp'>;
 
 const OTPScreen = () => {
@@ -21,18 +29,39 @@ const OTPScreen = () => {
   const phone = useSelector((state: RootState) => state.auth.phone);
   const navigation = useNavigation<OTPScreenNavigationProp>();
   const route = useRoute<OTPScreenRouteProp>();
-  const { method } = route.params;
+  const {confirmation, method} = route.params;
 
   const [otp, setOtpInput] = useState<string>('');
 
   const handleGoBack = () => navigation.goBack();
 
-  const handleOtpChange = (text: string) => {
+  // const handleOtpChange = (text: string) => {
+  //   setOtpInput(text);
+  //   dispatch(setOtp(text));
+
+  //   if (text.length === 6) {
+  //     navigation.navigate('Role');
+  //   }
+  // };
+
+  const handleOtpChange = async (text: string) => {
     setOtpInput(text);
     dispatch(setOtp(text));
 
-    if (text.length === 4) {
-      navigation.navigate('Role');
+    if (text.length === 6) {
+      try {
+        const userCredential = await confirmation.confirm(text);
+        console.log('✅ OTP verified:', userCredential.user);
+
+        // Navigate to next screen (e.g., Role selection)
+        navigation.navigate('Role');
+      } catch (error) {
+        console.error('❌ Invalid OTP:', error);
+        Alert.alert(
+          'Invalid Code',
+          'The verification code is incorrect or expired.',
+        );
+      }
     }
   };
 
@@ -71,7 +100,7 @@ const OTPScreen = () => {
         style={styles.otpInput}
         value={otp}
         onChangeText={handleOtpChange}
-        maxLength={4}
+        maxLength={6}
         keyboardType="number-pad"
         placeholder="Enter OTP"
         secureTextEntry

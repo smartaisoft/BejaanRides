@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {
   StyleSheet,
   Text,
@@ -20,7 +20,8 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack'; // Imp
 import {AuthStackParamList} from '../../navigation/AuthNavigator';
 import {useDispatch} from 'react-redux';
 import {setPhone} from '../../redux/actions/authActions'; // Adjust path based on your structure
-import type { AppDispatch } from '../../redux/store'; // ✅ Import this
+import type {AppDispatch} from '../../redux/store'; // ✅ Import this
+import auth from '@react-native-firebase/auth';
 
 // Define the navigation prop type for this screen
 type LoginWithPhoneNavigationProp = NativeStackNavigationProp<
@@ -35,27 +36,62 @@ const validationSchema = Yup.object().shape({
 
 const LoginWithPhone = () => {
   const navigation = useNavigation<LoginWithPhoneNavigationProp>(); // Type the navigation object
-const dispatch = useDispatch<AppDispatch>(); // ✅ Now it knows about AuthActionTypes
+  const dispatch = useDispatch<AppDispatch>(); // ✅ Now it knows about AuthActionTypes
+  const [phoneNumber, setPhoneNumber] = React.useState('');
 
   const [modalVisible, setModalVisible] = React.useState(false);
   const handleGoBack = () => {
     navigation.goBack();
   };
 
-  const handlePhonePress = (values: {phone: string}) => {
-    console.log('Phone Button Pressed', values.phone);
-    // Dispatch the phone number to Redux store
-    dispatch(setPhone(values.phone));
-    console.log('Phone number saved in redux:', values.phone);
-    setModalVisible(true);
+  // const handlePhonePress = (values: {phone: string}) => {
+  //   console.log('Phone Button Pressed', values.phone);
+  //   // Dispatch the phone number to Redux store
+  //   dispatch(setPhone(values.phone));
+  //   console.log('Phone number saved in redux:', values.phone);
+  //   setModalVisible(true);
+  // };
+  const handlePhonePress = async (values: {phone: string}) => {
+    try {
+      const fullPhoneNumber = values.phone;
+
+      // Send OTP
+      const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
+
+      // Save the phone and confirmation to Redux or local state if needed
+      dispatch(setPhone(fullPhoneNumber));
+
+      // Pass confirmation to OTP screen via params
+      navigation.navigate('Otp', {
+        method: 'SMS', // or WhatsApp based on your modal option
+        confirmation,
+      });
+    } catch (error) {
+      console.error('Failed to send OTP:', error);
+    }
   };
 
-  const handleOptionPress = (method: string) => {
-    console.log(`Send code via ${method}`);
-    setModalVisible(false); // Close the modal after selecting an option
+  // const handleOptionPress = (method: string) => {
+  //   console.log(`Send code via ${method}`);
+  //   setModalVisible(false); // Close the modal after selecting an option
 
-    // Navigate to OTP screen, passing both method and phone as params
-    navigation.navigate('Otp', {method});
+  //   // Navigate to OTP screen, passing both method and phone as params
+  //   navigation.navigate('Otp', {method});
+  // };
+
+  const handleOptionPress = async (method: string) => {
+    try {
+      setModalVisible(false);
+
+      const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
+
+      navigation.navigate('Otp', {
+        method,
+        confirmation,
+      });
+    } catch (error) {
+      console.error('OTP send error:', error);
+    }
   };
 
   const handleCloseModal = () => {
@@ -88,7 +124,11 @@ const dispatch = useDispatch<AppDispatch>(); // ✅ Now it knows about AuthActio
                 <View style={styles.inputContainer}>
                   <PhoneNumberInput
                     value={values.phone}
-                    onChange={handleChange('phone')}
+                    // onChange={handleChange('phone')}
+                    onChange={value => {
+                      handleChange('phone')(value);
+                      setPhoneNumber(value); // update local state
+                    }}
                     error={touched.phone && errors.phone ? errors.phone : ''}
                   />
                 </View>

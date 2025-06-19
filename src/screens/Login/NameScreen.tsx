@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   StyleSheet,
   Text,
@@ -6,14 +6,15 @@ import {
   TextInput,
   TouchableOpacity,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useSelector, useDispatch } from 'react-redux';
-import { AuthStackParamList } from '../../navigation/AuthNavigator';
-import { RootState } from '../../redux/store';
-import { setName } from '../../redux/actions/authActions';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {useSelector, useDispatch} from 'react-redux';
+import {AuthStackParamList} from '../../navigation/AuthNavigator';
+import {RootState} from '../../redux/store';
+import {setName} from '../../redux/actions/authActions';
 import Button from '../../components/Button';
 import {AppDispatch} from '../../redux/store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type NameScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -31,20 +32,35 @@ const NameScreen = () => {
     navigation.goBack();
   };
 
- const handlePress = () => {
-  console.log('Next Button Pressed');
-  dispatch(setName(name));
-  console.log('Saved name to Redux:', name);
+  const handlePress = async () => {
+    try {
+      console.log('Next Button Pressed');
+      dispatch(setName(name));
+      console.log('Saved name to Redux:', name);
 
-  if (role === 'driver') {
-    navigation.navigate('DriverPersonalInfo');
-  } else if (role === 'passenger') {
-    navigation.navigate('Location');
-  } else {
-    console.warn('No valid role set in Redux');
-  }
-};
+      if (!role) {
+        console.warn('❌ Role is null, not saving session.');
+        return;
+      }
 
+      await AsyncStorage.multiSet([
+        ['@name', name],
+        ['@role', role],
+        ['@isLoggedIn', 'true'],
+      ]);
+
+      // 🔀 Navigate
+      if (role === 'driver') {
+        navigation.navigate('DriverPersonalInfo');
+      } else if (role === 'passenger') {
+        navigation.navigate('Location');
+      } else {
+        console.warn('No valid role set in Redux');
+      }
+    } catch (error) {
+      console.error('❌ Failed to save session:', error);
+    }
+  };
 
   return (
     <View style={styles.container}>

@@ -1,41 +1,45 @@
-// redux/actions/authActions.ts
-import { Dispatch } from 'redux';
-import { signInWithPhoneNumber, ConfirmationResult, signOut } from 'firebase/auth';
-import { auth } from '../../firebase/firebaseConfig';
+import {
+  SET_PHONE,
+  SET_OTP_METHOD,
+  SET_OTP,
+  VERIFY_OTP,
+  SET_ROLE,
+  SET_NAME,
+  SET_LOGGED_IN,
+  AuthActionTypes,
+} from '../types/authTypes';
 
-export const SET_USER = 'SET_USER';
-export const LOGOUT_USER = 'LOGOUT_USER';
-export const SET_CONFIRMATION = 'SET_CONFIRMATION';
-
-export const setUser = (user: any) => ({
-  type: SET_USER,
-  payload: user,
+export const setPhone = (phone: string): AuthActionTypes => ({
+  type: SET_PHONE,
+  payload: phone,
 });
 
-export const logoutUser = () => async (dispatch: Dispatch) => {
-  await signOut(auth);
-  dispatch({ type: LOGOUT_USER });
-};
+export const setOtpMethod = (method: string): AuthActionTypes => ({
+  type: SET_OTP_METHOD,
+  payload: method,
+});
 
-export const sendOtp = (phone: string) => async (dispatch: Dispatch) => {
-  try {
-    const confirmation = await signInWithPhoneNumber(auth, phone);
-    dispatch({
-      type: SET_CONFIRMATION,
-      payload: confirmation,
-    });
-  } catch (error) {
-    console.error('OTP send error:', error);
-    throw error;
-  }
-};
+export const setOtp = (otp: string): AuthActionTypes => ({
+  type: SET_OTP,
+  payload: otp,
+});
 
-export const confirmOtp = (confirmation: ConfirmationResult, code: string) => async (dispatch: Dispatch) => {
-  try {
-    const result = await confirmation.confirm(code);
-    dispatch(setUser(result.user));
-  } catch (error) {
-    console.error('OTP confirm error:', error);
-    throw error;
-  }
-};
+export const verifyOtp = (isValid: boolean): AuthActionTypes => ({
+  type: VERIFY_OTP,
+  payload: isValid,
+});
+
+export const setRole = (role: 'passenger' | 'driver'): AuthActionTypes => ({
+  type: SET_ROLE,
+  payload: role,
+});
+
+export const setName = (name: string): AuthActionTypes => ({
+  type: SET_NAME,
+  payload: name,
+});
+
+export const setLoggedIn = (loggedIn: boolean): AuthActionTypes => ({
+  type: SET_LOGGED_IN,
+  payload: loggedIn,
+});

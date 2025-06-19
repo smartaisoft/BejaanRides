@@ -1,15 +1,22 @@
 import React, { useEffect } from 'react';
 import {View, StyleSheet, Image} from 'react-native';
-
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'; // Import the correct navigation prop
 import { useNavigation } from '@react-navigation/native';  // Import useNavigation hook
+import { AuthStackParamList } from '../navigation/AuthNavigator';
+
+// Define the navigation prop type for this screen
+type SplashNavigationProp = NativeStackNavigationProp<
+  AuthStackParamList,
+  'Splash'
+>;
 
 const SplashScreenComponent = () => {
-  const navigation = useNavigation();  // Get the navigation object
+  const navigation = useNavigation<SplashNavigationProp>(); // Type the navigation object
 
   useEffect(() => {
     // Navigate to the Home screen after 3 seconds
     const timer = setTimeout(() => {
-      navigation.replace('Home');  // Navigate to Home screen after 3 seconds
+      navigation.navigate('Home');  // Navigate to Home screen after 3 seconds
     }, 3000);
 
     // Clean up the timer on component unmount

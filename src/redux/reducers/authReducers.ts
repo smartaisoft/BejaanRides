@@ -1,33 +1,44 @@
-// redux/reducers/authReducer.ts
-import { SET_USER, LOGOUT_USER, SET_CONFIRMATION } from '../actions/authActions';
-
-interface AuthState {
-  user: any;
-  confirmation: any;
-  isLoggedIn: boolean;
-}
+import {
+  AuthState,
+  AuthActionTypes,
+  SET_PHONE,
+  SET_OTP_METHOD,
+  SET_OTP,
+  VERIFY_OTP,
+  SET_ROLE,
+  SET_NAME,
+  SET_LOGGED_IN,
+} from '../types/authTypes';
 
 const initialState: AuthState = {
-  user: null,
-  confirmation: null,
+  phone: '',
+  otpMethod: null,
+  otp: '',
+  isOtpVerified: false,
+  role: null,
+  name: '',
   isLoggedIn: false,
 };
 
-export const authReducer = (state = initialState, action: any): AuthState => {
+export const authReducer = (
+  state = initialState,
+  action: AuthActionTypes
+): AuthState => {
   switch (action.type) {
-    case SET_USER:
-      return {
-        ...state,
-        user: action.payload,
-        isLoggedIn: true,
-      };
-    case LOGOUT_USER:
-      return initialState;
-    case SET_CONFIRMATION:
-      return {
-        ...state,
-        confirmation: action.payload,
-      };
+    case SET_PHONE:
+      return { ...state, phone: action.payload };
+    case SET_OTP_METHOD:
+      return { ...state, otpMethod: action.payload };
+    case SET_OTP:
+      return { ...state, otp: action.payload };
+    case VERIFY_OTP:
+      return { ...state, isOtpVerified: action.payload };
+    case SET_ROLE:
+      return { ...state, role: action.payload };
+    case SET_NAME:
+      return { ...state, name: action.payload };
+    case SET_LOGGED_IN:
+      return { ...state, isLoggedIn: action.payload };
     default:
       return state;
   }

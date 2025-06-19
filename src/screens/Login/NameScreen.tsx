@@ -1,62 +1,69 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity } from 'react-native';
 import React, { useState } from 'react';
-import Button from '../../components/Button'; // Assuming you have a custom Button component
-import {useNavigation} from '@react-navigation/native'; // Import useNavigation hook
-import {NativeStackNavigationProp} from '@react-navigation/native-stack'; // Import the correct type
-import { RootStackParamList } from '../../navigation/StackNavigation';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSelector, useDispatch } from 'react-redux';
+import { AuthStackParamList } from '../../navigation/AuthNavigator';
+import { RootState } from '../../redux/store';
+import { setName } from '../../redux/actions/authActions';
+import Button from '../../components/Button';
+import {AppDispatch} from '../../redux/store';
 
-// Define navigation prop type
 type NameScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
+  AuthStackParamList,
   'Name'
 >;
+
 const NameScreen = () => {
-  const [name, setName] = useState('');
-  const navigation = useNavigation<NameScreenNavigationProp>(); // Type the navigation object
+  const [name, setNameInput] = useState('');
+  const navigation = useNavigation<NameScreenNavigationProp>();
+  const dispatch = useDispatch<AppDispatch>();
+  const role = useSelector((state: RootState) => state.auth.role);
+  console.log('Saved Role to Redux:', role);
 
-  // Handle Go Back functionality
   const handleGoBack = () => {
-    navigation.goBack(); // Navigate back to the previous screen
+    navigation.goBack();
   };
 
-  // Handle Next button press and navigate to LocationScreen
-  const handlePress = () => {
-    console.log('Next Button Pressed');
-    // navigation.navigate('Location', { name }); // Navigate to Location screen, passing name as parameter
-        navigation.navigate('DriverPersonalInfo'); // Navigate to Location screen, passing name as parameter
+ const handlePress = () => {
+  console.log('Next Button Pressed');
+  dispatch(setName(name));
+  console.log('Saved name to Redux:', name);
 
-
-  };
+  if (role === 'driver') {
+    navigation.navigate('DriverPersonalInfo');
+  } else if (role === 'passenger') {
+    navigation.navigate('Location');
+  } else {
+    console.warn('No valid role set in Redux');
+  }
+};
 
 
   return (
     <View style={styles.container}>
-      {/* Go Back Button */}
       <TouchableOpacity onPress={handleGoBack} style={styles.goBackButton}>
         <Text style={styles.goBackText}>{'<'}</Text>
       </TouchableOpacity>
 
-      {/* Header */}
       <Text style={styles.header}>Welcome to Bejaan Ride!</Text>
-
-      {/* Subtitle */}
       <Text style={styles.subtitle}>Please introduce yourself</Text>
 
-      {/* Name Input Section */}
       <Text style={styles.label}>Enter your name</Text>
       <TextInput
         style={styles.input}
         placeholder="First Name"
         value={name}
-        onChangeText={setName}
+        onChangeText={setNameInput}
       />
 
-      {/* Next Button */}
-      <Button
-        title="Next"
-        onPress={handlePress} // Trigger the navigation on press
-        style={styles.button}
-      />
+      <Button title="Next" onPress={handlePress} style={styles.button} />
     </View>
   );
 };
@@ -64,9 +71,9 @@ const NameScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center', // Vertically center the content
+    justifyContent: 'center',
     paddingHorizontal: 20,
-    backgroundColor: '#F5F5F5', // Light background color
+    backgroundColor: '#F5F5F5',
   },
   goBackButton: {
     position: 'absolute',
@@ -82,11 +89,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 5,
-    color: '#333', // Dark color for the header
+    color: '#333',
   },
   subtitle: {
     fontSize: 12,
-    color: '#000000', // Slightly lighter color for subtitle
+    color: '#000000',
     textAlign: 'center',
     marginBottom: 40,
     paddingHorizontal: 20,
@@ -95,7 +102,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#333', // Dark color for the label
+    color: '#333',
   },
   input: {
     width: '100%',

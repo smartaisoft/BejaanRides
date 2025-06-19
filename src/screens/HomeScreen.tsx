@@ -3,12 +3,12 @@ import {Text, View, StyleSheet, Image} from 'react-native';
 import CarLogo from '../../assets/SVG/CarLogo';
 import Button from '../components/Button';
 import {useNavigation} from '@react-navigation/native'; // Import useNavigation hook
-import {RootStackParamList} from '../navigation/StackNavigation'; // Import your param list
+import { AuthStackParamList } from '../navigation/AuthNavigator'; // Adjust the import path based on your project structure
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'; // Import the correct type
 
 // Define navigation prop type
 type HomeScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
+  AuthStackParamList,
   'Home'
 >;
 

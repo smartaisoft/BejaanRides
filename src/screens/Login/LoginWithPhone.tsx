@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   StyleSheet,
   Text,
@@ -13,15 +13,18 @@ import {
 } from 'react-native';
 import PhoneNumberInput from '../../components/PhoneNumberInput';
 import Button from '../../components/Button';
-import { Formik } from 'formik';
+import {Formik} from 'formik';
 import * as Yup from 'yup';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'; // Import the correct navigation prop
-import { RootStackParamList } from '../../navigation/StackNavigation';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack'; // Import the correct navigation prop
+import {AuthStackParamList} from '../../navigation/AuthNavigator';
+import {useDispatch} from 'react-redux';
+import {setPhone} from '../../redux/actions/authActions'; // Adjust path based on your structure
+import type { AppDispatch } from '../../redux/store'; // ✅ Import this
 
 // Define the navigation prop type for this screen
 type LoginWithPhoneNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
+  AuthStackParamList,
   'PhoneLogin'
 >;
 
@@ -32,27 +35,27 @@ const validationSchema = Yup.object().shape({
 
 const LoginWithPhone = () => {
   const navigation = useNavigation<LoginWithPhoneNavigationProp>(); // Type the navigation object
+const dispatch = useDispatch<AppDispatch>(); // ✅ Now it knows about AuthActionTypes
 
   const [modalVisible, setModalVisible] = React.useState(false);
-  const [phone, setPhone] = useState(''); // State to save phone number
-
   const handleGoBack = () => {
     navigation.goBack();
   };
 
-  const handlePhonePress = (values: { phone: string }) => {
-    console.log('Phone Button Pressed');
-    setPhone(values.phone); // Save phone number to state
-    console.log('Phone number saved:', values.phone); // Log phone number
-    setModalVisible(true); // Show modal when the Next button is pressed
+  const handlePhonePress = (values: {phone: string}) => {
+    console.log('Phone Button Pressed', values.phone);
+    // Dispatch the phone number to Redux store
+    dispatch(setPhone(values.phone));
+    console.log('Phone number saved in redux:', values.phone);
+    setModalVisible(true);
   };
 
   const handleOptionPress = (method: string) => {
-    console.log(`Send code via ${method} and ${phone}`);
+    console.log(`Send code via ${method}`);
     setModalVisible(false); // Close the modal after selecting an option
 
     // Navigate to OTP screen, passing both method and phone as params
-    navigation.navigate('Otp', { method, phone });
+    navigation.navigate('Otp', {method});
   };
 
   const handleCloseModal = () => {
@@ -76,16 +79,10 @@ const LoginWithPhone = () => {
 
           {/* Formik Form */}
           <Formik
-            initialValues={{ phone: '' }}
+            initialValues={{phone: ''}}
             validationSchema={validationSchema}
             onSubmit={handlePhonePress}>
-            {({
-              handleChange,
-              handleSubmit,
-              values,
-              errors,
-              touched,
-            }) => (
+            {({handleChange, handleSubmit, values, errors, touched}) => (
               <>
                 {/* Phone number input */}
                 <View style={styles.inputContainer}>

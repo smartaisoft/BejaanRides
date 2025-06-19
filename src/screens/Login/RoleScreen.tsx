@@ -1,49 +1,45 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import Button from '../../components/Button'; // Assuming Button is a reusable component
-import Ride from '../../../assets/SVG/Ride'; // Import the Ride SVG component
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../navigation/StackNavigation';
-
-// Define the navigation prop type for this screen
+import {StyleSheet, Text, View} from 'react-native';
+import Button from '../../components/Button';
+import Ride from '../../../assets/SVG/Ride';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {AuthStackParamList} from '../../navigation/AuthNavigator';
+import {useDispatch} from 'react-redux';
+import {setRole} from '../../redux/actions/authActions';
+import {AppDispatch} from '../../redux/store';
 type RoleScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'Role' // Replace with the screen you're navigating from
+  AuthStackParamList,
+  'Role'
 >;
 
 const RoleScreen = () => {
   const navigation = useNavigation<RoleScreenNavigationProp>();
+  const dispatch = useDispatch<AppDispatch>();
+
   const handlePassengerPress = () => {
     console.log('Passenger selected');
-    // Navigate or perform action for passenger selection
-        navigation.navigate('Name'); // Replace 'PassengerScreen' with the actual screen name
+    dispatch(setRole('passenger'));
 
+    navigation.navigate('Name');
   };
 
   const handleDriverPress = () => {
     console.log('Driver selected');
-    // Navigate or perform action for driver selection
-        navigation.navigate('Name'); // Replace 'PassengerScreen' with the actual screen name
-
+    dispatch(setRole('driver'));
+    navigation.navigate('Name');
   };
 
   return (
     <View style={styles.container}>
-      {/* Header Title */}
       <Text style={styles.header}>Are you a passenger or a driver? </Text>
 
-      {/* Subtitle */}
-      <Text style={styles.subtitle}>
-       You can change the mode.
-      </Text>
+      <Text style={styles.subtitle}>You can change the mode.</Text>
 
-      {/* Render Ride Image */}
       <View style={styles.imageContainer}>
         <Ride width={400} height={400} />
       </View>
 
-      {/* Bottom Buttons */}
       <Button
         title="Passenger"
         onPress={handlePassengerPress}
@@ -87,7 +83,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     marginBottom: 40,
-    marginRight:45,
+    marginRight: 45,
   },
   button: {
     width: '100%',

@@ -1,48 +1,37 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  TextInput,
-  Platform,
-  Alert,
+  StyleSheet, Text, View, TouchableOpacity,
+  TextInput, Platform, Alert,
 } from 'react-native';
-import {useNavigation, useRoute} from '@react-navigation/native'; // For navigation
-import {Linking} from 'react-native'; // For opening WhatsApp
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { Linking } from 'react-native';
 import Button from '../../components/Button';
-
-// Define the navigation prop type for this screen
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../navigation/StackNavigation';
+import { AuthStackParamList } from '../../navigation/AuthNavigator';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../../redux/store';
+import { setOtp } from '../../redux/actions/authActions';
 
-// Define navigation prop for RoleScreen
-type OTPScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'Otp'
->;
+// Navigation & Route Types
+type OTPScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Otp'>;
+type OTPScreenRouteProp = RouteProp<AuthStackParamList, 'Otp'>;
 
 const OTPScreen = () => {
-  const [otp, setOtp] = useState<string>('');
-  const navigation = useNavigation<OTPScreenNavigationProp>(); // Type the navigation object
-  const route = useRoute(); // Access the route params
+  const dispatch = useDispatch<AppDispatch>();
+  const phone = useSelector((state: RootState) => state.auth.phone);
+  const navigation = useNavigation<OTPScreenNavigationProp>();
+  const route = useRoute<OTPScreenRouteProp>();
+  const { method } = route.params;
 
+  const [otp, setOtpInput] = useState<string>('');
 
-  // Retrieve phone and method passed from previous screen
-  const {phone, method} = route.params;
+  const handleGoBack = () => navigation.goBack();
 
-  // Handle Go Back functionality
-  const handleGoBack = () => {
-    navigation.goBack(); // Navigate back to the previous screen
-  };
-
-  // Handle OTP Change
   const handleOtpChange = (text: string) => {
-    setOtp(text);
+    setOtpInput(text);
+    dispatch(setOtp(text));
 
-    // Check if OTP is 4 digits long and valid
     if (text.length === 4) {
-      // Navigate to RoleScreen if OTP is valid
       navigation.navigate('Role');
     }
   };

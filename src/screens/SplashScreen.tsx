@@ -18,49 +18,35 @@ const SplashScreenComponent = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<SplashNavigationProp>();
 
-  // useEffect(() => {
-  //   const checkSession = async () => {
-  //     try {
-  //       const [isLoggedIn, role] = await AsyncStorage.multiGet([
-  //         '@isLoggedIn',
-  //         '@role',
-  //       ]);
+useEffect(() => {
+  const checkSession = async () => {
+    try {
+      const [isLoggedIn, role] = await AsyncStorage.multiGet([
+        '@isLoggedIn',
+        '@role',
+      ]);
 
-  //       if (isLoggedIn[1] === 'true' && role[1]) {
-  //         dispatch(setRole(role[1] as 'passenger' | 'driver'));
-  //         dispatch(setLoggedIn(true));
-  //       }
-  //     } catch (error) {
-  //       console.error('❌ Session check failed:', error);
-  //     } finally {
-  //       setTimeout(() => {
-  //         navigation.replace('Home');
-  //       }, 2500);
-  //     }
-  //   };
+      console.log('🪵 isLoggedIn:', isLoggedIn[1]);
+      console.log('🪵 role:', role[1]);
 
-  //   checkSession();
-  // }, [dispatch, navigation]);
-
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const [isLoggedIn, role] = await AsyncStorage.multiGet([
-          '@isLoggedIn',
-          '@role',
-        ]);
-
-        if (isLoggedIn[1] === 'true' && role[1]) {
-          dispatch(setRole(role[1] as 'passenger' | 'driver'));
-          dispatch(setLoggedIn(true));
-        }
-      } catch (error) {
-        console.error('❌ Session check failed:', error);
+      if (isLoggedIn[1] === 'true' && role[1]) {
+        dispatch(setRole(role[1] as 'passenger' | 'driver'));
+        dispatch(setLoggedIn(true));
+      } else {
+        setTimeout(() => {
+          navigation.replace('Home');
+        }, 1500);
       }
-    };
+    } catch (error) {
+      console.error('❌ Session check failed:', error);
+      navigation.replace('Home');
+    }
+  };
 
-    checkSession();
-  }, [dispatch]);
+  checkSession();
+}, [dispatch, navigation]);
+
+
   return (
     <View style={styles.container}>
       <Image

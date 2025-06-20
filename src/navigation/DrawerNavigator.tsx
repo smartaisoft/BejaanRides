@@ -4,12 +4,14 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import SettingsScreen from '../screens/Passenger/SettingsScreen';
 import NotificationsScreen from '../screens/Passenger/NotificationsScreen';
 import HistoryScreen from '../screens/Passenger/HistoryScreen';
+import LocationPick from '../screens/Passenger/LocationPick';
 
 export type DrawerParamList = {
   History: undefined;
   Notifications: undefined;
   Settings: undefined;
   Logout: undefined;
+  Location: undefined;
 };
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
@@ -17,11 +19,9 @@ const Drawer = createDrawerNavigator<DrawerParamList>();
 const DrawerNavigator = () => {
   return (
     <Drawer.Navigator
-      screenOptions={{
-        headerShown: true,
-        drawerActiveTintColor: '#6200EE',
-        drawerLabelStyle: {marginLeft: -15, fontSize: 15},
-      }}>
+      initialRouteName="Location"
+      screenOptions={{headerShown: false}}>
+      <Drawer.Screen name="Location" component={LocationPick} />
       <Drawer.Screen
         name="History"
         component={HistoryScreen}

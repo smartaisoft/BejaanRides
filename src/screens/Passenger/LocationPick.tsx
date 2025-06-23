@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, {useEffect, useState, useCallback, useRef} from 'react';
 import {
   View,
   Text,
@@ -21,11 +21,11 @@ import Geolocation from '@react-native-community/geolocation';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Menu from '../../../assets/SVG/Menu';
 import Locate from '../../../assets/SVG/Locate';
-import { updateUser, getUser } from '../../services/userService';
-import { useNavigation } from '@react-navigation/native';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
-import { DrawerParamList } from '../../navigation/DrawerNavigator';
-import { getAllLocations } from '../../services/locationService';
+import {updateUser, getUser} from '../../services/userService';
+import {DrawerActions, useNavigation} from '@react-navigation/native';
+import {DrawerNavigationProp} from '@react-navigation/drawer';
+import {DrawerParamList} from '../../navigation/DrawerNavigator';
+import {getAllLocations} from '../../services/locationService';
 
 const INITIAL_DELTA = {
   latitudeDelta: 0.015,
@@ -45,10 +45,10 @@ const LocationPick = () => {
   const requestPermissions = async () => {
     if (Platform.OS === 'android') {
       const fine = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
       );
       const coarse = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION
+        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
       );
       return (
         fine === PermissionsAndroid.RESULTS.GRANTED ||
@@ -78,8 +78,8 @@ const LocationPick = () => {
 
     Geolocation.getCurrentPosition(
       position => {
-        const { latitude, longitude } = position.coords;
-        const newRegion = { latitude, longitude, ...INITIAL_DELTA };
+        const {latitude, longitude} = position.coords;
+        const newRegion = {latitude, longitude, ...INITIAL_DELTA};
         setRegion(newRegion);
         mapRef.current?.animateToRegion(newRegion, 1000);
       },
@@ -89,7 +89,12 @@ const LocationPick = () => {
           Alert.alert('Location Timeout', 'Please ensure GPS is turned on.');
         }
       },
-      { enableHighAccuracy: false, timeout: 20000, maximumAge: 6000, distanceFilter: 0 }
+      {
+        enableHighAccuracy: false,
+        timeout: 20000,
+        maximumAge: 6000,
+        distanceFilter: 0,
+      },
     );
   }, []);
 
@@ -118,13 +123,19 @@ const LocationPick = () => {
     }
     const lowerText = text.toLowerCase();
     const matches = locations.filter(loc =>
-      loc.name?.toLowerCase().includes(lowerText)
+      loc.name?.toLowerCase().includes(lowerText),
     );
     setFilteredSuggestions(matches.slice(0, 10));
   };
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity
+  onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+        style={styles.drawerButton}>
+        <Menu width={28} height={28} />
+      </TouchableOpacity>
+
       {region ? (
         <MapView
           ref={ref => (mapRef.current = ref)}
@@ -132,21 +143,26 @@ const LocationPick = () => {
           style={StyleSheet.absoluteFill}
           region={region}
           showsUserLocation
-          onRegionChangeComplete={setRegion}
-        >
+          onRegionChangeComplete={setRegion}>
           <Marker coordinate={region}>
             <Icon name="navigation" size={28} color="#fff" />
           </Marker>
-          <Circle center={region} radius={300} fillColor="rgba(139,0,255,0.1)" />
+          <Circle
+            center={region}
+            radius={300}
+            fillColor="rgba(139,0,255,0.1)"
+          />
           {locations.map(loc => {
             const coords = loc?.position?.geopoint;
             if (!coords) return null;
             return (
               <Marker
                 key={loc.id}
-                coordinate={{ latitude: coords._latitude, longitude: coords._longitude }}
-                title={loc.name}
-              >
+                coordinate={{
+                  latitude: coords._latitude,
+                  longitude: coords._longitude,
+                }}
+                title={loc.name}>
                 <Icon name="place" size={30} color="red" />
               </Marker>
             );
@@ -159,7 +175,7 @@ const LocationPick = () => {
       )}
 
       <View style={styles.card}>
-                  <Text style={styles.pickupLabel}>PICKUP</Text>
+        <Text style={styles.pickupLabel}>PICKUP</Text>
 
         <View style={styles.pickupRow}>
           <Icon name="radio-button-checked" size={20} color="#9b2fc2" />
@@ -179,8 +195,10 @@ const LocationPick = () => {
         <FlatList
           data={filteredSuggestions}
           keyExtractor={(item, idx) => idx.toString()}
-          ListHeaderComponent={<Text style={styles.sectionLabel}>POPULAR LOCATIONS</Text>}
-          renderItem={({ item }) => {
+          ListHeaderComponent={
+            <Text style={styles.sectionLabel}>POPULAR LOCATIONS</Text>
+          }
+          renderItem={({item}) => {
             const isFav = item.isFavorite || false;
             return (
               <TouchableOpacity
@@ -197,21 +215,19 @@ const LocationPick = () => {
                     setRegion(newRegion);
                     setSearchText(item.name);
                   }
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                }}>
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
                   <Icon name="place" color="#e74c3c" size={20} />
                   <Text style={styles.suggestionText}>{item.name}</Text>
                 </View>
                 <TouchableOpacity
                   onPress={() => {
                     const updated = locations.map(loc =>
-                      loc.id === item.id ? { ...loc, isFavorite: !isFav } : loc
+                      loc.id === item.id ? {...loc, isFavorite: !isFav} : loc,
                     );
                     setLocations(updated);
                     setFilteredSuggestions(updated);
-                  }}
-                >
+                  }}>
                   <Icon
                     name={isFav ? 'star' : 'star-outline'}
                     color={isFav ? '#f1c40f' : '#aaa'}
@@ -224,7 +240,9 @@ const LocationPick = () => {
         />
       </View>
 
-      <TouchableOpacity style={styles.locateButton} onPress={getCurrentLocation}>
+      <TouchableOpacity
+        style={styles.locateButton}
+        onPress={getCurrentLocation}>
         <Locate style={styles.locateIcon} />
       </TouchableOpacity>
     </View>
@@ -232,7 +250,7 @@ const LocationPick = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: {flex: 1},
   center: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -246,6 +264,21 @@ const styles = StyleSheet.create({
     marginTop: 'auto',
     elevation: 5,
   },
+  drawerButton: {
+  position: 'absolute',
+  top: Platform.OS === 'ios' ? 50 : 20,
+  left: 20,
+  zIndex: 10,
+  backgroundColor: '#fff',
+  borderRadius: 20,
+  padding: 8,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.2,
+  shadowRadius: 2,
+  elevation: 5,
+},
+
   pickupRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -305,7 +338,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
     shadowRadius: 2,
     elevation: 5,

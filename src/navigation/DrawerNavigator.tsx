@@ -5,6 +5,7 @@ import SettingsScreen from '../screens/Passenger/SettingsScreen';
 import NotificationsScreen from '../screens/Passenger/NotificationsScreen';
 import HistoryScreen from '../screens/Passenger/HistoryScreen';
 import LocationPick from '../screens/Passenger/LocationPick';
+import PaymentScreen from '../screens/Passenger/PaymentScreen';
 
 export type DrawerParamList = {
   History: undefined;
@@ -12,6 +13,7 @@ export type DrawerParamList = {
   Settings: undefined;
   Logout: undefined;
   Location: undefined;
+  Payment: undefined;
 };
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
@@ -19,7 +21,7 @@ const Drawer = createDrawerNavigator<DrawerParamList>();
 const DrawerNavigator = () => {
   return (
     <Drawer.Navigator
-      initialRouteName="Location"
+      initialRouteName="Payment"
       screenOptions={{headerShown: false}}>
       <Drawer.Screen name="Location" component={LocationPick} />
       <Drawer.Screen
@@ -50,8 +52,8 @@ const DrawerNavigator = () => {
         }}
       />
       <Drawer.Screen
-        name="Logout"
-        component={SettingsScreen}
+        name="Payment"
+        component={PaymentScreen}
         options={{
           drawerIcon: ({color, size}) => (
             <Icon name="logout" color={color} size={size} />

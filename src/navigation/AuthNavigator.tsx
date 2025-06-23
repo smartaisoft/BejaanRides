@@ -9,6 +9,7 @@ import HomeScreen from '../screens/HomeScreen';
 import DriverPersonalInfo from '../screens/Driver/DriverPersonalInfo';
 import LocationPick from '../screens/Passenger/LocationPick';
 import {FirebaseAuthTypes} from '@react-native-firebase/auth';
+import PaymentScreen from '../screens/Passenger/PaymentScreen';
 
 export type AuthStackParamList = {
   Splash: undefined;
@@ -23,6 +24,7 @@ export type AuthStackParamList = {
   Home: undefined;
   DriverPersonalInfo: undefined;
   Location: undefined;
+  Payment: undefined;
 };
 
 const Stack = createStackNavigator<AuthStackParamList>();
@@ -40,6 +42,7 @@ const AuthStack = () => {
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="DriverPersonalInfo" component={DriverPersonalInfo} />
       <Stack.Screen name="Location" component={LocationPick} />
+      <Stack.Screen name="Payment" component={PaymentScreen} />
     </Stack.Navigator>
   );
 };

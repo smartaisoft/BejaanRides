@@ -21,7 +21,7 @@ const Drawer = createDrawerNavigator<DrawerParamList>();
 const DrawerNavigator = () => {
   return (
     <Drawer.Navigator
-      initialRouteName="Payment"
+      initialRouteName="Location"
       screenOptions={{headerShown: false}}>
       <Drawer.Screen name="Location" component={LocationPick} />
       <Drawer.Screen

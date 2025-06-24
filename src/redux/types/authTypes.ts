@@ -7,6 +7,8 @@ export const VERIFY_OTP = 'VERIFY_OTP';
 export const SET_ROLE = 'SET_ROLE';
 export const SET_NAME = 'SET_NAME';
 export const SET_LOGGED_IN = 'SET_LOGGED_IN';
+export const SET_AUTH_LOADING = 'SET_AUTH_LOADING';
+
 
 export interface AuthState {
   phone: string;
@@ -16,6 +18,8 @@ export interface AuthState {
   role: 'passenger' | 'driver' | null;
   name: string;
   isLoggedIn: boolean;
+  isLoading: boolean; // ← Add this
+
 }
 
 interface SetPhoneAction {
@@ -53,6 +57,11 @@ interface SetLoggedInAction {
   payload: boolean;
 }
 
+interface SetAuthLoadingAction {
+  type: typeof SET_AUTH_LOADING;
+  payload: boolean;
+}
+
 export type AuthActionTypes =
   | SetPhoneAction
   | SetOtpMethodAction
@@ -60,4 +69,6 @@ export type AuthActionTypes =
   | VerifyOtpAction
   | SetRoleAction
   | SetNameAction
-  | SetLoggedInAction;
+  | SetLoggedInAction
+  | SetAuthLoadingAction; // ← Add this
+

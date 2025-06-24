@@ -7,8 +7,13 @@ import {
   SET_NAME,
   SET_LOGGED_IN,
   AuthActionTypes,
+  SET_AUTH_LOADING
 } from '../types/authTypes';
 
+export const setAuthLoading = (loading: boolean): AuthActionTypes => ({
+  type: SET_AUTH_LOADING,
+  payload: loading,
+});
 export const setPhone = (phone: string): AuthActionTypes => ({
   type: SET_PHONE,
   payload: phone,

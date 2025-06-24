@@ -58,20 +58,6 @@ const LocationPick = () => {
     return true;
   };
 
-  const testUpdateAndFetchUser = async () => {
-    const uid = '1shbKBPjwMShAPn0BbNsoVAqwoT2';
-    try {
-      await updateUser(uid, {
-        lastName: 'Mokoena',
-        address: 'New Street 123, Cape Town',
-      });
-      const updatedUser = await getUser(uid);
-      console.log('🔥 Updated user:', updatedUser);
-    } catch (error) {
-      console.error('❌ Error updating user:', error);
-    }
-  };
-
   const getCurrentLocation = useCallback(async () => {
     const hasPermission = await requestPermissions();
     if (!hasPermission) return;
@@ -100,7 +86,6 @@ const LocationPick = () => {
 
   useEffect(() => {
     const init = async () => {
-      await testUpdateAndFetchUser();
       try {
         const allLocations = await getAllLocations();
         setLocations(allLocations);
@@ -186,7 +171,7 @@ const LocationPick = () => {
           <Text style={styles.pickupLabel}>DROP-OFF</Text>
           <TextInput
             style={styles.dropInput}
-            placeholder="Enter drop-off location"
+            placeholder="Where are you going and what's your offer?"
             value={searchText}
             onChangeText={filterSuggestions}
           />
@@ -278,7 +263,6 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 5,
   },
-
   pickupRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -325,7 +309,6 @@ const styles = StyleSheet.create({
   suggestionText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '',
   },
   locateButton: {
     position: 'absolute',

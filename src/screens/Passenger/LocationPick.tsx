@@ -131,9 +131,9 @@ const LocationPick = () => {
   return (
     <View style={styles.container}>
       <TouchableOpacity
-  onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+        onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
         style={styles.drawerButton}>
-        <Menu width={28} height={28} />
+        <Menu width={28} height={25} />
       </TouchableOpacity>
 
       {region ? (
@@ -265,19 +265,19 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   drawerButton: {
-  position: 'absolute',
-  top: Platform.OS === 'ios' ? 50 : 20,
-  left: 20,
-  zIndex: 10,
-  backgroundColor: '#fff',
-  borderRadius: 20,
-  padding: 8,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.2,
-  shadowRadius: 2,
-  elevation: 5,
-},
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 50,
+    left: 20,
+    zIndex: 10,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 5,
+  },
 
   pickupRow: {
     flexDirection: 'row',

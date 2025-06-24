@@ -1,27 +1,53 @@
-import React, { useEffect } from 'react';
+import React, {useEffect} from 'react';
 import {View, StyleSheet, Image} from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'; // Import the correct navigation prop
-import { useNavigation } from '@react-navigation/native';  // Import useNavigation hook
-import { AuthStackParamList } from '../navigation/AuthNavigator';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {useNavigation} from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useDispatch} from 'react-redux';
 
-// Define the navigation prop type for this screen
+import {AuthStackParamList} from '../navigation/AuthNavigator';
+import {setLoggedIn, setRole} from '../redux/actions/authActions';
+import type {AppDispatch} from '../redux/store';
+
 type SplashNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
   'Splash'
 >;
 
 const SplashScreenComponent = () => {
-  const navigation = useNavigation<SplashNavigationProp>(); // Type the navigation object
+  const dispatch = useDispatch<AppDispatch>();
+  const navigation = useNavigation<SplashNavigationProp>();
 
-  useEffect(() => {
-    // Navigate to the Home screen after 3 seconds
-    const timer = setTimeout(() => {
-      navigation.navigate('Home');  // Navigate to Home screen after 3 seconds
-    }, 3000);
+useEffect(() => {
+  const checkSession = async () => {
+    try {
+      const [isLoggedIn, role] = await AsyncStorage.multiGet([
+        '@isLoggedIn',
+        '@role',
+      ]);
 
-    // Clean up the timer on component unmount
-    return () => clearTimeout(timer);
-  }, [navigation]);  return (
+      console.log('🪵 isLoggedIn:', isLoggedIn[1]);
+      console.log('🪵 role:', role[1]);
+
+      if (isLoggedIn[1] === 'true' && role[1]) {
+        dispatch(setRole(role[1] as 'passenger' | 'driver'));
+        dispatch(setLoggedIn(true));
+      } else {
+        setTimeout(() => {
+          navigation.replace('Home');
+        }, 1500);
+      }
+    } catch (error) {
+      console.error('❌ Session check failed:', error);
+      navigation.replace('Home');
+    }
+  };
+
+  checkSession();
+}, [dispatch, navigation]);
+
+
+  return (
     <View style={styles.container}>
       <Image
         source={require('../../assets/images/BeejanLogo.png')}

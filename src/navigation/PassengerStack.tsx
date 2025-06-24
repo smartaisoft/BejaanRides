@@ -1,17 +1,17 @@
 import React from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
-import LocationPick from '../screens/Login/LocationPick';
+import DrawerNavigator from './DrawerNavigator';
 
 export type PassengerStackParamList = {
-  Location: {name: string};
   PassengerHome: undefined;
+  Drawer: undefined;
 };
 
 const Stack = createStackNavigator<PassengerStackParamList>();
 
 const PassengerStack = () => (
   <Stack.Navigator screenOptions={{headerShown: false}}>
-    <Stack.Screen name="Location" component={LocationPick} />
+    <Stack.Screen name="Drawer" component={DrawerNavigator} />
   </Stack.Navigator>
 );
 

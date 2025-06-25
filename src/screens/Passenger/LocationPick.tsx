@@ -15,6 +15,7 @@ import MapView, {
   Circle,
   PROVIDER_GOOGLE,
   Region,
+  Polyline,
 } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -24,9 +25,15 @@ import {DrawerActions, useNavigation} from '@react-navigation/native';
 import {DrawerNavigationProp} from '@react-navigation/drawer';
 import {DrawerParamList} from '../../navigation/DrawerNavigator';
 import {getAllLocations} from '../../services/locationService';
+import {
+  getRouteDirections,
+  Coordinate,
+  RouteInfo,
+} from '../../utils/directions';
 
 const INITIAL_DELTA = {latitudeDelta: 0.015, longitudeDelta: 0.0121};
-const GOOGLE_MAPS_API_KEY = 'AIzaSyBm08IrroljcXSn1uD9DqRlUNtTtE6-kK8';
+// const GOOGLE_MAPS_API_KEY = 'AIzaSyBm08IrroljcXSn1uD9DqRlUNtTtE6-kK8';
+const GOOGLE_MAPS_API_KEY = 'AIzaSyCb2ys2AD6NTFhnEGXNsDrjSXde6d569vU';
 
 const fetchPlaceSuggestions = async (query: string): Promise<any[]> => {
   if (!query.trim()) return [];
@@ -106,6 +113,9 @@ const LocationPick = () => {
   const [filteredSuggestions, setFilteredSuggestions] = useState<any[]>([]);
   const [showVehicleOptions, setShowVehicleOptions] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
+  const [routeCoords, setRouteCoords] = useState<Coordinate[]>([]);
+  const [distanceKm, setDistanceKm] = useState<number | null>(null);
+  const [duration, setDuration] = useState<string | null>(null);
 
   const requestPermissions = async () => {
     if (Platform.OS === 'android') {
@@ -155,7 +165,7 @@ const LocationPick = () => {
       err => console.error('Location Error:', err),
       {
         enableHighAccuracy: true,
-        timeout: 20000,
+        timeout: 30000,
         maximumAge: 6000,
         distanceFilter: 0,
       },
@@ -174,6 +184,20 @@ const LocationPick = () => {
     };
     init();
   }, [getCurrentLocation]);
+
+  useEffect(() => {
+    const fetchRoute = async () => {
+      if (pickupCoords && dropoffCoords) {
+        const result = await getRouteDirections(pickupCoords, dropoffCoords);
+        if (result) {
+          setRouteCoords(result.path);
+          setDistanceKm(result.distanceKm);
+          setDuration(result.durationText);
+        }
+      }
+    };
+    fetchRoute();
+  }, [pickupCoords, dropoffCoords]);
 
   const onSelectDropoff = async (item: any) => {
     if (item.isGooglePlace) {
@@ -228,7 +252,32 @@ const LocationPick = () => {
           style={StyleSheet.absoluteFill}
           initialRegion={region}
           showsUserLocation>
+          {pickupCoords && (
+            <>
+              <Marker
+                coordinate={pickupCoords}
+                title="You are here"
+                pinColor="#9b2fc2"
+              />
+              <Circle
+                center={pickupCoords}
+                radius={30}
+                strokeColor="#9b2fc2"
+                fillColor="rgba(155, 47, 194, 0.2)"
+              />
+            </>
+          )}
+
           {dropoffCoords && <Marker coordinate={dropoffCoords} />}
+
+          {routeCoords.length > 0 && (
+            <Polyline
+              coordinates={routeCoords}
+              strokeColor="red"
+              strokeWidth={4}
+            />
+          )}
+
           <Circle
             center={region}
             radius={300}
@@ -261,6 +310,15 @@ const LocationPick = () => {
             onChangeText={filterSuggestions}
           />
         </View>
+
+        {/* ✅ Distance info */}
+        {distanceKm !== null && duration !== null && (
+          <View style={{marginTop: 6, paddingHorizontal: 8}}>
+            <Text style={{fontSize: 13, color: '#555'}}>
+              Distance: {distanceKm.toFixed(2)} km • ETA: {duration}
+            </Text>
+          </View>
+        )}
 
         <FlatList
           data={filteredSuggestions}
@@ -367,6 +425,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 16,
+    marginTop: 15,
   },
   vehicleTitle: {fontSize: 18, fontWeight: 'bold', marginBottom: 12},
   vehicleOption: {

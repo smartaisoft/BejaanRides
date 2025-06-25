@@ -22,6 +22,7 @@ import {useDispatch} from 'react-redux';
 import {setPhone} from '../../redux/actions/authActions'; // Adjust path based on your structure
 import type {AppDispatch} from '../../redux/store'; // ✅ Import this
 import auth from '@react-native-firebase/auth';
+
 import {setAuthLoading} from '../../redux/actions/authActions';
 import {useSelector} from 'react-redux';
 import {RootState} from '../../redux/store';
@@ -43,31 +44,34 @@ const LoginWithPhone = () => {
   const isLoading = useSelector((state: RootState) => state.auth.isLoading);
 
   const [phoneNumber, setPhoneNumber] = React.useState('');
-
   const [modalVisible, setModalVisible] = React.useState(false);
   const handleGoBack = () => {
     navigation.goBack();
   };
 
-  const handlePhonePress = async (values: {phone: string}) => {
-    dispatch(setAuthLoading(true));
-    try {
-      const fullPhoneNumber = values.phone;
+ const handlePhonePress = async (values: { phone: string }) => {
+  dispatch(setAuthLoading(true));
+  try {
+    const fullPhoneNumber = values.phone;
 
-      const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
+    // ✅ Debug log for OTP sending
+    console.log('Sending OTP to:', fullPhoneNumber);
 
-      dispatch(setPhone(fullPhoneNumber));
+    const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
 
-      navigation.navigate('Otp', {
-        method: 'SMS',
-        confirmation,
-      });
-    } catch (error) {
-      console.error('Failed to send OTP:', error);
-    } finally {
-      dispatch(setAuthLoading(false));
-    }
-  };
+    dispatch(setPhone(fullPhoneNumber));
+
+    navigation.navigate('Otp', {
+      method: 'SMS',
+      confirmation,
+    });
+  } catch (error) {
+    console.error('Failed to send OTP:', error);
+  } finally {
+    dispatch(setAuthLoading(false));
+  }
+};
+
 
   const handleOptionPress = async (method: string) => {
     try {

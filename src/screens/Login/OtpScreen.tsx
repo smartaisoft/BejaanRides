@@ -31,7 +31,7 @@ const OTPScreen = () => {
 
   const navigation = useNavigation<OTPScreenNavigationProp>();
   const route = useRoute<OTPScreenRouteProp>();
-  const {method} = route.params;
+  const {method, confirmation} = route.params;
 
   const [otp, setOtpInput] = useState<string>('');
 
@@ -42,20 +42,21 @@ const OTPScreen = () => {
     dispatch(setOtp(text));
 
     if (text.length === 6) {
-      dispatch(setAuthLoading(true)); // ✅ Start loader
+      dispatch(setAuthLoading(true));
 
       try {
+        const credential = await confirmation.confirm(text); // ✅ SIGN-IN step
+        console.log('✅ OTP verified:', credential?.user.uid);
         navigation.navigate('Role');
       } catch (error) {
-        console.error('❌ Invalid OTP:', error);
+        console.error('❌ OTP verification failed:', error);
         Alert.alert(
           'Invalid Code',
           'The verification code is incorrect or expired.',
         );
+      } finally {
+        dispatch(setAuthLoading(false));
       }
-      finally {
-      dispatch(setAuthLoading(false)); // ✅ Stop loader
-    }
     }
   };
 
@@ -84,45 +85,45 @@ const OTPScreen = () => {
   return (
     <View style={styles.container}>
       {isLoading ? (
-      <ActivityIndicator size="large" color="#0000ff" />
-    ) : (
-      <>
-        <TouchableOpacity onPress={handleGoBack} style={styles.goBackButton}>
-          <Text style={styles.goBackText}>{'<'}</Text>
-        </TouchableOpacity>
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <>
+          <TouchableOpacity onPress={handleGoBack} style={styles.goBackButton}>
+            <Text style={styles.goBackText}>{'<'}</Text>
+          </TouchableOpacity>
 
-        <View style={styles.textContainer}>
-          <Text style={styles.title}>Enter the code</Text>
-          <Text style={styles.subText}>
-            We have sent you a verification code to {phone}
-          </Text>
-        </View>
+          <View style={styles.textContainer}>
+            <Text style={styles.title}>Enter the code</Text>
+            <Text style={styles.subText}>
+              We have sent you a verification code to {phone}
+            </Text>
+          </View>
 
-        <TextInput
-          style={styles.otpInput}
-          value={otp}
-          onChangeText={handleOtpChange}
-          maxLength={6}
-          keyboardType="number-pad"
-          placeholder="Enter OTP"
-          secureTextEntry={false}
-          autoFocus
-        />
+          <TextInput
+            style={styles.otpInput}
+            value={otp}
+            onChangeText={handleOtpChange}
+            maxLength={6}
+            keyboardType="number-pad"
+            placeholder="Enter OTP"
+            secureTextEntry={false}
+            autoFocus
+          />
 
-        <TouchableOpacity onPress={handleResendCode}>
-          <Text style={styles.resendText}>Resend code</Text>
-        </TouchableOpacity>
+          <TouchableOpacity onPress={handleResendCode}>
+            <Text style={styles.resendText}>Resend code</Text>
+          </TouchableOpacity>
 
-        <Button
-          title={`Open ${method}`}
-          onPress={handleOpenCommunicationApp}
-          backgroundColor="#E4E4E4"
-          textColor="white"
-          style={styles.button}
-          textStyle={styles.customButtonText}
-        />
-      </>
-    )}
+          <Button
+            title={`Open ${method}`}
+            onPress={handleOpenCommunicationApp}
+            backgroundColor="#E4E4E4"
+            textColor="white"
+            style={styles.button}
+            textStyle={styles.customButtonText}
+          />
+        </>
+      )}
     </View>
   );
 };

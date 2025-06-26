@@ -8,13 +8,14 @@ import {
 import {View, Text, Image, StyleSheet, Pressable} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useDispatch} from 'react-redux';
-import {setLoggedIn} from '../redux/actions/authActions';
+import {setLoggedIn, setRole} from '../redux/actions/authActions';
 import SettingsScreen from '../screens/Passenger/SettingsScreen';
 import NotificationsScreen from '../screens/Passenger/NotificationsScreen';
 import HistoryScreen from '../screens/Passenger/HistoryScreen';
 import LocationPick from '../screens/Passenger/LocationPick';
 import PaymentScreen from '../screens/Passenger/PaymentScreen';
 import type {AppDispatch} from '../redux/store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type DrawerParamList = {
   History: undefined;
@@ -29,10 +30,14 @@ const Drawer = createDrawerNavigator<DrawerParamList>();
 
 const CustomDrawerContent = (props: DrawerContentComponentProps) => {
   const dispatch = useDispatch<AppDispatch>();
-
-  const handleLogout = () => {
+const handleLogout = async () => {
+  try {
+    await AsyncStorage.multiRemove(['@isLoggedIn', '@role', '@name']);
     dispatch(setLoggedIn(false));
-  };
+  } catch (error) {
+    console.error('❌ Logout failed:', error);
+  }
+};
 
   return (
     <View style={{flex: 1}}>

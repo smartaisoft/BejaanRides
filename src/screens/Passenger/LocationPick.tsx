@@ -32,7 +32,6 @@ import {
 } from '../../utils/directions';
 
 const INITIAL_DELTA = {latitudeDelta: 0.015, longitudeDelta: 0.0121};
-// const GOOGLE_MAPS_API_KEY = 'AIzaSyBm08IrroljcXSn1uD9DqRlUNtTtE6-kK8';
 const GOOGLE_MAPS_API_KEY = 'AIzaSyCb2ys2AD6NTFhnEGXNsDrjSXde6d569vU';
 
 const fetchPlaceSuggestions = async (query: string): Promise<any[]> => {

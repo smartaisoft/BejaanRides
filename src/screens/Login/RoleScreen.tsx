@@ -5,9 +5,11 @@ import Ride from '../../../assets/SVG/Ride';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {AuthStackParamList} from '../../navigation/AuthNavigator';
-import {useDispatch} from 'react-redux';
-import {setRole} from '../../redux/actions/authActions';
-import {AppDispatch} from '../../redux/store';
+import {useDispatch, useSelector} from 'react-redux';
+import {setAuthLoading, setRole} from '../../redux/actions/authActions';
+import {AppDispatch, RootState} from '../../redux/store';
+import LoaderScreen from '../../components/LoaderScreen';
+
 type RoleScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
   'Role'
@@ -16,20 +18,31 @@ type RoleScreenNavigationProp = NativeStackNavigationProp<
 const RoleScreen = () => {
   const navigation = useNavigation<RoleScreenNavigationProp>();
   const dispatch = useDispatch<AppDispatch>();
+  const isLoading = useSelector((state: RootState) => state.auth.isLoading);
 
-  const handlePassengerPress = () => {
-    console.log('Passenger selected');
+ const handlePassengerPress = () => {
+    dispatch(setAuthLoading(true));
     dispatch(setRole('passenger'));
 
-    navigation.navigate('Name');
+    setTimeout(() => {
+      dispatch(setAuthLoading(false));
+      navigation.navigate('Name');
+    }, 1000);
   };
 
   const handleDriverPress = () => {
-    console.log('Driver selected');
+    dispatch(setAuthLoading(true));
     dispatch(setRole('driver'));
-    navigation.navigate('Name');
+
+    setTimeout(() => {
+      dispatch(setAuthLoading(false));
+      navigation.navigate('Name');
+    }, 1000);
   };
 
+  if (isLoading) {
+    return <LoaderScreen />;
+  }
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Are you a passenger or a driver? </Text>

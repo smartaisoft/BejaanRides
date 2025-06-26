@@ -10,12 +10,14 @@ const RootNavigator = () => {
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
   const role = useSelector((state: RootState) => state.auth.role);
 
-  // Conditional stack selection
-  if (!isLoggedIn) return <AuthStack />;
-  if (role === 'passenger') return <DrawerNavigator />;
-  if (role === 'driver') return <DriverStack />;
+  // 🔹 User is logged in AND role is passenger
+  if (isLoggedIn && role === 'passenger') return <DrawerNavigator />;
 
-  return null;
+  // 🔹 User is logged in AND role is driver
+  if (isLoggedIn && role === 'driver') return <DriverStack />;
+
+  // 🔹 User is NOT logged in
+  return <AuthStack />;
 };
 
 const AppNavigator = () => (

@@ -11,12 +11,13 @@ import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useSelector, useDispatch} from 'react-redux';
 import {AuthStackParamList} from '../../navigation/AuthNavigator';
-import {RootState, AppDispatch} from '../../redux/store';
-import {setName} from '../../redux/actions/authActions';
+import {setName, setAuthLoading} from '../../redux/actions/authActions';
 import Button from '../../components/Button';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
 import {createOrUpdateUser} from '../../services/realTimeUserService';
+import {AppDispatch, RootState} from '../../redux/store';
+import LoaderScreen from '../../components/LoaderScreen';
 
 type NameScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -30,21 +31,21 @@ const NameScreen = () => {
 
   const phone = useSelector((state: RootState) => state.auth.phone);
   const role = useSelector((state: RootState) => state.auth.role);
+  const isLoading = useSelector((state: RootState) => state.auth.isLoading);
 
   const handleGoBack = () => {
     navigation.goBack();
   };
+
   useEffect(() => {
     const unsubscribe = auth().onAuthStateChanged(user => {
       console.log('👤 Auth state restored:', user?.uid);
     });
     return unsubscribe;
   }, []);
+
   const handlePress = async () => {
     try {
-      console.log('➡️ Next Button Pressed');
-      dispatch(setName(name));
-
       if (!name.trim()) {
         Alert.alert('Validation', 'Please enter your name.');
         return;
@@ -56,6 +57,9 @@ const NameScreen = () => {
         return;
       }
 
+      dispatch(setAuthLoading(true));
+      dispatch(setName(name));
+
       await AsyncStorage.multiSet([
         ['@name', name],
         ['@role', role],
@@ -66,6 +70,7 @@ const NameScreen = () => {
         if (!user) {
           console.warn('❌ Firebase Auth user is still null');
           Alert.alert('Error', 'Authentication session is not ready yet.');
+          dispatch(setAuthLoading(false));
           unsubscribe();
           return;
         }
@@ -79,8 +84,9 @@ const NameScreen = () => {
         });
 
         console.log('✅ User registered in Realtime Database');
-
         unsubscribe();
+
+        dispatch(setAuthLoading(false));
 
         if (role === 'driver') {
           navigation.navigate('DriverPersonalInfo');
@@ -90,9 +96,14 @@ const NameScreen = () => {
       });
     } catch (error: any) {
       console.error('❌ Failed to register user or navigate:', error);
+      dispatch(setAuthLoading(false));
       Alert.alert('Error', 'Something went wrong while saving your profile.');
     }
   };
+
+  if (isLoading) {
+    return <LoaderScreen />;
+  }
 
   return (
     <View style={styles.container}>

@@ -7,6 +7,7 @@ import {
   TextInput,
   Platform,
   Alert,
+  ActivityIndicator
 } from 'react-native';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {Linking} from 'react-native';
@@ -17,7 +18,6 @@ import {useSelector, useDispatch} from 'react-redux';
 import {RootState, AppDispatch} from '../../redux/store';
 import {setOtp} from '../../redux/actions/authActions';
 import {setAuthLoading} from '../../redux/actions/authActions';
-import {ActivityIndicator} from 'react-native';
 type OTPScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
   'Otp'

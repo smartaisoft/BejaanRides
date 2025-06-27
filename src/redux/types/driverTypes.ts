@@ -22,4 +22,6 @@ export interface RideData {
 export interface DriverState {
   status: DriverStatus;
   currentRide: RideData | null;
+  rideRequests: RideData[]; // ✅ NEW: All incoming ride requests
+
 }

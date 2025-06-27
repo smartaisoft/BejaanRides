@@ -3,12 +3,15 @@ import {
   SET_DRIVER_STATUS,
   SET_CURRENT_RIDE,
   CLEAR_CURRENT_RIDE,
+  SET_RIDE_REQUESTS,
+  CLEAR_RIDE_REQUESTS,
   DriverActionTypes,
 } from '../actions/driverActions';
 
 const initialState: DriverState = {
   status: DriverStatus.OFFLINE,
   currentRide: null,
+  rideRequests: [], // ✅ Add default empty array
 };
 
 export const driverReducer = (
@@ -22,6 +25,10 @@ export const driverReducer = (
       return { ...state, currentRide: action.payload };
     case CLEAR_CURRENT_RIDE:
       return { ...state, currentRide: null };
+    case SET_RIDE_REQUESTS:
+      return { ...state, rideRequests: action.payload };
+    case CLEAR_RIDE_REQUESTS:
+      return { ...state, rideRequests: [] };
     default:
       return state;
   }

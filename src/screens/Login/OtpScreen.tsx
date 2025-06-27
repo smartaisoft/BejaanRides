@@ -45,7 +45,7 @@ const OTPScreen = () => {
       dispatch(setAuthLoading(true));
 
       try {
-        const credential = await confirmation.confirm(text); // ✅ SIGN-IN step
+        const credential = await confirmation.confirm(text);
         console.log('✅ OTP verified:', credential?.user.uid);
         navigation.navigate('Role');
       } catch (error) {

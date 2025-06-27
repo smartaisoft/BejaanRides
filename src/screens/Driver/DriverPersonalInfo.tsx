@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -9,18 +9,19 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as ImagePicker from 'react-native-image-picker';
-import { useNavigation } from '@react-navigation/native';
-import type { StackNavigationProp } from '@react-navigation/stack';
-import type { DriverStackParamList } from '../../navigation/DriverStack';
-import { useDispatch } from 'react-redux';
-import { setDriverPersonalInfo } from '../../redux/actions/vehicleActions';
-import { AppDispatch } from '../../redux/store';
+import {useNavigation} from '@react-navigation/native';
+import type {StackNavigationProp} from '@react-navigation/stack';
+import type {DriverStackParamList} from '../../navigation/DriverStack';
+import {useDispatch} from 'react-redux';
+import {setDriverPersonalInfo} from '../../redux/actions/vehicleActions';
+import {AppDispatch} from '../../redux/store';
 import auth from '@react-native-firebase/auth';
-import { updateUser, getUserByUid } from '../../services/realTimeUserService';
+import {updateUser, getUserByUid} from '../../services/realTimeUserService';
 
 type DriverPersonalInfoNavigationProp = StackNavigationProp<
   DriverStackParamList,
@@ -40,16 +41,14 @@ const DriverPersonalInfo = () => {
     license: null,
     selfie: null,
   });
+  const [loading, setLoading] = useState(true);
 
-  // Load existing driver info on mount
   useEffect(() => {
     loadExistingDriverInfo();
   }, []);
 
-  /**
-   * Load driver info from Realtime DB if exists
-   */
   const loadExistingDriverInfo = async () => {
+    setLoading(true);
     try {
       const uid = auth().currentUser?.uid;
       if (!uid) throw new Error('User not logged in');
@@ -69,31 +68,29 @@ const DriverPersonalInfo = () => {
       }
     } catch (error) {
       console.error('❌ Failed to load driver info:', error);
+      Alert.alert('Error', 'Failed to load your saved information.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  /**
-   * Handle image selection
-   */
   const pickImage = (key: 'profile' | 'license' | 'selfie') => {
-    ImagePicker.launchImageLibrary({ mediaType: 'photo' }, response => {
-      if (!response.didCancel && !response.errorCode && response.assets?.[0]?.uri) {
+    ImagePicker.launchImageLibrary({mediaType: 'photo'}, response => {
+      if (
+        !response.didCancel &&
+        !response.errorCode &&
+        response.assets?.[0]?.uri
+      ) {
         const uri = response.assets[0].uri;
-        setImages(prev => ({ ...prev, [key]: uri }));
+        setImages(prev => ({...prev, [key]: uri}));
       }
     });
   };
 
-  /**
-   * Remove selected image
-   */
   const removeImage = (key: 'profile' | 'license' | 'selfie') => {
-    setImages(prev => ({ ...prev, [key]: null }));
+    setImages(prev => ({...prev, [key]: null}));
   };
 
-  /**
-   * Save info to Redux + Realtime DB
-   */
   const handleNext = async () => {
     try {
       const uid = auth().currentUser?.uid;
@@ -109,7 +106,7 @@ const DriverPersonalInfo = () => {
       dispatch(setDriverPersonalInfo(payload));
 
       console.log('✅ Saving driver info to Realtime Database...');
-      await updateUser(uid, { driverInfo: payload });
+      await updateUser(uid, {driverInfo: payload});
 
       console.log('✅ Driver info saved successfully!');
       navigation.navigate('ChooseVehicleScreen');
@@ -119,27 +116,34 @@ const DriverPersonalInfo = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#9b2fc2" />
+        <Text style={styles.loadingText}>Loading your information...</Text>
+      </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+          onPress={() => navigation.goBack()}>
           <Icon name="arrow-left" size={24} color="#000" />
         </TouchableOpacity>
 
-        <Text style={styles.title}>Personal information</Text>
+        <Text style={styles.title}>Personal Information</Text>
 
         <View style={styles.imageRow}>
           {(['profile', 'license', 'selfie'] as const).map(key => (
             <View style={styles.imageBox} key={key}>
               <TouchableOpacity onPress={() => pickImage(key)}>
                 {images[key] ? (
-                  <Image source={{ uri: images[key]! }} style={styles.image} />
+                  <Image source={{uri: images[key]!}} style={styles.image} />
                 ) : (
                   <View style={styles.placeholder}>
                     <Icon name="add" size={30} color="#888" />
@@ -156,8 +160,7 @@ const DriverPersonalInfo = () => {
               {images[key] && (
                 <TouchableOpacity
                   style={styles.removeIcon}
-                  onPress={() => removeImage(key)}
-                >
+                  onPress={() => removeImage(key)}>
                   <Icon name="close" size={18} color="#fff" />
                 </TouchableOpacity>
               )}
@@ -189,9 +192,19 @@ const DriverPersonalInfo = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  scrollContent: { padding: 20 },
-  backButton: { marginBottom: 20, marginTop: 50 },
+  container: {flex: 1, backgroundColor: '#fff'},
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#555',
+  },
+  scrollContent: {padding: 20},
+  backButton: {marginBottom: 20, marginTop: 50},
   title: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -227,7 +240,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 16,
   },
-  image: { width: '100%', height: '100%', resizeMode: 'cover' },
+  image: {width: '100%', height: '100%', resizeMode: 'cover'},
   removeIcon: {
     position: 'absolute',
     top: 5,

@@ -11,7 +11,11 @@ import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useSelector, useDispatch} from 'react-redux';
 import {AuthStackParamList} from '../../navigation/AuthNavigator';
-import {setName, setAuthLoading} from '../../redux/actions/authActions';
+import {
+  setName,
+  setAuthLoading,
+  setLoggedIn,
+} from '../../redux/actions/authActions';
 import Button from '../../components/Button';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
@@ -66,6 +70,8 @@ const NameScreen = () => {
         ['@isLoggedIn', 'true'],
       ]);
 
+      dispatch(setLoggedIn(true)); // ✅ Ensure Redux updates immediately
+
       const unsubscribe = auth().onAuthStateChanged(async user => {
         if (!user) {
           console.warn('❌ Firebase Auth user is still null');
@@ -87,12 +93,10 @@ const NameScreen = () => {
         unsubscribe();
 
         dispatch(setAuthLoading(false));
-
-        if (role === 'driver') {
-          navigation.navigate('DriverPersonalInfo');
-        } else {
-          navigation.navigate('Location');
+        if (role === 'passenger') {
+          navigation.navigate('Location'); // only navigate if passenger
         }
+        // if driver, RootNavigator will automatically render DriverStack
       });
     } catch (error: any) {
       console.error('❌ Failed to register user or navigate:', error);

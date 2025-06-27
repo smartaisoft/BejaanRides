@@ -1,14 +1,14 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   createDrawerNavigator,
   DrawerContentScrollView,
   DrawerItemList,
   DrawerContentComponentProps,
 } from '@react-navigation/drawer';
-import {View, Text, Image, StyleSheet, Pressable} from 'react-native';
+import {View, Text, Image, StyleSheet, Pressable, Alert} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useDispatch} from 'react-redux';
-import {setLoggedIn, setRole} from '../redux/actions/authActions';
+import {setLoggedIn} from '../redux/actions/authActions';
 import SettingsScreen from '../screens/Passenger/SettingsScreen';
 import NotificationsScreen from '../screens/Passenger/NotificationsScreen';
 import HistoryScreen from '../screens/Passenger/HistoryScreen';
@@ -16,6 +16,8 @@ import LocationPick from '../screens/Passenger/LocationPick';
 import PaymentScreen from '../screens/Passenger/PaymentScreen';
 import type {AppDispatch} from '../redux/store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {getUserByUid, UserData} from '../services/realTimeUserService';
+import auth from '@react-native-firebase/auth';
 
 export type DrawerParamList = {
   History: undefined;
@@ -30,14 +32,31 @@ const Drawer = createDrawerNavigator<DrawerParamList>();
 
 const CustomDrawerContent = (props: DrawerContentComponentProps) => {
   const dispatch = useDispatch<AppDispatch>();
-const handleLogout = async () => {
-  try {
-    await AsyncStorage.multiRemove(['@isLoggedIn', '@role', '@name']);
-    dispatch(setLoggedIn(false));
-  } catch (error) {
-    console.error('❌ Logout failed:', error);
-  }
-};
+  const [user, setUser] = useState<UserData | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const currentUser = auth().currentUser;
+      if (!currentUser) return;
+
+      const userData = await getUserByUid(currentUser.uid);
+      if (userData) {
+        setUser(userData);
+      } else {
+        Alert.alert('Error', 'User data not found.');
+      }
+    };
+
+    fetchUser();
+  }, []);
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.multiRemove(['@isLoggedIn', '@role', '@name']);
+      dispatch(setLoggedIn(false));
+    } catch (error) {
+      console.error('❌ Logout failed:', error);
+    }
+  };
 
   return (
     <View style={{flex: 1}}>
@@ -46,7 +65,8 @@ const handleLogout = async () => {
           source={require('../../assets/images/Avatar.png')}
           style={styles.avatar}
         />
-        <Text style={styles.name}>Passenger name</Text>
+        <Text style={styles.name}>{user?.name || 'Passenger'}</Text>
+        <Text style={styles.phone}>{user?.phone || ''}</Text>
       </View>
       <DrawerContentScrollView {...props}>
         <DrawerItemList {...props} />
@@ -138,6 +158,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '500',
+  },
+  phone: {
+    color: '#E0E0E0',
+    fontSize: 14,
+    marginTop: 4,
   },
   logoutButton: {
     paddingVertical: 12,

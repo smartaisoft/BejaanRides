@@ -12,27 +12,48 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as ImagePicker from 'react-native-image-picker';
+import {useNavigation} from '@react-navigation/native';
+import type {StackNavigationProp} from '@react-navigation/stack';
+import type {DriverStackParamList} from '../../navigation/DriverStack';
+
+type DriverPersonalInfoNavigationProp = StackNavigationProp<
+  DriverStackParamList,
+  'DriverPersonalInfo'
+>;
 
 const DriverPersonalInfo = () => {
+  const navigation = useNavigation<DriverPersonalInfoNavigationProp>();
+
   const [licenseNumber, setLicenseNumber] = useState('');
   const [expirationDate, setExpirationDate] = useState('');
-  const [images, setImages] = useState({
+  const [images, setImages] = useState<
+    Record<'profile' | 'license' | 'selfie', string | null>
+  >({
     profile: null,
     license: null,
     selfie: null,
   });
 
-  const pickImage = async key => {
+  const pickImage = (key: 'profile' | 'license' | 'selfie') => {
     ImagePicker.launchImageLibrary({mediaType: 'photo'}, response => {
-      if (!response.didCancel && !response.errorCode) {
+      if (
+        !response.didCancel &&
+        !response.errorCode &&
+        response.assets?.[0]?.uri
+      ) {
         const uri = response.assets[0].uri;
         setImages(prev => ({...prev, [key]: uri}));
       }
     });
   };
 
-  const removeImage = key => {
+  const removeImage = (key: 'profile' | 'license' | 'selfie') => {
     setImages(prev => ({...prev, [key]: null}));
+  };
+
+  const handleNext = () => {
+    // Optional: Add validation here
+    navigation.navigate('ChooseVehicleScreen');
   };
 
   return (
@@ -40,26 +61,29 @@ const DriverPersonalInfo = () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <TouchableOpacity style={styles.backButton}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}>
           <Icon name="arrow-left" size={24} color="#000" />
         </TouchableOpacity>
 
         <Text style={styles.title}>Personal information</Text>
 
         <View style={styles.imageRow}>
-          {['profile', 'license', 'selfie'].map(key => (
+          {(['profile', 'license', 'selfie'] as const).map(key => (
             <View style={styles.imageBox} key={key}>
               <TouchableOpacity onPress={() => pickImage(key)}>
                 {images[key] ? (
-                  <Image source={{uri: images[key]}} style={styles.image} />
+                  <Image source={{uri: images[key]!}} style={styles.image} />
                 ) : (
                   <View style={styles.placeholder}>
+                    <Icon name="add" size={30} color="#888" />
                     <Text style={styles.placeholderText}>
                       {key === 'profile'
                         ? 'Upload picture'
                         : key === 'license'
                         ? 'Driver license'
-                        : 'Selfie with driver license'}
+                        : 'Selfie with license'}
                     </Text>
                   </View>
                 )}
@@ -90,7 +114,7 @@ const DriverPersonalInfo = () => {
           onChangeText={setExpirationDate}
         />
 
-        <TouchableOpacity style={styles.nextButton}>
+        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
           <Text style={styles.nextText}>Next</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -103,8 +127,7 @@ const styles = StyleSheet.create({
   scrollContent: {padding: 20},
   backButton: {
     marginBottom: 20,
-    marginTop:50,
-
+    marginTop: 50,
   },
   title: {
     fontSize: 20,
@@ -126,15 +149,20 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     flex: 1,
-    backgroundColor: '#eee',
+    backgroundColor: '#f9f9f9',
+    borderWidth: 1.5,
+    borderColor: '#ccc',
+    borderStyle: 'dashed',
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 8,
+    padding: 50,
   },
   placeholderText: {
     fontSize: 12,
-    color: '#555',
+    color: '#888',
     textAlign: 'center',
+    lineHeight: 16,
   },
   image: {
     width: '100%',

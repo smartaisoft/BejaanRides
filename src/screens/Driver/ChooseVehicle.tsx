@@ -11,6 +11,9 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import {useNavigation} from '@react-navigation/native';
 import type {StackNavigationProp} from '@react-navigation/stack';
 import type {DriverStackParamList} from '../../navigation/DriverStack';
+import {useDispatch} from 'react-redux';
+import {setVehicleType} from '../../redux/actions/vehicleActions';
+import {AppDispatch} from '../../redux/store';
 
 type Vehicle = {
   id: string;
@@ -43,17 +46,19 @@ const vehicles: Vehicle[] = [
 
 const ChooseVehicleScreen = () => {
   const navigation = useNavigation<StackNavigationProp<DriverStackParamList>>();
+  const dispatch = useDispatch<AppDispatch>();
 
   const handleSelectVehicle = (vehicleId: string) => {
-    // Save to localStorage / Redux / Context here if needed
-    console.log('🚗 Selected vehicle:', vehicleId);
-    
-    // Navigate to VehicleInfoScreen
+    console.log('✅ Saving vehicle type in Redux:', vehicleId);
+
+    dispatch(setVehicleType(vehicleId));
     navigation.navigate('VehicleInfoScreen');
   };
 
   const renderItem = ({item}: {item: Vehicle}) => (
-    <TouchableOpacity style={styles.card} onPress={() => handleSelectVehicle(item.id)}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => handleSelectVehicle(item.id)}>
       <View style={styles.iconBox}>
         <Image source={item.icon} style={styles.icon} resizeMode="contain" />
       </View>

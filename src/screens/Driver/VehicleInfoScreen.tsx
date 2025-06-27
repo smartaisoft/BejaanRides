@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -9,9 +9,21 @@ import {
   StyleSheet,
   Platform,
   KeyboardAvoidingView,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as ImagePicker from 'react-native-image-picker';
+import {useDispatch, useSelector} from 'react-redux';
+import {
+  setVehicleDetails,
+  resetVehicleInfo,
+} from '../../redux/actions/vehicleActions';
+import {AppDispatch, RootState} from '../../redux/store';
+import {saveVehicleInfo} from '../../services/vehicleService';
+import auth from '@react-native-firebase/auth';
+import {useNavigation} from '@react-navigation/native';
+import type {StackNavigationProp} from '@react-navigation/stack';
+import type {DriverStackParamList} from '../../navigation/DriverStack';
 
 interface ImageMap {
   certificateFront: string | null;
@@ -20,6 +32,10 @@ interface ImageMap {
 }
 
 const VehicleInfoScreen: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const {vehicleType} = useSelector((state: RootState) => state.vehicle);
+  const navigation = useNavigation<StackNavigationProp<DriverStackParamList>>();
+
   const [vehicleModel, setVehicleModel] = useState<string>('');
   const [vehicleBrand, setVehicleBrand] = useState<string>('');
   const [vehicleColor, setVehicleColor] = useState<string>('');
@@ -31,23 +47,119 @@ const VehicleInfoScreen: React.FC = () => {
   });
 
   const pickImage = (key: keyof ImageMap): void => {
-    ImagePicker.launchImageLibrary({ mediaType: 'photo' }, response => {
-      if (!response.didCancel && !response.errorCode && response.assets && response.assets.length > 0) {
+    ImagePicker.launchImageLibrary({mediaType: 'photo'}, response => {
+      if (
+        !response.didCancel &&
+        !response.errorCode &&
+        response.assets &&
+        response.assets.length > 0
+      ) {
         const uri = response.assets[0].uri;
-        setImages(prev => ({ ...prev, [key]: uri || null }));
+        setImages(prev => ({...prev, [key]: uri || null}));
       }
     });
   };
 
   const removeImage = (key: keyof ImageMap): void => {
-    setImages(prev => ({ ...prev, [key]: null }));
+    setImages(prev => ({...prev, [key]: null}));
+  };
+
+  /**
+   * Save data in Redux and Firebase
+   */
+  // const handleSaveVehicleInfo = async () => {
+  //   try {
+  //     if (!vehicleType) {
+  //       Alert.alert('Error', 'Please select a vehicle type.');
+  //       return;
+  //     }
+
+  //     const vehiclePayload = {
+  //       model: vehicleModel,
+  //       brand: vehicleBrand,
+  //       color: vehicleColor,
+  //       plateNumber,
+  //       images,
+  //     };
+
+  //     // ✅ Save to Redux
+  //     dispatch(setVehicleDetails(vehiclePayload));
+  //     console.log('✅ Saved in Redux:', vehiclePayload);
+
+  //     const userId = auth().currentUser?.uid;
+  //     if (!userId) throw new Error('User not logged in');
+
+  //     const firebasePayload = {
+  //       vehicleType,
+  //       ...vehiclePayload,
+  //       createdAt: new Date().toISOString(),
+  //     };
+
+  //     console.log('✅ Saving to Firebase:', firebasePayload);
+
+  //     // ✅ Save to Firebase
+  //     await saveVehicleInfo(firebasePayload);
+
+  //     dispatch(resetVehicleInfo());
+  //     Alert.alert('Success', 'Vehicle information saved!');
+  //     // Optionally navigate somewhere here
+  //   } catch (error) {
+  //     console.error('❌ Error saving vehicle info:', error);
+  //     Alert.alert('Error', 'Could not save vehicle info.');
+  //   }
+  // };
+  const handleSaveVehicleInfo = async () => {
+    try {
+      if (!vehicleType) {
+        Alert.alert('Error', 'Please select a vehicle type.');
+        return;
+      }
+
+      const vehiclePayload = {
+        model: vehicleModel,
+        brand: vehicleBrand,
+        color: vehicleColor,
+        plateNumber,
+        images,
+      };
+
+      // Save to Redux
+      dispatch(setVehicleDetails(vehiclePayload));
+      console.log('✅ Saved in Redux:', vehiclePayload);
+
+      const userId = auth().currentUser?.uid;
+      if (!userId) throw new Error('User not logged in');
+
+      const firebasePayload = {
+        vehicleType,
+        ...vehiclePayload,
+        createdAt: new Date().toISOString(),
+      };
+
+      console.log('✅ Saving to Firebase:', firebasePayload);
+
+      // Save to Firebase
+      await saveVehicleInfo(firebasePayload);
+
+      dispatch(resetVehicleInfo());
+
+      Alert.alert('Success', 'Vehicle information saved!');
+
+      // ✅ Navigate to DriverMapScreen
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'DriverMapScreen'}],
+      });
+    } catch (error) {
+      console.error('❌ Error saving vehicle info:', error);
+      Alert.alert('Error', 'Could not save vehicle info.');
+    }
   };
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.content}>
         <TouchableOpacity style={styles.backButton}>
           <Icon name="arrow-back" size={24} color="#000" />
@@ -57,15 +169,16 @@ const VehicleInfoScreen: React.FC = () => {
 
         <View style={styles.imageRow}>
           {[
-            { key: 'certificateFront', label: 'Vehicle certificate' },
-            { key: 'certificateBack', label: 'Back side of vehicle certificate' },
-            { key: 'vehiclePhoto', label: 'Photo of your vehicle' },
-          ].map(({ key, label }) => (
+            {key: 'certificateFront', label: 'Vehicle certificate'},
+            {key: 'certificateBack', label: 'Back side of vehicle certificate'},
+            {key: 'vehiclePhoto', label: 'Photo of your vehicle'},
+          ].map(({key, label}) => (
             <View key={key} style={styles.imageBox}>
-              <TouchableOpacity onPress={() => pickImage(key as keyof ImageMap)}>
+              <TouchableOpacity
+                onPress={() => pickImage(key as keyof ImageMap)}>
                 {images[key as keyof ImageMap] ? (
                   <Image
-                    source={{ uri: images[key as keyof ImageMap] as string }}
+                    source={{uri: images[key as keyof ImageMap]!}}
                     style={styles.image}
                   />
                 ) : (
@@ -77,8 +190,7 @@ const VehicleInfoScreen: React.FC = () => {
               {images[key as keyof ImageMap] && (
                 <TouchableOpacity
                   style={styles.removeIcon}
-                  onPress={() => removeImage(key as keyof ImageMap)}
-                >
+                  onPress={() => removeImage(key as keyof ImageMap)}>
                   <Icon name="close" size={16} color="#fff" />
                 </TouchableOpacity>
               )}
@@ -119,8 +231,10 @@ const VehicleInfoScreen: React.FC = () => {
           onChangeText={setPlateNumber}
         />
 
-        <TouchableOpacity style={styles.nextButton}>
-          <Text style={styles.nextText}>Next</Text>
+        <TouchableOpacity
+          style={styles.nextButton}
+          onPress={handleSaveVehicleInfo}>
+          <Text style={styles.nextText}>Save</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -128,9 +242,9 @@ const VehicleInfoScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  content: { padding: 20 },
-  backButton: {marginTop:20 ,marginBottom: 20 },
+  container: {flex: 1, backgroundColor: '#fff'},
+  content: {padding: 20},
+  backButton: {marginTop: 20, marginBottom: 20},
   heading: {
     fontSize: 20,
     fontWeight: 'bold',

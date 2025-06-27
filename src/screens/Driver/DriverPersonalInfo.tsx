@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,18 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as ImagePicker from 'react-native-image-picker';
-import {useNavigation} from '@react-navigation/native';
-import type {StackNavigationProp} from '@react-navigation/stack';
-import type {DriverStackParamList} from '../../navigation/DriverStack';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import type { DriverStackParamList } from '../../navigation/DriverStack';
+import { useDispatch } from 'react-redux';
+import { setDriverPersonalInfo } from '../../redux/actions/vehicleActions';
+import { AppDispatch } from '../../redux/store';
+import auth from '@react-native-firebase/auth';
+import { updateUser, getUserByUid } from '../../services/realTimeUserService';
 
 type DriverPersonalInfoNavigationProp = StackNavigationProp<
   DriverStackParamList,
@@ -23,6 +29,7 @@ type DriverPersonalInfoNavigationProp = StackNavigationProp<
 
 const DriverPersonalInfo = () => {
   const navigation = useNavigation<DriverPersonalInfoNavigationProp>();
+  const dispatch = useDispatch<AppDispatch>();
 
   const [licenseNumber, setLicenseNumber] = useState('');
   const [expirationDate, setExpirationDate] = useState('');
@@ -34,36 +41,94 @@ const DriverPersonalInfo = () => {
     selfie: null,
   });
 
+  // Load existing driver info on mount
+  useEffect(() => {
+    loadExistingDriverInfo();
+  }, []);
+
+  /**
+   * Load driver info from Realtime DB if exists
+   */
+  const loadExistingDriverInfo = async () => {
+    try {
+      const uid = auth().currentUser?.uid;
+      if (!uid) throw new Error('User not logged in');
+
+      const userData = await getUserByUid(uid);
+      if (userData?.driverInfo) {
+        console.log('✅ Loaded existing driver info:', userData.driverInfo);
+        setLicenseNumber(userData.driverInfo.licenseNumber || '');
+        setExpirationDate(userData.driverInfo.expirationDate || '');
+        setImages({
+          profile: userData.driverInfo.images?.profile || null,
+          license: userData.driverInfo.images?.license || null,
+          selfie: userData.driverInfo.images?.selfie || null,
+        });
+      } else {
+        console.log('ℹ️ No existing driver info found.');
+      }
+    } catch (error) {
+      console.error('❌ Failed to load driver info:', error);
+    }
+  };
+
+  /**
+   * Handle image selection
+   */
   const pickImage = (key: 'profile' | 'license' | 'selfie') => {
-    ImagePicker.launchImageLibrary({mediaType: 'photo'}, response => {
-      if (
-        !response.didCancel &&
-        !response.errorCode &&
-        response.assets?.[0]?.uri
-      ) {
+    ImagePicker.launchImageLibrary({ mediaType: 'photo' }, response => {
+      if (!response.didCancel && !response.errorCode && response.assets?.[0]?.uri) {
         const uri = response.assets[0].uri;
-        setImages(prev => ({...prev, [key]: uri}));
+        setImages(prev => ({ ...prev, [key]: uri }));
       }
     });
   };
 
+  /**
+   * Remove selected image
+   */
   const removeImage = (key: 'profile' | 'license' | 'selfie') => {
-    setImages(prev => ({...prev, [key]: null}));
+    setImages(prev => ({ ...prev, [key]: null }));
   };
 
-  const handleNext = () => {
-    // Optional: Add validation here
-    navigation.navigate('ChooseVehicleScreen');
+  /**
+   * Save info to Redux + Realtime DB
+   */
+  const handleNext = async () => {
+    try {
+      const uid = auth().currentUser?.uid;
+      if (!uid) throw new Error('User not logged in');
+
+      const payload = {
+        licenseNumber,
+        expirationDate,
+        images,
+      };
+
+      console.log('✅ Saving driver info to Redux:', payload);
+      dispatch(setDriverPersonalInfo(payload));
+
+      console.log('✅ Saving driver info to Realtime Database...');
+      await updateUser(uid, { driverInfo: payload });
+
+      console.log('✅ Driver info saved successfully!');
+      navigation.navigate('ChooseVehicleScreen');
+    } catch (error) {
+      console.error('❌ Failed to save driver info:', error);
+      Alert.alert('Error', 'Could not save your information.');
+    }
   };
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.goBack()}>
+          onPress={() => navigation.goBack()}
+        >
           <Icon name="arrow-left" size={24} color="#000" />
         </TouchableOpacity>
 
@@ -74,7 +139,7 @@ const DriverPersonalInfo = () => {
             <View style={styles.imageBox} key={key}>
               <TouchableOpacity onPress={() => pickImage(key)}>
                 {images[key] ? (
-                  <Image source={{uri: images[key]!}} style={styles.image} />
+                  <Image source={{ uri: images[key]! }} style={styles.image} />
                 ) : (
                   <View style={styles.placeholder}>
                     <Icon name="add" size={30} color="#888" />
@@ -91,7 +156,8 @@ const DriverPersonalInfo = () => {
               {images[key] && (
                 <TouchableOpacity
                   style={styles.removeIcon}
-                  onPress={() => removeImage(key)}>
+                  onPress={() => removeImage(key)}
+                >
                   <Icon name="close" size={18} color="#fff" />
                 </TouchableOpacity>
               )}
@@ -123,12 +189,9 @@ const DriverPersonalInfo = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: '#fff'},
-  scrollContent: {padding: 20},
-  backButton: {
-    marginBottom: 20,
-    marginTop: 50,
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
+  scrollContent: { padding: 20 },
+  backButton: { marginBottom: 20, marginTop: 50 },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -164,11 +227,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 16,
   },
-  image: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
+  image: { width: '100%', height: '100%', resizeMode: 'cover' },
   removeIcon: {
     position: 'absolute',
     top: 5,

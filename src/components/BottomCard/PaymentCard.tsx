@@ -18,16 +18,6 @@ const PaymentCard: React.FC<Props> = ({amount, onConfirm}) => (
         <Icon name="cash" size={24} color="#9C27B0" />
         <Text style={styles.methodTextSelected}>Cash</Text>
       </View>
-      <View style={styles.method}>
-        <Icon name="cash" size={24} color="#9C27B0" />
-
-        <Text style={styles.methodText}>Card</Text>
-      </View>
-      <View style={styles.method}>
-        <Icon name="cash" size={24} color="#9C27B0" />
-
-        <Text style={styles.methodText}>Ride balance</Text>
-      </View>
     </View>
 
     <TouchableOpacity style={styles.button} onPress={onConfirm}>
@@ -42,7 +32,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
     paddingVertical: 16,
-    paddingHorizontal: 30,
+    paddingHorizontal: 24,
     alignItems: 'center',
   },
   handle: {
@@ -55,28 +45,23 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 8,
     color: '#000',
+    marginBottom: 8,
   },
   amount: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: '#000',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   methodsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center', // Center the method in the row
     width: '100%',
     marginBottom: 20,
   },
   method: {
     alignItems: 'center',
-  },
-  methodText: {
-    marginTop: 4,
-    fontSize: 14,
-    color: '#000',
   },
   methodTextSelected: {
     marginTop: 4,

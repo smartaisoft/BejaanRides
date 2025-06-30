@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {
   Modal,
   View,
@@ -36,7 +36,7 @@ const popularLocations = [
   'Punjab University Lahore',
 ];
 
-const LocationSearchModal: React.FC<Props> = ({ visible, onSelect, onClose }) => {
+const LocationSearchModal: React.FC<Props> = ({visible, onSelect, onClose}) => {
   const [input, setInput] = useState('');
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
   const [loading, setLoading] = useState(false);
@@ -53,8 +53,8 @@ const LocationSearchModal: React.FC<Props> = ({ visible, onSelect, onClose }) =>
       try {
         const response = await fetch(
           `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
-            input
-          )}&key=${GOOGLE_MAPS_API_KEY}&components=country:pk`
+            input,
+          )}&key=${GOOGLE_MAPS_API_KEY}&components=country:pk`,
         );
         const json = await response.json();
         setPredictions(json.predictions || []);
@@ -73,12 +73,12 @@ const LocationSearchModal: React.FC<Props> = ({ visible, onSelect, onClose }) =>
   const fetchPlaceDetails = useCallback(async (placeId: string) => {
     try {
       const res = await fetch(
-        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_MAPS_API_KEY}`
+        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_MAPS_API_KEY}`,
       );
       const json = await res.json();
       const result = json.result;
       if (result) {
-        const { lat, lng } = result.geometry.location;
+        const {lat, lng} = result.geometry.location;
         return {
           description: result.formatted_address,
           latitude: lat,
@@ -96,13 +96,13 @@ const LocationSearchModal: React.FC<Props> = ({ visible, onSelect, onClose }) =>
     try {
       const res = await fetch(
         `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(
-          query
-        )}&key=${GOOGLE_MAPS_API_KEY}`
+          query,
+        )}&key=${GOOGLE_MAPS_API_KEY}`,
       );
       const json = await res.json();
       const result = json.results?.[0];
       if (result) {
-        const { lat, lng } = result.geometry.location;
+        const {lat, lng} = result.geometry.location;
         return {
           description: result.formatted_address,
           latitude: lat,
@@ -115,7 +115,7 @@ const LocationSearchModal: React.FC<Props> = ({ visible, onSelect, onClose }) =>
     return null;
   }, []);
 
-  const renderPredictionItem = ({ item }: { item: PlacePrediction }) => (
+  const renderPredictionItem = ({item}: {item: PlacePrediction}) => (
     <TouchableOpacity
       style={styles.item}
       onPress={async () => {
@@ -123,14 +123,18 @@ const LocationSearchModal: React.FC<Props> = ({ visible, onSelect, onClose }) =>
         if (details) {
           onSelect(details);
         }
-      }}
-    >
-      <Icon name="map-marker" size={20} color="#9C27B0" style={styles.itemIcon} />
+      }}>
+      <Icon
+        name="map-marker"
+        size={20}
+        color="#9C27B0"
+        style={styles.itemIcon}
+      />
       <Text>{item.description}</Text>
     </TouchableOpacity>
   );
 
-  const renderPopularItem = ({ item }: { item: string }) => (
+  const renderPopularItem = ({item}: {item: string}) => (
     <TouchableOpacity
       style={styles.item}
       onPress={async () => {
@@ -138,15 +142,24 @@ const LocationSearchModal: React.FC<Props> = ({ visible, onSelect, onClose }) =>
         if (details) {
           onSelect(details);
         }
-      }}
-    >
-      <Icon name="map-marker" size={20} color="#9C27B0" style={styles.itemIcon} />
+      }}>
+      <Icon
+        name="map-marker"
+        size={20}
+        color="#9C27B0"
+        style={styles.itemIcon}
+      />
       <Text>{item}</Text>
     </TouchableOpacity>
   );
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      presentationStyle="overFullScreen" // ✅ This is the fix
+      statusBarTranslucent>
       <View style={styles.overlay}>
         <Pressable style={styles.backdrop} onPress={onClose} />
         <View style={styles.sheet}>
@@ -154,7 +167,12 @@ const LocationSearchModal: React.FC<Props> = ({ visible, onSelect, onClose }) =>
 
           {/* Search Bar */}
           <View style={styles.searchRow}>
-            <Icon name="magnify" size={20} color="#666" style={styles.searchIcon} />
+            <Icon
+              name="magnify"
+              size={20}
+              color="#666"
+              style={styles.searchIcon}
+            />
             <TextInput
               style={styles.input}
               placeholder="Where are you going?"
@@ -164,13 +182,17 @@ const LocationSearchModal: React.FC<Props> = ({ visible, onSelect, onClose }) =>
           </View>
 
           {loading && (
-            <ActivityIndicator size="small" color="#9C27B0" style={styles.loader} />
+            <ActivityIndicator
+              size="small"
+              color="#9C27B0"
+              style={styles.loader}
+            />
           )}
 
           {input.length > 1 ? (
             <FlatList
               data={predictions}
-              keyExtractor={(item) => item.place_id}
+              keyExtractor={item => item.place_id}
               keyboardShouldPersistTaps="handled"
               renderItem={renderPredictionItem}
               ListEmptyComponent={
@@ -182,7 +204,7 @@ const LocationSearchModal: React.FC<Props> = ({ visible, onSelect, onClose }) =>
           ) : (
             <FlatList
               data={popularLocations}
-              keyExtractor={(item) => item}
+              keyExtractor={item => item}
               renderItem={renderPopularItem}
             />
           )}

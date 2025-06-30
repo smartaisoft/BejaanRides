@@ -127,6 +127,7 @@ const styles = StyleSheet.create({
   },
   infoRow: {
     marginTop: 8,
+    backgroundColor: '#f3f3f3',
   },
   infoText: {
     fontSize: 13,

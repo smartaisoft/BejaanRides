@@ -5,6 +5,7 @@ import {
   PermissionsAndroid,
   Platform,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import Geolocation, {
   GeolocationResponse,
@@ -56,9 +57,10 @@ const HomeMapScreen: React.FC = () => {
   const [showDriverModal, setShowDriverModal] = useState(false);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
-  const [selectedVehicle] = useState<string>('car'); // default vehicle
+  const [selectedVehicle] = useState<string>('car');
   const [currentRideId, setCurrentRideId] = useState<string | null>(null);
   const unsubscribeListener = useRef<(() => void) | null>(null);
+
   const [mapRegion, setMapRegion] = useState<Region>({
     latitude: defaultLat,
     longitude: defaultLng,
@@ -66,6 +68,7 @@ const HomeMapScreen: React.FC = () => {
     longitudeDelta: 0.01,
   });
 
+  // Initialize: permissions + user profile + location
   useEffect(() => {
     const init = async () => {
       if (Platform.OS === 'android') {
@@ -78,7 +81,10 @@ const HomeMapScreen: React.FC = () => {
           },
         );
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          console.warn('Location permission denied');
+          Alert.alert(
+            'Permission Denied',
+            'Location permission is required to use this feature.',
+          );
           setPickupDescription('Unknown Location');
           return;
         }
@@ -118,18 +124,8 @@ const HomeMapScreen: React.FC = () => {
           longitudeDelta: 0.01,
         });
 
-        try {
-          const response = await fetch(
-            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`,
-          );
-          const json = await response.json();
-          const address =
-            json.results?.[0]?.formatted_address ?? 'Current Location';
-          setPickupDescription(address);
-        } catch (error) {
-          console.error('Reverse geocoding failed:', error);
-          setPickupDescription('Current Location');
-        }
+        const address = await reverseGeocode(latitude, longitude);
+        setPickupDescription(address);
       },
       error => {
         console.error('Error getting location:', error);
@@ -139,43 +135,44 @@ const HomeMapScreen: React.FC = () => {
     );
   };
 
-  const handleMapPress = useCallback(async (event: MapPressEvent) => {
-    const {latitude, longitude} = event.nativeEvent.coordinate;
+  const reverseGeocode = async (lat: number, lng: number) => {
     try {
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`,
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}`,
       );
       const json = await response.json();
-      const address =
-        json.results?.[0]?.formatted_address ?? 'Selected location';
-
-      setDestinationCoords({latitude, longitude});
-      setDestinationDescription(address);
+      return json.results?.[0]?.formatted_address ?? 'Unknown Location';
     } catch (error) {
       console.error('Reverse geocoding failed:', error);
-      setDestinationCoords({latitude, longitude});
-      setDestinationDescription('Selected location');
+      return 'Unknown Location';
     }
+  };
+
+  const handleMapPress = useCallback(async (event: MapPressEvent) => {
+    const {latitude, longitude} = event.nativeEvent.coordinate;
+    const address = await reverseGeocode(latitude, longitude);
+    setDestinationCoords({latitude, longitude});
+    setDestinationDescription(address);
     setShowLocationModal(false);
     setShowTripSummary(true);
   }, []);
 
   const handleRequestRide = async () => {
-    console.log('Current RideId', currentRideId);
-
     if (
       !pickupCoords ||
       !destinationCoords ||
       !currentUser ||
       !destinationDescription
     ) {
-      console.warn('Missing data to create ride request.');
+      Alert.alert('Error', 'Missing data to create ride request.');
       return;
     }
 
     try {
       const rideId = await createRideRequest({
         passengerId: currentUser.uid,
+        passengerName: currentUser.name ?? 'Passenger',
+        passengerPhone: currentUser.phone ?? 'N/A',
         pickup: {
           latitude: pickupCoords.latitude,
           longitude: pickupCoords.longitude,

@@ -10,6 +10,8 @@ interface Location {
 
 interface RideRequestData {
   passengerId: string;
+  passengerName: string;
+  passengerPhone: string;
   pickup: Location;
   dropoff: Location;
   vehicleType: string;
@@ -17,14 +19,16 @@ interface RideRequestData {
 }
 
 export const createRideRequest = async (data: RideRequestData) => {
-  const requestRef = database().ref('rideRequests').push();
+  const requestRef = database().ref("rideRequests").push();
   await requestRef.set({
     ...data,
-    status: 'pending',
+    status: "pending",
     createdAt: Date.now(),
   });
-  return requestRef.key; // return ID to listen later
+  return requestRef.key;
 };
+
+
 
 export const listenForRideStatus = (
   rideId: string,

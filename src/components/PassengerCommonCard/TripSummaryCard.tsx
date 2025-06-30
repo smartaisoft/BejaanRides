@@ -1,5 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Pressable,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 interface Props {
@@ -7,6 +13,7 @@ interface Props {
   dropoff: string;
   distance?: string;
   duration?: string;
+  fare?: number; // 👈 add this
   onCancel: () => void;
   onNext: () => void;
 }
@@ -18,6 +25,7 @@ const TripSummaryCard: React.FC<Props> = ({
   duration,
   onCancel,
   onNext,
+  fare,
 }) => (
   <View style={styles.container}>
     {/* Handle */}
@@ -30,7 +38,12 @@ const TripSummaryCard: React.FC<Props> = ({
 
     {/* Pickup Row */}
     <View style={styles.row}>
-      <Icon name="circle-slice-8" size={20} color="#9C27B0" style={styles.icon} />
+      <Icon
+        name="circle-slice-8"
+        size={20}
+        color="#9C27B0"
+        style={styles.icon}
+      />
       <View style={styles.textContainer}>
         <Text style={styles.label}>PICKUP</Text>
         <Text style={styles.location}>{pickup}</Text>
@@ -53,11 +66,16 @@ const TripSummaryCard: React.FC<Props> = ({
     </View>
 
     {/* Distance & Duration */}
-    {distance && duration && (
+    {(distance || duration || fare) && (
       <View style={styles.infoRow}>
-        <Text style={styles.infoText}>
-          {distance} • {duration} to destination
-        </Text>
+        {distance && duration && (
+          <Text style={styles.infoText}>
+            {distance} • {duration} to destination
+          </Text>
+        )}
+        {fare !== undefined && (
+          <Text style={styles.infoText}>Estimated Fare: Rs {fare}</Text>
+        )}
       </View>
     )}
   </View>

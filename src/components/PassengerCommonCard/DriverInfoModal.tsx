@@ -12,23 +12,38 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 interface Props {
   visible: boolean;
   onClose: () => void;
+  driver?: {
+    name: string;
+    phone: string;
+    vehicleName: string;
+    vehicleColor: string;
+    vehicleNumber: string;
+    rating?: number;
+    avatarUrl?: string;
+  };
 }
 
-const DriverInfoModal: React.FC<Props> = ({visible, onClose}) => (
+const DriverInfoModal: React.FC<Props> = ({ visible, onClose, driver }) => (
   <Modal visible={visible} transparent animationType="slide">
     <View style={styles.overlay}>
       <View style={styles.container}>
         {/* Top Section */}
         <View style={styles.topSection}>
           <Image
-            source={{uri: 'https://randomuser.me/api/portraits/men/1.jpg'}}
+            source={{
+              uri:
+                driver?.avatarUrl ??
+                'https://randomuser.me/api/portraits/men/1.jpg',
+            }}
             style={styles.avatar}
           />
           <View style={styles.driverInfo}>
-            <Text style={styles.driverName}>Driver name</Text>
+            <Text style={styles.driverName}>{driver?.name ?? 'Driver Name'}</Text>
             <View style={styles.ratingRow}>
               <Icon name="star" size={16} color="#FFC107" />
-              <Text style={styles.ratingText}>4.9</Text>
+              <Text style={styles.ratingText}>
+                {driver?.rating?.toFixed(1) ?? '4.9'}
+              </Text>
             </View>
           </View>
           <View style={styles.actions}>
@@ -36,7 +51,8 @@ const DriverInfoModal: React.FC<Props> = ({visible, onClose}) => (
               <Icon name="message" size={20} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.iconButton, {backgroundColor: '#9C27B0'}]}>
+              style={[styles.iconButton, { backgroundColor: '#9C27B0' }]}
+            >
               <Icon name="phone" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
@@ -45,16 +61,16 @@ const DriverInfoModal: React.FC<Props> = ({visible, onClose}) => (
         {/* Vehicle Details */}
         <View style={styles.vehicleDetails}>
           <View style={styles.vehicleItem}>
-            <Text style={styles.vehicleLabel}>Vehicle name</Text>
-            <Text style={styles.vehicleValue}>Toyota</Text>
+            <Text style={styles.vehicleLabel}>Vehicle</Text>
+            <Text style={styles.vehicleValue}>{driver?.vehicleName ?? 'N/A'}</Text>
           </View>
           <View style={styles.vehicleItem}>
             <Text style={styles.vehicleLabel}>Colour</Text>
-            <Text style={styles.vehicleValue}>Black</Text>
+            <Text style={styles.vehicleValue}>{driver?.vehicleColor ?? 'N/A'}</Text>
           </View>
           <View style={styles.vehicleItem}>
             <Text style={styles.vehicleLabel}>Number</Text>
-            <Text style={styles.vehicleValue}>AAA-123</Text>
+            <Text style={styles.vehicleValue}>{driver?.vehicleNumber ?? 'N/A'}</Text>
           </View>
         </View>
 

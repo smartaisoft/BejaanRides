@@ -30,7 +30,11 @@ const PassengerRideRequestCard: React.FC<Props> = ({
       </View>
       <View style={styles.timeDistance}>
         <Text style={styles.timeText}>25 min</Text>
-        <Text style={styles.distanceText}>{ride.distance.toFixed(1)} km</Text>
+        <Text style={styles.distanceText}>
+          {ride.distance != null
+            ? `${ride.distance.toFixed(1)} km`
+            : ride.distance ?? 'Distance N/A'}
+        </Text>
       </View>
     </View>
 
@@ -44,6 +48,7 @@ const PassengerRideRequestCard: React.FC<Props> = ({
     </View>
   </View>
 );
+
 
 const styles = StyleSheet.create({
   container: {

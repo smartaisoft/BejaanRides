@@ -16,7 +16,10 @@ interface RideRequestData {
   dropoff: Location;
   vehicleType: string;
   fareEstimate: number;
+  distanceText: string;
+  durationText: string;
 }
+
 
 export const createRideRequest = async (data: RideRequestData) => {
   const requestRef = database().ref("rideRequests").push();
@@ -45,4 +48,21 @@ export const listenForRideStatus = (
 
 export const cancelRideRequest = async (rideId: string) => {
   await database().ref(`rideRequests/${rideId}`).update({ status: 'cancelled' });
+};
+
+// src/services/RideService.ts
+
+export const listenForRideUpdates = (
+  rideId: string,
+  callback: (ride: any) => void
+) => {
+  const ref = database().ref(`rideRequests/${rideId}`);
+  ref.on("value", snapshot => {
+    const ride = snapshot.val();
+    if (ride) {
+      callback(ride);
+    }
+  });
+
+  return () => ref.off();
 };

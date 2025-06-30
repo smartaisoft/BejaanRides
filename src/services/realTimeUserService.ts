@@ -35,6 +35,22 @@ export const getUserByUid = async (uid: string): Promise<UserData | null> => {
     return null;
   }
 };
+// src/services/realTimeUserService.ts
+
+// ✅ Firestore version
+export const getDriverByUid = async (uid: string): Promise<UserData | null> => {
+  try {
+    const doc = await firestore().collection('users').doc(uid).get();
+    if (doc.exists()) {
+      return doc.data() as UserData;
+    }
+    return null;
+  } catch (error) {
+    console.error('❌ Failed to fetch driver:', error);
+    return null;
+  }
+};
+
 
 /**
  * Update fields of a user document

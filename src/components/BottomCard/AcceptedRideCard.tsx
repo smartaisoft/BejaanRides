@@ -1,4 +1,3 @@
-// src/components/BottomCard/StartTripCard.tsx
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -10,6 +9,7 @@ interface Props {
   distance: number;
   onStart: () => void;
 }
+
 
 const StartTripCard: React.FC<Props> = ({ eta, fare, rating, distance, onStart }) => (
   <View style={styles.container}>
@@ -31,7 +31,7 @@ const StartTripCard: React.FC<Props> = ({ eta, fare, rating, distance, onStart }
       </View>
       <View style={styles.infoItem}>
         <Icon name="map-marker-distance" size={20} color="#9C27B0" />
-        <Text style={styles.infoValue}>{distance} km</Text>
+        <Text style={styles.infoValue}>{distance}</Text>
         <Text style={styles.infoLabel}>Ride</Text>
       </View>
     </View>

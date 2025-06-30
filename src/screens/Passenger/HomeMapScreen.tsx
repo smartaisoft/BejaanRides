@@ -25,10 +25,14 @@ import {RouteInfo} from '../../utils/getRouteInfo';
 import Locate from '../../../assets/SVG/Locate';
 import {
   createRideRequest,
-  listenForRideStatus,
+  listenForRideUpdates,
 } from '../../services/RideService';
 import auth from '@react-native-firebase/auth';
-import {getUserByUid, UserData} from '../../services/realTimeUserService';
+import {
+  getDriverByUid,
+  getUserByUid,
+  UserData,
+} from '../../services/realTimeUserService';
 
 const defaultLat = 31.5497;
 const defaultLng = 74.3436;
@@ -60,6 +64,7 @@ const HomeMapScreen: React.FC = () => {
   const [selectedVehicle] = useState<string>('car');
   const [currentRideId, setCurrentRideId] = useState<string | null>(null);
   const unsubscribeListener = useRef<(() => void) | null>(null);
+  const [driverInfo, setDriverInfo] = useState<any | null>(null);
 
   const [mapRegion, setMapRegion] = useState<Region>({
     latitude: defaultLat,
@@ -70,6 +75,7 @@ const HomeMapScreen: React.FC = () => {
 
   // Initialize: permissions + user profile + location
   useEffect(() => {
+    console.log('currentRideId', currentRideId);
     const init = async () => {
       if (Platform.OS === 'android') {
         const granted = await PermissionsAndroid.request(
@@ -111,6 +117,29 @@ const HomeMapScreen: React.FC = () => {
       }
     };
   }, []);
+
+  const calculateFare = (
+    distanceText: string | undefined,
+    durationText: string | undefined,
+  ): number => {
+    const baseFare = 150;
+    const perKm = 50;
+    const perMin = 5;
+
+    // Parse distance "4.5 km"
+    const distanceKm = distanceText
+      ? parseFloat(distanceText.replace('km', '').trim())
+      : 0;
+
+    // Parse duration "12 min"
+    const durationMin = durationText
+      ? parseInt(durationText.replace('min', '').trim(), 10)
+      : 0;
+
+    const fare = baseFare + distanceKm * perKm + durationMin * perMin;
+
+    return Math.round(fare);
+  };
 
   const getCurrentLocation = () => {
     Geolocation.getCurrentPosition(
@@ -184,7 +213,12 @@ const HomeMapScreen: React.FC = () => {
           address: destinationDescription,
         },
         vehicleType: selectedVehicle,
-        fareEstimate: 450,
+        fareEstimate: calculateFare(
+          routeInfo?.distanceText,
+          routeInfo?.durationText,
+        ),
+        distanceText: routeInfo?.distanceText ?? 'N/A',
+        durationText: routeInfo?.durationText ?? 'N/A',
       });
 
       if (!rideId) {
@@ -193,16 +227,26 @@ const HomeMapScreen: React.FC = () => {
       }
 
       setCurrentRideId(rideId);
-
-      const unsubscribe = listenForRideStatus(rideId, status => {
-        if (status === 'accepted') {
-          setShowDriverModal(true);
+      const unsubscribe = listenForRideUpdates(rideId, ride => {
+        if (ride.status === 'accepted' && ride.driverId) {
+          fetchDriverInfo(ride.driverId);
         }
       });
 
       unsubscribeListener.current = unsubscribe;
     } catch (error) {
       console.error('Error creating ride:', error);
+    }
+  };
+  const fetchDriverInfo = async (driverId: string) => {
+    try {
+      const info = await getDriverByUid(driverId);
+      if (info) {
+        setDriverInfo(info);
+        setShowDriverModal(true);
+      }
+    } catch (error) {
+      console.error('Error fetching driver info:', error);
     }
   };
 
@@ -275,6 +319,7 @@ const HomeMapScreen: React.FC = () => {
           dropoff={destinationDescription}
           distance={routeInfo?.distanceText}
           duration={routeInfo?.durationText}
+          fare={calculateFare(routeInfo?.distanceText, routeInfo?.durationText)}
           onCancel={() => {
             setDestinationDescription(null);
             setDestinationCoords(null);
@@ -315,6 +360,17 @@ const HomeMapScreen: React.FC = () => {
       <DriverInfoModal
         visible={showDriverModal}
         onClose={() => setShowDriverModal(false)}
+        driver={
+          driverInfo && {
+            name: driverInfo.name,
+            phone: driverInfo.phone,
+            vehicleName: driverInfo.vehicleName,
+            vehicleColor: driverInfo.vehicleColor,
+            vehicleNumber: driverInfo.vehicleNumber,
+            rating: driverInfo.rating,
+            avatarUrl: driverInfo.avatarUrl,
+          }
+        }
       />
     </View>
   );

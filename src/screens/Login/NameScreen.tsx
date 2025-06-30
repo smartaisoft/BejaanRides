@@ -94,7 +94,8 @@ const NameScreen = () => {
 
         dispatch(setAuthLoading(false));
         if (role === 'passenger') {
-          navigation.navigate('Location'); // only navigate if passenger
+          navigation.navigate('HomeMapScreen');
+          // navigation.navigate('Location'); // only navigate if passenger
         }
         // if driver, RootNavigator will automatically render DriverStack
       });

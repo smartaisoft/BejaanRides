@@ -8,6 +8,7 @@ import DrawerNavigator from './DrawerNavigator';
 import {ActivityIndicator, View} from 'react-native';
 import {setVehicleDetails} from '../redux/actions/vehicleActions';
 import {getVehicleInfo} from '../services/vehicleService';
+import HomeMapScreen from '../screens/Passenger/HomeMapScreen';
 
 const RootNavigator: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -60,7 +61,8 @@ const RootNavigator: React.FC = () => {
 
   // 🔹 Passenger
   if (role === 'passenger') {
-    return <DrawerNavigator />;
+    // return <DrawerNavigator />;
+    return <HomeMapScreen />;
   }
 
   // 🔹 Driver

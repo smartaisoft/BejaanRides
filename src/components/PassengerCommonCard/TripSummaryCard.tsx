@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -13,9 +14,10 @@ interface Props {
   dropoff: string;
   distance?: string;
   duration?: string;
-  fare?: number; // 👈 add this
+  fare?: number;
   onCancel: () => void;
   onNext: () => void;
+  loading?: boolean;
 }
 
 const TripSummaryCard: React.FC<Props> = ({
@@ -26,14 +28,23 @@ const TripSummaryCard: React.FC<Props> = ({
   onCancel,
   onNext,
   fare,
+  loading,
 }) => (
   <View style={styles.container}>
     {/* Handle */}
     <View style={styles.handle} />
 
     {/* Next Button */}
-    <TouchableOpacity style={styles.nextButton} onPress={onNext}>
-      <Text style={styles.nextButtonText}>Next</Text>
+    <TouchableOpacity
+      style={[styles.nextButton, loading && styles.nextButtonDisabled]}
+      onPress={loading ? undefined : onNext}
+      disabled={loading}
+    >
+      {loading ? (
+        <ActivityIndicator size="small" color="#fff" />
+      ) : (
+        <Text style={styles.nextButtonText}>Next</Text>
+      )}
     </TouchableOpacity>
 
     {/* Pickup Row */}
@@ -108,6 +119,9 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 16,
     borderRadius: 20,
+  },
+  nextButtonDisabled: {
+    opacity: 0.6,
   },
   nextButtonText: {
     color: '#fff',

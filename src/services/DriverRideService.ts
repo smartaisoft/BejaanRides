@@ -33,3 +33,10 @@ export const acceptRideRequest = async (rideId: string, driverId: string) => {
     acceptedAt: Date.now(),
   });
 };
+
+export const startTrip = async (rideId: string) => {
+  await database().ref(`rideRequests/${rideId}`).update({
+    status: 'ongoing',
+    tripStartedAt: Date.now(),
+  });
+};

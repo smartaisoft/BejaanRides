@@ -33,6 +33,9 @@ import {
   getUserByUid,
   UserData,
 } from '../../services/realTimeUserService';
+import SearchingDriverOverlay from '../../components/PassengerCommonCard/ SearchingDriverOverlay';
+import database from '@react-native-firebase/database';
+import DriverArrivedCard from '../../components/PassengerCommonCard/DriverArrivedCard';
 
 const defaultLat = 31.5497;
 const defaultLng = 74.3436;
@@ -61,10 +64,17 @@ const HomeMapScreen: React.FC = () => {
   const [showDriverModal, setShowDriverModal] = useState(false);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
-  const [selectedVehicle] = useState<string>('car');
   const [currentRideId, setCurrentRideId] = useState<string | null>(null);
   const unsubscribeListener = useRef<(() => void) | null>(null);
   const [driverInfo, setDriverInfo] = useState<any | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<string>('Car');
+  const [isSearchingDriver, setIsSearchingDriver] = useState(false);
+  const [driverLiveCoords, setDriverLiveCoords] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [hasDriverArrived, setHasDriverArrived] = useState(false);
+  const [isTripSummaryLoading, setIsTripSummaryLoading] = useState(false);
 
   const [mapRegion, setMapRegion] = useState<Region>({
     latitude: defaultLat,
@@ -72,6 +82,19 @@ const HomeMapScreen: React.FC = () => {
     latitudeDelta: 0.01,
     longitudeDelta: 0.01,
   });
+  const [rideStatus, setRideStatus] = useState<'idle' | 'accepted' | 'arrived' | 'started'>('idle');
+
+  const getVehicleMarkerIcon = (vehicleType: string) => {
+  switch (vehicleType) {
+    case 'Bike':
+      return require('../../../assets/images/vehicles/bikeVehicle.png');
+    case 'Car':
+      return require('../../../assets/images/vehicles/carRoute.png');
+    default:
+      return require('../../../assets/images/vehicles/carRoute.png');
+  }
+};
+
 
   // Initialize: permissions + user profile + location
   useEffect(() => {
@@ -121,22 +144,43 @@ const HomeMapScreen: React.FC = () => {
   const calculateFare = (
     distanceText: string | undefined,
     durationText: string | undefined,
+    vehicleType: string,
   ): number => {
-    const baseFare = 150;
-    const perKm = 50;
-    const perMin = 5;
+    const baseFare = 100;
+    const perKm = 40;
+    const perMin = 3;
 
-    // Parse distance "4.5 km"
+    let vehicleMultiplier = 1;
+    switch (vehicleType) {
+      case 'Bike':
+        vehicleMultiplier = 0.7;
+        break;
+      case 'Car':
+        vehicleMultiplier = 1;
+        break;
+      case 'Luxury':
+        vehicleMultiplier = 1.8;
+        break;
+      case 'ElectricCar':
+        vehicleMultiplier = 1.3;
+        break;
+      case 'Limousine':
+        vehicleMultiplier = 2.2;
+        break;
+      default:
+        vehicleMultiplier = 1;
+    }
+
     const distanceKm = distanceText
       ? parseFloat(distanceText.replace('km', '').trim())
       : 0;
-
-    // Parse duration "12 min"
     const durationMin = durationText
       ? parseInt(durationText.replace('min', '').trim(), 10)
       : 0;
 
-    const fare = baseFare + distanceKm * perKm + durationMin * perMin;
+    const fare =
+      vehicleMultiplier *
+      (baseFare + distanceKm * perKm + durationMin * perMin);
 
     return Math.round(fare);
   };
@@ -160,7 +204,7 @@ const HomeMapScreen: React.FC = () => {
         console.error('Error getting location:', error);
         setPickupDescription('Current Location');
       },
-      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+      {enableHighAccuracy: false, timeout: 15000, maximumAge: 10000},
     );
   };
 
@@ -198,6 +242,8 @@ const HomeMapScreen: React.FC = () => {
     }
 
     try {
+      setIsSearchingDriver(true); // <-- Show the overlay
+
       const rideId = await createRideRequest({
         passengerId: currentUser.uid,
         passengerName: currentUser.name ?? 'Passenger',
@@ -216,6 +262,7 @@ const HomeMapScreen: React.FC = () => {
         fareEstimate: calculateFare(
           routeInfo?.distanceText,
           routeInfo?.durationText,
+          selectedVehicle,
         ),
         distanceText: routeInfo?.distanceText ?? 'N/A',
         durationText: routeInfo?.durationText ?? 'N/A',
@@ -223,19 +270,37 @@ const HomeMapScreen: React.FC = () => {
 
       if (!rideId) {
         console.error('❌ Failed to create ride: rideId was null.');
+        setIsSearchingDriver(false);
         return;
       }
 
       setCurrentRideId(rideId);
-      const unsubscribe = listenForRideUpdates(rideId, ride => {
-        if (ride.status === 'accepted' && ride.driverId) {
-          fetchDriverInfo(ride.driverId);
-        }
-      });
+     unsubscribeListener.current = listenForRideUpdates(rideId, ride => {
+  if (ride.status === 'accepted' && ride.driverId) {
+    setRideStatus('accepted');
+    setIsSearchingDriver(false);
+    fetchDriverInfo(ride.driverId);
 
-      unsubscribeListener.current = unsubscribe;
+    const driverLocRef = database().ref(`rideRequests/${rideId}/driverLocation`);
+    driverLocRef.on('value', snap => {
+      const loc = snap.val();
+      if (loc) setDriverLiveCoords(loc);
+    });
+  }
+
+  if (ride.status === 'arrived') {
+    setRideStatus('arrived');
+    setHasDriverArrived(true);
+  }
+
+  if (ride.status === 'started') {
+    setRideStatus('started');
+  }
+});
+
     } catch (error) {
       console.error('Error creating ride:', error);
+      setIsSearchingDriver(false);
     }
   };
   const fetchDriverInfo = async (driverId: string) => {
@@ -258,20 +323,32 @@ const HomeMapScreen: React.FC = () => {
         region={mapRegion}
         onPress={handleMapPress}>
         {pickupCoords && (
-          <>
-            <Marker
-              coordinate={pickupCoords}
-              title="You are here"
-              pinColor="#9b2fc2"
-            />
-            <Circle
-              center={pickupCoords}
-              radius={100}
-              strokeColor="#9b2fc2"
-              fillColor="rgba(155,47,194,0.2)"
-            />
-          </>
-        )}
+  <>
+    {rideStatus === 'started' && driverInfo ? (
+      // Show vehicle icon when ride started
+      <Marker
+        coordinate={pickupCoords}
+        image={getVehicleMarkerIcon(driverInfo.vehicleType || 'Car')}
+        title="Pickup"
+      />
+    ) : (
+      <>
+        <Marker
+          coordinate={pickupCoords}
+          title="Pickup"
+          pinColor="#9b2fc2"
+        />
+        <Circle
+          center={pickupCoords}
+          radius={100}
+          strokeColor="#9b2fc2"
+          fillColor="rgba(155,47,194,0.2)"
+        />
+      </>
+    )}
+  </>
+)}
+
         {destinationCoords && (
           <Marker
             coordinate={destinationCoords}
@@ -279,6 +356,23 @@ const HomeMapScreen: React.FC = () => {
             pinColor="#F44336"
           />
         )}
+        {driverLiveCoords && (
+          <Marker
+            coordinate={driverLiveCoords}
+            title="Driver"
+            pinColor="#4CAF50"
+          />
+        )}
+        {driverLiveCoords && destinationCoords && (
+          <MapViewDirections
+            origin={driverLiveCoords}
+            destination={destinationCoords}
+            apikey={GOOGLE_MAPS_API_KEY}
+            strokeWidth={4}
+            strokeColor="#9C27B0"
+          />
+        )}
+
         {pickupCoords && destinationCoords && (
           <MapViewDirections
             origin={pickupCoords}
@@ -319,7 +413,12 @@ const HomeMapScreen: React.FC = () => {
           dropoff={destinationDescription}
           distance={routeInfo?.distanceText}
           duration={routeInfo?.durationText}
-          fare={calculateFare(routeInfo?.distanceText, routeInfo?.durationText)}
+          fare={calculateFare(
+            routeInfo?.distanceText,
+            routeInfo?.durationText,
+            selectedVehicle,
+          )}
+          loading={isTripSummaryLoading} // 👈 HERE
           onCancel={() => {
             setDestinationDescription(null);
             setDestinationCoords(null);
@@ -328,8 +427,13 @@ const HomeMapScreen: React.FC = () => {
             setShowLocationModal(true);
           }}
           onNext={() => {
-            setShowTripSummary(false);
-            setShowVehicleModal(true);
+            setIsTripSummaryLoading(true);
+            // Simulate async or prepare for VehicleSelectionModal
+            setTimeout(() => {
+              setShowTripSummary(false);
+              setShowVehicleModal(true);
+              setIsTripSummaryLoading(false);
+            }, 500); // adjust delay if needed
           }}
         />
       )}
@@ -348,6 +452,14 @@ const HomeMapScreen: React.FC = () => {
         }}
       />
 
+      {/* <VehicleSelectionModal
+        visible={showVehicleModal}
+        onRequest={() => {
+          setShowVehicleModal(false);
+          handleRequestRide();
+        }}
+        onClose={() => setShowVehicleModal(false)}
+      /> */}
       <VehicleSelectionModal
         visible={showVehicleModal}
         onRequest={() => {
@@ -355,7 +467,41 @@ const HomeMapScreen: React.FC = () => {
           handleRequestRide();
         }}
         onClose={() => setShowVehicleModal(false)}
+        onSelectVehicle={vehicle => {
+          setSelectedVehicle(vehicle.type);
+        }}
+        routeInfo={routeInfo}
       />
+      {isSearchingDriver && (
+        <SearchingDriverOverlay
+          onCancel={() => {
+            setIsSearchingDriver(false);
+            if (unsubscribeListener.current) {
+              unsubscribeListener.current();
+              unsubscribeListener.current = null;
+            }
+            setCurrentRideId(null);
+            Alert.alert(
+              'Ride Cancelled',
+              'You have cancelled the ride request.',
+            );
+          }}
+        />
+      )}
+      {hasDriverArrived && driverInfo && (
+        <DriverArrivedCard
+          driver={{
+            name: driverInfo.name,
+            phone: driverInfo.phone,
+            vehicleName: driverInfo.vehicleName,
+            vehicleColor: driverInfo.vehicleColor,
+            vehicleNumber: driverInfo.vehicleNumber,
+            rating: driverInfo.rating,
+            avatarUrl: driverInfo.avatarUrl,
+          }}
+          onClose={() => setHasDriverArrived(false)}
+        />
+      )}
 
       <DriverInfoModal
         visible={showDriverModal}

@@ -6,11 +6,10 @@ import {
   TouchableOpacity,
   Text,
   FlatList,
-  Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-interface VehicleOption {
+export interface VehicleOption {
   id: string;
   type: string;
   price: string;
@@ -23,68 +22,94 @@ interface Props {
   visible: boolean;
   onRequest: () => void;
   onClose: () => void;
+  onSelectVehicle: (vehicle: VehicleOption) => void;
+  routeInfo: {
+    distanceText: string;
+    durationText: string;
+  } | null;
 }
 
-const vehicleOptions: VehicleOption[] = [
-  {
-    id: '1',
-    type: 'Just go',
-    price: 'RS:450',
-    eta: '2 min',
-    distance: 'Near by you',
-    icon: 'car',
-  },
-  {
-    id: '2',
-    type: 'Limousine',
-    price: 'RS:800',
-    eta: '5 min',
-    distance: '0.2 km',
-    icon: 'car-limousine',
-  },
-  {
-    id: '3',
-    type: 'Luxury',
-    price: 'RS:1200',
-    eta: '3 min',
-    distance: '0.4 km',
-    icon: 'car-convertible',
-  },
-  {
-    id: '4',
-    type: 'ElectricCar',
-    price: 'RS:600',
-    eta: '2 min',
-    distance: '0.45 km',
-    icon: 'car-electric',
-  },
-];
-
-const categories = ['All', 'Car', 'Bike', 'Riksha', 'Pickup'];
+const categories = ['All', 'Bike', 'Car', 'Limousine', 'Luxury', 'ElectricCar'];
 
 const VehicleSelectionModal: React.FC<Props> = ({
   visible,
   onRequest,
   onClose,
+  onSelectVehicle,
+  routeInfo,
 }) => {
   const [selectedVehicle, setSelectedVehicle] = useState<string>('1');
   const [activeCategory, setActiveCategory] = useState<string>('All');
+
+  const getVehicleOptions = (): VehicleOption[] => {
+    if (!routeInfo) return [];
+
+    const distanceKm =
+      parseFloat(routeInfo.distanceText.replace('km', '').trim()) || 0;
+    const durationMin =
+      parseInt(routeInfo.durationText.replace('min', '').trim()) || 0;
+
+    return [
+      {
+        id: '1',
+        type: 'Bike',
+        price: `RS:${Math.round(50 + distanceKm * 20 + durationMin * 2)}`,
+        eta: `${Math.max(1, Math.floor(durationMin * 0.8))} min`,
+        distance: `${distanceKm.toFixed(1)} km`,
+        icon: 'motorbike',
+      },
+      {
+        id: '2',
+        type: 'Car',
+        price: `RS:${Math.round(100 + distanceKm * 40 + durationMin * 5)}`,
+        eta: `${Math.max(2, Math.floor(durationMin * 1))} min`,
+        distance: `${distanceKm.toFixed(1)} km`,
+        icon: 'car',
+      },
+      {
+        id: '3',
+        type: 'Limousine',
+        price: `RS:${Math.round(200 + distanceKm * 70 + durationMin * 8)}`,
+        eta: `${Math.max(4, Math.floor(durationMin * 1.2))} min`,
+        distance: `${distanceKm.toFixed(1)} km`,
+        icon: 'car-limousine',
+      },
+      {
+        id: '4',
+        type: 'Luxury',
+        price: `RS:${Math.round(250 + distanceKm * 90 + durationMin * 10)}`,
+        eta: `${Math.max(3, Math.floor(durationMin * 1.1))} min`,
+        distance: `${distanceKm.toFixed(1)} km`,
+        icon: 'car-convertible',
+      },
+      {
+        id: '5',
+        type: 'ElectricCar',
+        price: `RS:${Math.round(150 + distanceKm * 60 + durationMin * 6)}`,
+        eta: `${Math.max(2, Math.floor(durationMin * 0.9))} min`,
+        distance: `${distanceKm.toFixed(1)} km`,
+        icon: 'car-electric',
+      },
+    ];
+  };
 
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
         <View style={styles.sheet}>
-          {/* Handle */}
           <View style={styles.handle} />
           <Text style={{fontSize: 16, fontWeight: 'bold', marginBottom: 12}}>
             Select Vehicle
           </Text>
 
-          {/* Categories */}
-          <View style={styles.categories}>
-            {categories.map(cat => (
+          <FlatList
+            data={categories}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={item => item}
+            contentContainerStyle={styles.categories}
+            renderItem={({item: cat}) => (
               <TouchableOpacity
-                key={cat}
                 style={[
                   styles.categoryButton,
                   activeCategory === cat && styles.categoryButtonActive,
@@ -98,12 +123,15 @@ const VehicleSelectionModal: React.FC<Props> = ({
                   {cat}
                 </Text>
               </TouchableOpacity>
-            ))}
-          </View>
+            )}
+          />
 
-          {/* Vehicle List */}
           <FlatList
-            data={vehicleOptions}
+            data={
+              activeCategory === 'All'
+                ? getVehicleOptions()
+                : getVehicleOptions().filter(v => v.type === activeCategory)
+            }
             keyExtractor={item => item.id}
             renderItem={({item}) => (
               <TouchableOpacity
@@ -111,7 +139,10 @@ const VehicleSelectionModal: React.FC<Props> = ({
                   styles.vehicleRow,
                   selectedVehicle === item.id && styles.vehicleRowSelected,
                 ]}
-                onPress={() => setSelectedVehicle(item.id)}>
+                onPress={() => {
+                  setSelectedVehicle(item.id);
+                  onSelectVehicle(item);
+                }}>
                 <Icon name={item.icon} size={30} color="#333" />
                 <View style={styles.vehicleInfo}>
                   <Text style={styles.vehicleType}>{item.type}</Text>
@@ -125,27 +156,6 @@ const VehicleSelectionModal: React.FC<Props> = ({
             )}
           />
 
-          {/* Drivers viewed */}
-          <View style={styles.driversContainer}>
-            <View style={styles.avatars}>
-              {[
-                'https://randomuser.me/api/portraits/men/1.jpg',
-                'https://randomuser.me/api/portraits/men/2.jpg',
-                'https://randomuser.me/api/portraits/men/3.jpg',
-              ].map((url, index) => (
-                <Image
-                  key={index}
-                  source={{uri: url}}
-                  style={[styles.avatar, {marginLeft: index === 0 ? 0 : -12}]}
-                />
-              ))}
-            </View>
-            <Text style={styles.driversText}>
-              3 drivers viewed your request
-            </Text>
-          </View>
-
-          {/* Actions */}
           <View style={styles.actions}>
             <TouchableOpacity onPress={onClose}>
               <Text style={styles.cancelText}>Cancel request</Text>
@@ -178,10 +188,6 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: '#ccc',
     alignSelf: 'center',
-    marginBottom: 12,
-  },
-  categories: {
-    flexDirection: 'row',
     marginBottom: 12,
   },
   categoryButton: {
@@ -278,6 +284,11 @@ const styles = StyleSheet.create({
   requestText: {
     color: '#fff',
     fontWeight: '600',
+  },
+  categories: {
+    flexDirection: 'row',
+    marginBottom: 12,
+    paddingHorizontal: 4,
   },
 });
 

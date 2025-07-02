@@ -43,19 +43,6 @@ const DriverArrivedCard: React.FC<Props> = ({driver, onClose}) => {
           <Text style={styles.name}>{driver.name}</Text>
         </View>
       </View>
-
-      {/* Message */}
-      <Text style={styles.message}>
-        I’m here! Please come to the pickup location.
-      </Text>
-
-      {/* <View style={styles.vehicleContainer}>
-        <Text style={styles.vehicle}>
-          {driver.vehicleColor} {driver.vehicleName}
-        </Text>
-        <Text style={styles.vehicleNumber}>{driver.vehicleNumber}</Text>
-      </View> */}
-
       {/* Call Driver */}
       <TouchableOpacity
         style={styles.callButton}

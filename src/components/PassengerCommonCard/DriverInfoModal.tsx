@@ -52,6 +52,7 @@ const DriverInfoModal: React.FC<Props> = ({ visible, onClose, driver }) => (
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.iconButton, { backgroundColor: '#9C27B0' }]}
+              onPress={onClose}
             >
               <Icon name="phone" size={20} color="#fff" />
             </TouchableOpacity>
@@ -94,8 +95,7 @@ const DriverInfoModal: React.FC<Props> = ({ visible, onClose, driver }) => (
           </View>
         </View>
 
-        {/* Footer Button */}
-        <TouchableOpacity style={styles.arrivalButton} onPress={onClose}>
+         <TouchableOpacity style={styles.arrivalButton}>
           <Text style={styles.arrivalText}>Driver will arrive in few minutes</Text>
         </TouchableOpacity>
       </View>

@@ -4,9 +4,10 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 interface Props {
   onGoOnline: () => void;
+  driverName?: string;
 }
 
-const OfflinePanel: React.FC<Props> = ({onGoOnline}) => (
+const OfflinePanel: React.FC<Props> = ({onGoOnline, driverName}) => (
   <View style={styles.container}>
     <View style={styles.header} />
 
@@ -18,7 +19,7 @@ const OfflinePanel: React.FC<Props> = ({onGoOnline}) => (
         style={styles.avatar}
       />
       <View style={styles.profileInfo}>
-        <Text style={styles.name}>Driver name</Text>
+        <Text style={styles.name}>{driverName ?? 'Driver'}</Text>
         <View style={styles.ratingRow}>
           <Icon name="star" size={16} color="#fbc02d" />
           <Text style={styles.rating}>4.9</Text>

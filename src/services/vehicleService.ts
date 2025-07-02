@@ -50,3 +50,17 @@ export const deleteVehicleInfo = async (): Promise<void> => {
   await firestore().collection('vehicles').doc(userId).delete();
   console.log('🗑️ Vehicle info deleted from Firestore');
 };
+
+/**
+ * Get vehicle info by driver UID
+ */
+export const getVehicleInfoByDriverId = async (
+  driverId: string,
+): Promise<VehicleInfo | null> => {
+  const doc = await firestore().collection('vehicles').doc(driverId).get();
+  if (doc.exists) {
+    return doc.data() as VehicleInfo;
+  }
+  return null;
+};
+

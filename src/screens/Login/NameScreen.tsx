@@ -93,10 +93,10 @@ const NameScreen = () => {
         unsubscribe();
 
         dispatch(setAuthLoading(false));
-        if (role === 'passenger') {
-          navigation.navigate('HomeMapScreen');
-          // navigation.navigate('Location'); // only navigate if passenger
-        }
+        // if (role === 'passenger') {
+        //   navigation.navigate('HomeMapScreen');
+        //   // navigation.navigate('Location'); // only navigate if passenger
+        // }
         // if driver, RootNavigator will automatically render DriverStack
       });
     } catch (error: any) {

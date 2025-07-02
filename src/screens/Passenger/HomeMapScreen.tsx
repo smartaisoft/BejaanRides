@@ -36,6 +36,7 @@ import {
 import SearchingDriverOverlay from '../../components/PassengerCommonCard/ SearchingDriverOverlay';
 import database from '@react-native-firebase/database';
 import DriverArrivedCard from '../../components/PassengerCommonCard/DriverArrivedCard';
+import {getVehicleInfoByDriverId} from '../../services/vehicleService';
 
 const defaultLat = 31.5497;
 const defaultLng = 74.3436;
@@ -82,19 +83,20 @@ const HomeMapScreen: React.FC = () => {
     latitudeDelta: 0.01,
     longitudeDelta: 0.01,
   });
-  const [rideStatus, setRideStatus] = useState<'idle' | 'accepted' | 'arrived' | 'started'>('idle');
+  const [rideStatus, setRideStatus] = useState<
+    'idle' | 'accepted' | 'arrived' | 'started'
+  >('idle');
 
   const getVehicleMarkerIcon = (vehicleType: string) => {
-  switch (vehicleType) {
-    case 'Bike':
-      return require('../../../assets/images/vehicles/bikeVehicle.png');
-    case 'Car':
-      return require('../../../assets/images/vehicles/carRoute.png');
-    default:
-      return require('../../../assets/images/vehicles/carRoute.png');
-  }
-};
-
+    switch (vehicleType) {
+      case 'Bike':
+        return require('../../../assets/images/vehicles/bikeVehicle.png');
+      case 'Car':
+        return require('../../../assets/images/vehicles/carRoute.png');
+      default:
+        return require('../../../assets/images/vehicles/carRoute.png');
+    }
+  };
 
   // Initialize: permissions + user profile + location
   useEffect(() => {
@@ -275,41 +277,81 @@ const HomeMapScreen: React.FC = () => {
       }
 
       setCurrentRideId(rideId);
-     unsubscribeListener.current = listenForRideUpdates(rideId, ride => {
-  if (ride.status === 'accepted' && ride.driverId) {
-    setRideStatus('accepted');
-    setIsSearchingDriver(false);
-    fetchDriverInfo(ride.driverId);
+      unsubscribeListener.current = listenForRideUpdates(rideId, ride => {
+        if (ride.status === 'accepted' && ride.driverId) {
+          setRideStatus('accepted');
+          setIsSearchingDriver(false);
+          fetchDriverInfo(ride.driverId);
 
-    const driverLocRef = database().ref(`rideRequests/${rideId}/driverLocation`);
-    driverLocRef.on('value', snap => {
-      const loc = snap.val();
-      if (loc) setDriverLiveCoords(loc);
-    });
-  }
+          const driverLocRef = database().ref(
+            `rideRequests/${rideId}/driverLocation`,
+          );
+          driverLocRef.on('value', snap => {
+            const loc = snap.val();
+            if (loc) setDriverLiveCoords(loc);
+          });
+        }
 
-  if (ride.status === 'arrived') {
-    setRideStatus('arrived');
-    setHasDriverArrived(true);
-  }
+        if (ride.status === 'arrived') {
+          setRideStatus('arrived');
+          setHasDriverArrived(true);
+        }
 
-  if (ride.status === 'started') {
-    setRideStatus('started');
-  }
-});
-
+        if (ride.status === 'started') {
+          setRideStatus('started');
+        }
+      });
     } catch (error) {
       console.error('Error creating ride:', error);
       setIsSearchingDriver(false);
     }
   };
+  // const fetchDriverInfo = async (driverId: string) => {
+  //   try {
+  //     const info = await getDriverByUid(driverId);
+  //     if (info) {
+  //       setDriverInfo(info);
+  //       setShowDriverModal(true);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching driver info:', error);
+  //   }
+  // };
+
   const fetchDriverInfo = async (driverId: string) => {
     try {
-      const info = await getDriverByUid(driverId);
-      if (info) {
-        setDriverInfo(info);
-        setShowDriverModal(true);
-      }
+          console.log(`🔍 Fetching driver profile for UID: ${driverId}`);
+    console.log(`🔍 Fetching vehicle info for UID: ${driverId}`);
+
+      const [profile, vehicle] = await Promise.all([
+        getDriverByUid(driverId),
+        getVehicleInfoByDriverId(driverId),
+      ]);
+          console.log('✅ Driver profile fetched:', profile);
+    console.log('✅ Vehicle info fetched:', vehicle);
+
+
+      if (profile) {
+      const mergedInfo = {
+        name: profile.name,
+        phone: profile.phone,
+        // avatarUrl: profile.avatarUrl,
+        // rating: profile.rating,
+        vehicleName: vehicle?.brand
+          ? `${vehicle.brand} ${vehicle.model}`
+          : 'N/A',
+        vehicleColor: vehicle?.color ?? 'N/A',
+        vehicleNumber: vehicle?.plateNumber ?? 'N/A',
+        vehicleType: vehicle?.vehicleType ?? 'Car',
+      };
+
+      console.log('✅ Merged driver+vehicle info to show in modal:', mergedInfo);
+
+      setDriverInfo(mergedInfo);
+      setShowDriverModal(true);
+    } else {
+      console.warn('⚠️ No driver profile found.');
+    }
     } catch (error) {
       console.error('Error fetching driver info:', error);
     }
@@ -323,31 +365,31 @@ const HomeMapScreen: React.FC = () => {
         region={mapRegion}
         onPress={handleMapPress}>
         {pickupCoords && (
-  <>
-    {rideStatus === 'started' && driverInfo ? (
-      // Show vehicle icon when ride started
-      <Marker
-        coordinate={pickupCoords}
-        image={getVehicleMarkerIcon(driverInfo.vehicleType || 'Car')}
-        title="Pickup"
-      />
-    ) : (
-      <>
-        <Marker
-          coordinate={pickupCoords}
-          title="Pickup"
-          pinColor="#9b2fc2"
-        />
-        <Circle
-          center={pickupCoords}
-          radius={100}
-          strokeColor="#9b2fc2"
-          fillColor="rgba(155,47,194,0.2)"
-        />
-      </>
-    )}
-  </>
-)}
+          <>
+            {rideStatus === 'started' && driverInfo ? (
+              // Show vehicle icon when ride started
+              <Marker
+                coordinate={pickupCoords}
+                image={getVehicleMarkerIcon(driverInfo.vehicleType || 'Car')}
+                title="Pickup"
+              />
+            ) : (
+              <>
+                <Marker
+                  coordinate={pickupCoords}
+                  title="Pickup"
+                  pinColor="#9b2fc2"
+                />
+                <Circle
+                  center={pickupCoords}
+                  radius={100}
+                  strokeColor="#9b2fc2"
+                  fillColor="rgba(155,47,194,0.2)"
+                />
+              </>
+            )}
+          </>
+        )}
 
         {destinationCoords && (
           <Marker
@@ -451,15 +493,6 @@ const HomeMapScreen: React.FC = () => {
           setShowTripSummary(true);
         }}
       />
-
-      {/* <VehicleSelectionModal
-        visible={showVehicleModal}
-        onRequest={() => {
-          setShowVehicleModal(false);
-          handleRequestRide();
-        }}
-        onClose={() => setShowVehicleModal(false)}
-      /> */}
       <VehicleSelectionModal
         visible={showVehicleModal}
         onRequest={() => {
@@ -510,6 +543,9 @@ const HomeMapScreen: React.FC = () => {
           driverInfo && {
             name: driverInfo.name,
             phone: driverInfo.phone,
+            // vehicleName: driverInfo.vehicleName,
+            // vehicleColor: driverInfo.vehicleColor,
+            // vehicleNumber: driverInfo.vehicleNumber,
             vehicleName: driverInfo.vehicleName,
             vehicleColor: driverInfo.vehicleColor,
             vehicleNumber: driverInfo.vehicleNumber,

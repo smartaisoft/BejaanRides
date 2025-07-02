@@ -96,7 +96,7 @@ const DriverInfoModal: React.FC<Props> = ({ visible, onClose, driver }) => (
 
         {/* Footer Button */}
         <TouchableOpacity style={styles.arrivalButton} onPress={onClose}>
-          <Text style={styles.arrivalText}>Driver will arrive in 2 min</Text>
+          <Text style={styles.arrivalText}>Driver will arrive in few minutes</Text>
         </TouchableOpacity>
       </View>
     </View>

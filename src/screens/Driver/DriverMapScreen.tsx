@@ -304,7 +304,7 @@
 //             longitude: defaultLng,
 //           });
 //         },
-//         { enableHighAccuracy: true, distanceFilter: 5 }
+//         { enableHighAccuracy: false, distanceFilter: 5 }
 //       );
 //     }
 
@@ -599,6 +599,7 @@ import {
 } from '../../services/DriverRideService';
 import Geolocation from '@react-native-community/geolocation';
 import database from '@react-native-firebase/database';
+import { getDriverByUid } from '../../services/realTimeUserService';
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyCb2ys2AD6NTFhnEGXNsDrjSXde6d569vU';
 
@@ -615,6 +616,29 @@ const DriverMapScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const myDriverId = auth().currentUser?.uid ?? 'unknown_driver';
+  console.log('👤 Current Driver ID:', myDriverId);
+const [driverName, setDriverName] = useState<string>('Driver');
+
+useEffect(() => {
+  const fetchDriverName = async () => {
+    try {
+      const uid = auth().currentUser?.uid;
+      if (!uid) return;
+      console.log('🔍 Fetching driver profile for offline panel...');
+      const profile = await getDriverByUid(uid);
+      if (profile) {
+        console.log('✅ Driver profile fetched:', profile);
+        setDriverName(profile.name);
+      } else {
+        console.warn('⚠️ Driver profile not found.');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching driver profile:', error);
+    }
+  };
+
+  fetchDriverName();
+}, []);
 
   /**
    * Watch driver GPS continuously
@@ -766,6 +790,8 @@ const DriverMapScreen: React.FC = () => {
       {status === DriverStatus.OFFLINE && (
         <OfflinePanel
           onGoOnline={() => dispatch(setDriverStatus(DriverStatus.ONLINE))}
+              driverName={driverName}
+
         />
       )}
 

@@ -38,8 +38,7 @@ const TripSummaryCard: React.FC<Props> = ({
     <TouchableOpacity
       style={[styles.nextButton, loading && styles.nextButtonDisabled]}
       onPress={loading ? undefined : onNext}
-      disabled={loading}
-    >
+      disabled={loading}>
       {loading ? (
         <ActivityIndicator size="small" color="#fff" />
       ) : (
@@ -80,12 +79,17 @@ const TripSummaryCard: React.FC<Props> = ({
     {(distance || duration || fare) && (
       <View style={styles.infoRow}>
         {distance && duration && (
-          <Text style={styles.infoText}>
-            {distance} • {duration} to destination
-          </Text>
-        )}
-        {fare !== undefined && (
-          <Text style={styles.infoText}>Estimated Fare: Rs {fare}</Text>
+          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+            <Icon
+              name="map-clock"
+              size={16}
+              color="#666"
+              style={{marginRight: 6}}
+            />
+            <Text style={styles.infoText}>
+              Distance {distance} • {duration} Route
+            </Text>
+          </View>
         )}
       </View>
     )}
@@ -158,12 +162,19 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   infoRow: {
-    marginTop: 8,
+    marginTop: 12,
     backgroundColor: '#f3f3f3',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    width: '100%',
   },
   infoText: {
-    fontSize: 13,
-    color: '#555',
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
   },
 });
 

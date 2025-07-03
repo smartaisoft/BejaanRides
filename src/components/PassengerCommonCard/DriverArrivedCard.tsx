@@ -21,15 +21,9 @@ interface Props {
   onClose: () => void;
 }
 
-const DriverArrivedCard: React.FC<Props> = ({driver, onClose}) => {
+const DriverArrivedCard: React.FC<Props> = ({driver}) => {
   return (
     <View style={styles.container}>
-      {/* Close Button */}
-      {/* <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-        <Text style={styles.closeText}>✕</Text>
-      </TouchableOpacity> */}
-
-      {/* Driver Info */}
       <View style={styles.header}>
         {driver.avatarUrl ? (
           <Image source={{uri: driver.avatarUrl}} style={styles.avatar} />

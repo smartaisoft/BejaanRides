@@ -389,8 +389,17 @@ const HomeMapScreen: React.FC = () => {
       <MapView
         ref={mapRef}
         style={styles.map}
-        region={mapRegion}
-        >
+        initialRegion={mapRegion}
+        onRegionChangeComplete={newRegion => {
+          setMapRegion(newRegion);
+          // ✅ Only update pickupCoords if no destination is selected
+          if (!destinationCoords) {
+            setPickupCoords({
+              latitude: newRegion.latitude,
+              longitude: newRegion.longitude,
+            });
+          }
+        }}>
         {pickupCoords && (
           <>
             {rideStatus === 'started' && driverInfo ? (

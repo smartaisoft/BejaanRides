@@ -37,6 +37,8 @@ import SearchingDriverOverlay from '../../components/PassengerCommonCard/ Search
 import database from '@react-native-firebase/database';
 import DriverArrivedCard from '../../components/PassengerCommonCard/DriverArrivedCard';
 import {getVehicleInfoByDriverId} from '../../services/vehicleService';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
 
 const defaultLat = 31.5497;
 const defaultLng = 74.3436;
@@ -86,6 +88,7 @@ const HomeMapScreen: React.FC = () => {
   const [rideStatus, setRideStatus] = useState<
     'idle' | 'accepted' | 'arrived' | 'started'
   >('idle');
+const user = useSelector((state: RootState) => state.auth.user);
 
   const getVehicleMarkerIcon = (vehicleType: string) => {
     switch (vehicleType) {
@@ -100,6 +103,7 @@ const HomeMapScreen: React.FC = () => {
 
   // Initialize: permissions + user profile + location
   useEffect(() => {
+    console.log('existing user data ===>', user);
     console.log('currentRideId', currentRideId);
     const init = async () => {
       if (Platform.OS === 'android') {

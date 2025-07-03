@@ -9,6 +9,7 @@ import {
   SET_NAME,
   SET_LOGGED_IN,
   SET_AUTH_LOADING,
+  SET_USER_DATA,
 } from '../types/authTypes';
 
 const initialState: AuthState = {
@@ -20,6 +21,7 @@ const initialState: AuthState = {
   name: '',
   isLoggedIn: false,
   isLoading: false,
+  user: null, // Initialize user as null
 };
 
 export const authReducer = (
@@ -43,6 +45,8 @@ export const authReducer = (
       return {...state, isLoggedIn: action.payload};
     case SET_AUTH_LOADING:
       return {...state, isLoading: action.payload};
+    case SET_USER_DATA:
+      return {...state, user: action.payload};
     default:
       return state;
   }

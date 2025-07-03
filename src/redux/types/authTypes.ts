@@ -8,6 +8,7 @@ export const SET_ROLE = 'SET_ROLE';
 export const SET_NAME = 'SET_NAME';
 export const SET_LOGGED_IN = 'SET_LOGGED_IN';
 export const SET_AUTH_LOADING = 'SET_AUTH_LOADING';
+export const SET_USER_DATA = 'SET_USER_DATA';
 
 
 export interface AuthState {
@@ -18,9 +19,20 @@ export interface AuthState {
   role: 'passenger' | 'driver' | null;
   name: string;
   isLoggedIn: boolean;
-  isLoading: boolean; // ← Add this
-
+  isLoading: boolean;
+  user: UserData | null; // ✅ New field
 }
+
+export interface UserData {
+  uid: string;
+  name: string;
+  phone: string;
+  email: string;
+  cnic: string;
+  role: 'passenger' | 'driver';
+  createdAt: string;
+}
+
 
 interface SetPhoneAction {
   type: typeof SET_PHONE;
@@ -62,6 +74,12 @@ interface SetAuthLoadingAction {
   payload: boolean;
 }
 
+interface SetUserDataAction {
+  type: typeof SET_USER_DATA;
+  payload: UserData;
+}
+
+
 export type AuthActionTypes =
   | SetPhoneAction
   | SetOtpMethodAction
@@ -70,5 +88,5 @@ export type AuthActionTypes =
   | SetRoleAction
   | SetNameAction
   | SetLoggedInAction
-  | SetAuthLoadingAction; // ← Add this
-
+  | SetAuthLoadingAction
+  | SetUserDataAction; // ✅ New

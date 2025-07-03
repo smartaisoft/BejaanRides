@@ -17,6 +17,7 @@ export type AuthStackParamList = {
   Otp: {
     method: string;
     confirmation: FirebaseAuthTypes.ConfirmationResult;
+    isNewUser: boolean; // ✅ Add this line
   };
   Role: undefined;
   Name: undefined;

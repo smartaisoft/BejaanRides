@@ -7,7 +7,9 @@ import {
   SET_NAME,
   SET_LOGGED_IN,
   AuthActionTypes,
-  SET_AUTH_LOADING
+  SET_AUTH_LOADING,
+  UserData,
+  SET_USER_DATA,
 } from '../types/authTypes';
 
 export const setAuthLoading = (loading: boolean): AuthActionTypes => ({
@@ -47,4 +49,9 @@ export const setName = (name: string): AuthActionTypes => ({
 export const setLoggedIn = (loggedIn: boolean): AuthActionTypes => ({
   type: SET_LOGGED_IN,
   payload: loggedIn,
+});
+
+export const setUserData = (user: UserData): AuthActionTypes => ({
+  type: SET_USER_DATA,
+  payload: user,
 });

@@ -6,6 +6,8 @@ export interface UserData {
   uid: string;
   name: string;
   phone: string;
+  email: string;
+  cnic: string;
   role: UserRole;
   createdAt: string;
   driverInfo?: any; // You can define a proper type if you want
@@ -76,5 +78,26 @@ export const deleteUser = async (uid: string) => {
     console.log('🗑️ User deleted from Firestore');
   } catch (error) {
     console.error('❌ Failed to delete user:', error);
+  }
+};
+
+/**
+ * Get user by phone number
+ */
+export const getUserByPhone = async (phone: string): Promise<UserData | null> => {
+  try {
+    const querySnapshot = await firestore()
+      .collection('users')
+      .where('phone', '==', phone)
+      .limit(1)
+      .get();
+
+    if (!querySnapshot.empty) {
+      return querySnapshot.docs[0].data() as UserData;
+    }
+    return null;
+  } catch (error) {
+    console.error('❌ Failed to fetch user by phone:', error);
+    return null;
   }
 };

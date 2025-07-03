@@ -7,7 +7,7 @@ import {
   TextInput,
   Platform,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {Linking} from 'react-native';
@@ -16,8 +16,14 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {AuthStackParamList} from '../../navigation/AuthNavigator';
 import {useSelector, useDispatch} from 'react-redux';
 import {RootState, AppDispatch} from '../../redux/store';
-import {setOtp} from '../../redux/actions/authActions';
+import {
+  setLoggedIn,
+  setOtp,
+  setRole,
+  setUserData,
+} from '../../redux/actions/authActions';
 import {setAuthLoading} from '../../redux/actions/authActions';
+import {getUserByUid} from '../../services/realTimeUserService';
 type OTPScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
   'Otp'
@@ -31,12 +37,34 @@ const OTPScreen = () => {
 
   const navigation = useNavigation<OTPScreenNavigationProp>();
   const route = useRoute<OTPScreenRouteProp>();
-  const {method, confirmation} = route.params;
+  const {method, confirmation, isNewUser} = route.params;
 
   const [otp, setOtpInput] = useState<string>('');
 
   const handleGoBack = () => navigation.goBack();
 
+  // const handleOtpChange = async (text: string) => {
+  //   setOtpInput(text);
+  //   dispatch(setOtp(text));
+
+  //   if (text.length === 6) {
+  //     dispatch(setAuthLoading(true));
+
+  //     try {
+  //       const credential = await confirmation.confirm(text);
+  //       console.log('✅ OTP verified:', credential?.user.uid);
+  //       navigation.navigate('Role');
+  //     } catch (error) {
+  //       console.error('❌ OTP verification failed:', error);
+  //       Alert.alert(
+  //         'Invalid Code',
+  //         'The verification code is incorrect or expired.',
+  //       );
+  //     } finally {
+  //       dispatch(setAuthLoading(false));
+  //     }
+  //   }
+  // };
   const handleOtpChange = async (text: string) => {
     setOtpInput(text);
     dispatch(setOtp(text));
@@ -46,8 +74,25 @@ const OTPScreen = () => {
 
       try {
         const credential = await confirmation.confirm(text);
-        console.log('✅ OTP verified:', credential?.user.uid);
-        navigation.navigate('Role');
+
+        if (!credential || !credential.user) {
+          console.error('❌ Credential or user is null');
+          Alert.alert('Error', 'Failed to verify OTP.');
+          return;
+        }
+
+        console.log('✅ OTP verified:', credential.user.uid);
+
+        if (isNewUser) {
+          navigation.navigate('Role');
+        } else {
+          const userData = await getUserByUid(credential.user.uid);
+          if (userData) {
+            dispatch(setUserData(userData));
+            dispatch(setRole(userData.role));
+          }
+          dispatch(setLoggedIn(true));
+        }
       } catch (error) {
         console.error('❌ OTP verification failed:', error);
         Alert.alert(

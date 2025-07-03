@@ -37,8 +37,9 @@ import SearchingDriverOverlay from '../../components/PassengerCommonCard/ Search
 import database from '@react-native-firebase/database';
 import DriverArrivedCard from '../../components/PassengerCommonCard/DriverArrivedCard';
 import {getVehicleInfoByDriverId} from '../../services/vehicleService';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../redux/store';
+import {useSelector} from 'react-redux';
+import {RootState} from '../../redux/store';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const defaultLat = 31.5497;
 const defaultLng = 74.3436;
@@ -88,7 +89,6 @@ const HomeMapScreen: React.FC = () => {
   const [rideStatus, setRideStatus] = useState<
     'idle' | 'accepted' | 'arrived' | 'started'
   >('idle');
-const user = useSelector((state: RootState) => state.auth.user);
 
   const getVehicleMarkerIcon = (vehicleType: string) => {
     switch (vehicleType) {
@@ -103,8 +103,6 @@ const user = useSelector((state: RootState) => state.auth.user);
 
   // Initialize: permissions + user profile + location
   useEffect(() => {
-    console.log('existing user data ===>', user);
-    console.log('currentRideId', currentRideId);
     const init = async () => {
       if (Platform.OS === 'android') {
         const granted = await PermissionsAndroid.request(
@@ -192,9 +190,12 @@ const user = useSelector((state: RootState) => state.auth.user);
   };
 
   const getCurrentLocation = () => {
+    // First, try High Accuracy
     Geolocation.getCurrentPosition(
       async (position: GeolocationResponse) => {
+        console.log('✅ Got High Accuracy Location');
         const {latitude, longitude} = position.coords;
+
         setPickupCoords({latitude, longitude});
         setMapRegion({
           latitude,
@@ -207,10 +208,41 @@ const user = useSelector((state: RootState) => state.auth.user);
         setPickupDescription(address);
       },
       error => {
-        console.error('Error getting location:', error);
-        setPickupDescription('Current Location');
+        console.warn('⚠️ High Accuracy failed, falling back:', error);
+
+        // Fall back to Low Accuracy
+        Geolocation.getCurrentPosition(
+          async (fallbackPosition: GeolocationResponse) => {
+            console.log('✅ Got Low Accuracy Location');
+            const {latitude, longitude} = fallbackPosition.coords;
+
+            setPickupCoords({latitude, longitude});
+            setMapRegion({
+              latitude,
+              longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            });
+
+            const address = await reverseGeocode(latitude, longitude);
+            setPickupDescription(address);
+          },
+          fallbackError => {
+            console.error('❌ Both location methods failed:', fallbackError);
+            setPickupDescription('Unknown Location');
+          },
+          {
+            enableHighAccuracy: false,
+            timeout: 10000,
+            maximumAge: 10000,
+          },
+        );
       },
-      {enableHighAccuracy: false, timeout: 15000, maximumAge: 10000},
+      {
+        enableHighAccuracy: false,
+        timeout: 15000,
+        maximumAge: 0,
+      },
     );
   };
 
@@ -310,52 +342,43 @@ const user = useSelector((state: RootState) => state.auth.user);
       setIsSearchingDriver(false);
     }
   };
-  // const fetchDriverInfo = async (driverId: string) => {
-  //   try {
-  //     const info = await getDriverByUid(driverId);
-  //     if (info) {
-  //       setDriverInfo(info);
-  //       setShowDriverModal(true);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching driver info:', error);
-  //   }
-  // };
 
   const fetchDriverInfo = async (driverId: string) => {
     try {
-          console.log(`🔍 Fetching driver profile for UID: ${driverId}`);
-    console.log(`🔍 Fetching vehicle info for UID: ${driverId}`);
+      console.log(`🔍 Fetching driver profile for UID: ${driverId}`);
+      console.log(`🔍 Fetching vehicle info for UID: ${driverId}`);
 
       const [profile, vehicle] = await Promise.all([
         getDriverByUid(driverId),
         getVehicleInfoByDriverId(driverId),
       ]);
-          console.log('✅ Driver profile fetched:', profile);
-    console.log('✅ Vehicle info fetched:', vehicle);
-
+      console.log('✅ Driver profile fetched:', profile);
+      console.log('✅ Vehicle info fetched:', vehicle);
 
       if (profile) {
-      const mergedInfo = {
-        name: profile.name,
-        phone: profile.phone,
-        // avatarUrl: profile.avatarUrl,
-        // rating: profile.rating,
-        vehicleName: vehicle?.brand
-          ? `${vehicle.brand} ${vehicle.model}`
-          : 'N/A',
-        vehicleColor: vehicle?.color ?? 'N/A',
-        vehicleNumber: vehicle?.plateNumber ?? 'N/A',
-        vehicleType: vehicle?.vehicleType ?? 'Car',
-      };
+        const mergedInfo = {
+          name: profile.name,
+          phone: profile.phone,
+          // avatarUrl: profile.avatarUrl,
+          // rating: profile.rating,
+          vehicleName: vehicle?.brand
+            ? `${vehicle.brand} ${vehicle.model}`
+            : 'N/A',
+          vehicleColor: vehicle?.color ?? 'N/A',
+          vehicleNumber: vehicle?.plateNumber ?? 'N/A',
+          vehicleType: vehicle?.vehicleType ?? 'Car',
+        };
 
-      console.log('✅ Merged driver+vehicle info to show in modal:', mergedInfo);
+        console.log(
+          '✅ Merged driver+vehicle info to show in modal:',
+          mergedInfo,
+        );
 
-      setDriverInfo(mergedInfo);
-      setShowDriverModal(true);
-    } else {
-      console.warn('⚠️ No driver profile found.');
-    }
+        setDriverInfo(mergedInfo);
+        setShowDriverModal(true);
+      } else {
+        console.warn('⚠️ No driver profile found.');
+      }
     } catch (error) {
       console.error('Error fetching driver info:', error);
     }
@@ -367,7 +390,7 @@ const user = useSelector((state: RootState) => state.auth.user);
         ref={mapRef}
         style={styles.map}
         region={mapRegion}
-        onPress={handleMapPress}>
+        >
         {pickupCoords && (
           <>
             {rideStatus === 'started' && driverInfo ? (
@@ -379,17 +402,23 @@ const user = useSelector((state: RootState) => state.auth.user);
               />
             ) : (
               <>
-                <Marker
-                  coordinate={pickupCoords}
-                  title="Pickup"
-                  pinColor="#9b2fc2"
-                />
+                {/* Circle */}
                 <Circle
                   center={pickupCoords}
-                  radius={100}
-                  strokeColor="#9b2fc2"
-                  fillColor="rgba(155,47,194,0.2)"
+                  radius={200}
+                  strokeColor="#19AF18"
+                  fillColor="rgba(25,175,24,0.2)"
                 />
+
+                <Marker coordinate={pickupCoords} anchor={{x: 0.5, y: 0.5}}>
+                  <View style={styles.markerWrapper}>
+                    <View style={styles.outerCircle}>
+                      <View style={styles.innerCircle}>
+                        <Icon name="navigation" size={18} color="#fff" />
+                      </View>
+                    </View>
+                  </View>
+                </Marker>
               </>
             )}
           </>
@@ -441,7 +470,6 @@ const user = useSelector((state: RootState) => state.auth.user);
         <TouchableOpacity
           style={styles.locateButton}
           onPress={() => {
-            setShowLocationModal(true);
             mapRef.current?.animateToRegion({
               latitude: pickupCoords.latitude,
               longitude: pickupCoords.longitude,
@@ -567,6 +595,28 @@ const styles = StyleSheet.create({
   map: {flex: 1},
   locateButton: {position: 'absolute', top: 40, right: 10},
   locateIcon: {width: 24, height: 24, tintColor: '#9b2fc2'},
+  markerWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  outerCircle: {
+    backgroundColor: '#19AF18',
+    width: 40,
+    height: 40,
+    borderRadius: 20, // half of width/height
+    borderWidth: 2,
+    borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  innerCircle: {
+    backgroundColor: '#19AF18',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
 
 export default HomeMapScreen;

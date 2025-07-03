@@ -13,11 +13,10 @@ import PaymentScreen from '../screens/Passenger/PaymentScreen';
 export type AuthStackParamList = {
   Splash: undefined;
   PhoneLogin: undefined;
-  // Otp: { method: string; phone: string };
   Otp: {
     method: string;
     confirmation: FirebaseAuthTypes.ConfirmationResult;
-    isNewUser: boolean; // ✅ Add this line
+    isNewUser: boolean;
   };
   Role: undefined;
   Name: undefined;

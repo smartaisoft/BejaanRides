@@ -43,28 +43,6 @@ const OTPScreen = () => {
 
   const handleGoBack = () => navigation.goBack();
 
-  // const handleOtpChange = async (text: string) => {
-  //   setOtpInput(text);
-  //   dispatch(setOtp(text));
-
-  //   if (text.length === 6) {
-  //     dispatch(setAuthLoading(true));
-
-  //     try {
-  //       const credential = await confirmation.confirm(text);
-  //       console.log('✅ OTP verified:', credential?.user.uid);
-  //       navigation.navigate('Role');
-  //     } catch (error) {
-  //       console.error('❌ OTP verification failed:', error);
-  //       Alert.alert(
-  //         'Invalid Code',
-  //         'The verification code is incorrect or expired.',
-  //       );
-  //     } finally {
-  //       dispatch(setAuthLoading(false));
-  //     }
-  //   }
-  // };
   const handleOtpChange = async (text: string) => {
     setOtpInput(text);
     dispatch(setOtp(text));

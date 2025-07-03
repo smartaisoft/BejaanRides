@@ -15,6 +15,7 @@ import {
   setAuthLoading,
   setLoggedIn,
   setUserData,
+  setRole,
 } from '../../redux/actions/authActions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
@@ -70,7 +71,10 @@ const NameScreen: React.FC = () => {
         phone: yup
           .string()
           .trim()
-          .matches(/^\+92\d{10}$/, 'Enter a valid phone number starting with +92.'),
+          .matches(
+            /^\+92\d{10}$/,
+            'Enter a valid phone number starting with +92.',
+          ),
         cnic: yup
           .string()
           .trim()
@@ -84,7 +88,7 @@ const NameScreen: React.FC = () => {
           phone: phoneInput.trim(),
           cnic: cnic.trim(),
         },
-        {abortEarly: false}
+        {abortEarly: false},
       );
 
       if (!role) {
@@ -103,6 +107,7 @@ const NameScreen: React.FC = () => {
       ]);
 
       dispatch(setLoggedIn(true));
+      dispatch(setRole(role));
 
       const currentUser = auth().currentUser;
 

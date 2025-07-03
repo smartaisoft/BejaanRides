@@ -1,51 +1,54 @@
-import React, {useEffect} from 'react';
-import {View, StyleSheet, Image} from 'react-native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {useNavigation} from '@react-navigation/native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, Image } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useDispatch} from 'react-redux';
+import { useDispatch } from 'react-redux';
 
-import {AuthStackParamList} from '../navigation/AuthNavigator';
-import {setLoggedIn, setRole} from '../redux/actions/authActions';
-import type {AppDispatch} from '../redux/store';
+import { AuthStackParamList } from '../navigation/AuthNavigator';
+import { setLoggedIn, setRole } from '../redux/actions/authActions';
+import type { AppDispatch } from '../redux/store';
 
 type SplashNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
   'Splash'
 >;
 
-const SplashScreenComponent = () => {
+const SplashScreenComponent: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<SplashNavigationProp>();
 
-useEffect(() => {
-  const checkSession = async () => {
-    try {
-      const [isLoggedIn, role] = await AsyncStorage.multiGet([
-        '@isLoggedIn',
-        '@role',
-      ]);
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const [isLoggedIn, role] = await AsyncStorage.multiGet([
+          '@isLoggedIn',
+          '@role',
+        ]);
 
-      console.log('🪵 isLoggedIn:', isLoggedIn[1]);
-      console.log('🪵 role:', role[1]);
+        const loggedIn = isLoggedIn[1] === 'true';
+        const userRole = role[1] as 'driver' | 'passenger' | null;
 
-      if (isLoggedIn[1] === 'true' && role[1]) {
-        dispatch(setRole(role[1] as 'passenger' | 'driver'));
-        dispatch(setLoggedIn(true));
-      } else {
-        setTimeout(() => {
+        console.log('🪵 isLoggedIn:', loggedIn);
+        console.log('🪵 role:', userRole);
+
+        if (loggedIn && userRole) {
+          // Restore Redux state
+          dispatch(setRole(userRole));
+          dispatch(setLoggedIn(true));
+          // Splash stays here - RootNavigator will route to Home/Driver
+        } else {
+          // If no session, go to phone login
           navigation.replace('Home');
-        }, 1500);
+        }
+      } catch (error) {
+        console.error('❌ Session check failed:', error);
+        navigation.replace('Home');
       }
-    } catch (error) {
-      console.error('❌ Session check failed:', error);
-      navigation.replace('Home');
-    }
-  };
+    };
 
-  checkSession();
-}, [dispatch, navigation]);
-
+    checkSession();
+  }, [dispatch, navigation]);
 
   return (
     <View style={styles.container}>

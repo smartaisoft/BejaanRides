@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Colors from '../../themes/colors';
 
 interface Props {
   pickup: string;
@@ -51,7 +52,7 @@ const TripSummaryCard: React.FC<Props> = ({
       <Icon
         name="circle-slice-8"
         size={20}
-        color="#9C27B0"
+        color={Colors.primary}
         style={styles.icon}
       />
       <View style={styles.textContainer}>
@@ -119,7 +120,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 16,
     right: 16,
-    backgroundColor: '#9C27B0',
+    backgroundColor: Colors.primary,
     paddingVertical: 6,
     paddingHorizontal: 16,
     borderRadius: 20,

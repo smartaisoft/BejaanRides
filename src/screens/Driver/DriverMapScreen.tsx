@@ -600,6 +600,7 @@ import {
 import Geolocation from '@react-native-community/geolocation';
 import database from '@react-native-firebase/database';
 import { getDriverByUid } from '../../services/realTimeUserService';
+import Colors from '../../themes/colors';
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyCb2ys2AD6NTFhnEGXNsDrjSXde6d569vU';
 
@@ -799,7 +800,7 @@ useEffect(() => {
         <View style={styles.rideRequestsContainer}>
           {rideRequests.length === 0 ? (
             <View style={styles.loaderContainer}>
-              <ActivityIndicator size="large" color="#9b2fc2" />
+              <ActivityIndicator size="large" color={Colors.primary} />
               <Text style={styles.loaderText}>
                 Searching for rides nearby...
               </Text>

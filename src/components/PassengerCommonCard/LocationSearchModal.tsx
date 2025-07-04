@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Colors from '../../themes/colors';
 
 interface Props {
   visible: boolean;
@@ -119,7 +120,12 @@ const LocationSearchModal: React.FC<Props> = ({visible, onSelect}) => {
           onSelect(details);
         }
       }}>
-      <Icon name="map-marker" size={20} color="#9C27B0" style={styles.itemIcon} />
+      <Icon
+        name="map-marker"
+        size={20}
+        color={Colors.primary}
+        style={styles.itemIcon}
+      />
       <Text>{item.description}</Text>
     </TouchableOpacity>
   );
@@ -133,32 +139,46 @@ const LocationSearchModal: React.FC<Props> = ({visible, onSelect}) => {
           onSelect(details);
         }
       }}>
-      <Icon name="map-marker" size={20} color="#9C27B0" style={styles.itemIcon} />
+      <Icon
+        name="map-marker"
+        size={20}
+        color={Colors.primary}
+        style={styles.itemIcon}
+      />
       <Text>{item}</Text>
     </TouchableOpacity>
   );
 
-  if (!visible) return null;
+  if (!visible) {return null;}
 
   return (
     <View style={styles.container}>
       <View style={styles.sheet}>
         {/* Header */}
-        
 
         {/* Search Bar */}
         <View style={styles.searchRow}>
-          <Icon name="magnify" size={20} color="#666" style={styles.searchIcon} />
+          <Icon
+            name="magnify"
+            size={20}
+            color={Colors.textBlack}
+            style={styles.searchIcon}
+          />
           <TextInput
             style={styles.input}
             placeholder="Where are you going?"
+            placeholderTextColor="#999"
             value={input}
             onChangeText={setInput}
           />
         </View>
 
         {loading && (
-          <ActivityIndicator size="small" color="#9C27B0" style={styles.loader} />
+          <ActivityIndicator
+            size="small"
+            color={Colors.primary}
+            style={styles.loader}
+          />
         )}
 
         {input.length > 1 ? (
@@ -215,8 +235,8 @@ const styles = StyleSheet.create({
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f3f3f3',
-    borderRadius: 8,
+    backgroundColor: Colors.primaryLight,
+    borderRadius: 12,
     paddingHorizontal: 12,
     marginBottom: 12,
   },
@@ -227,6 +247,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     paddingVertical: 8,
+    color: '#333',
   },
   loader: {
     marginVertical: 8,

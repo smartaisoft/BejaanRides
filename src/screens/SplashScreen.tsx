@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import { StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch } from 'react-redux';
+import LinearGradient from 'react-native-linear-gradient';
 
 import { AuthStackParamList } from '../navigation/AuthNavigator';
 import { setLoggedIn, setRole } from '../redux/actions/authActions';
@@ -33,12 +34,9 @@ const SplashScreenComponent: React.FC = () => {
         console.log('🪵 role:', userRole);
 
         if (loggedIn && userRole) {
-          // Restore Redux state
           dispatch(setRole(userRole));
           dispatch(setLoggedIn(true));
-          // Splash stays here - RootNavigator will route to Home/Driver
         } else {
-          // If no session, go to phone login
           navigation.replace('Home');
         }
       } catch (error) {
@@ -51,12 +49,15 @@ const SplashScreenComponent: React.FC = () => {
   }, [dispatch, navigation]);
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#A7FFA7', '#3FFF3F']}
+      style={styles.container}
+    >
       <Image
-        source={require('../../assets/images/BeejanLogo.png')}
+        source={require('../../assets/images/SalamRider.png')}
         style={styles.image}
       />
-    </View>
+    </LinearGradient>
   );
 };
 
@@ -65,7 +66,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#B39DDBCC',
     paddingHorizontal: 20,
   },
   image: {

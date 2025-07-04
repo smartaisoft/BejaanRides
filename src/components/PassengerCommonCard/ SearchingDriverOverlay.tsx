@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import Colors from '../../themes/colors';
 
 interface Props {
   onCancel: () => void;
@@ -8,7 +9,7 @@ interface Props {
 const SearchingDriverOverlay: React.FC<Props> = ({ onCancel }) => (
   <View style={styles.overlay}>
     <View style={styles.card}>
-      <ActivityIndicator size="large" color="#9C27B0" />
+      <ActivityIndicator size="large" color={Colors.primary} />
       <Text style={styles.text}>Searching for nearby drivers...</Text>
       <TouchableOpacity onPress={onCancel} style={styles.cancelButton}>
         <Text style={styles.cancelText}>Cancel</Text>

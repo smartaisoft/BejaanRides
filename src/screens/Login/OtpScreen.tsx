@@ -24,6 +24,7 @@ import {
 } from '../../redux/actions/authActions';
 import {setAuthLoading} from '../../redux/actions/authActions';
 import {getUserByUid} from '../../services/realTimeUserService';
+import Colors from '../../themes/colors';
 type OTPScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
   'Otp'
@@ -108,7 +109,7 @@ const OTPScreen = () => {
   return (
     <View style={styles.container}>
       {isLoading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color={Colors.primary}/>
       ) : (
         <>
           <TouchableOpacity onPress={handleGoBack} style={styles.goBackButton}>

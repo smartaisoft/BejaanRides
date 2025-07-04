@@ -1,6 +1,7 @@
 import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Colors from '../../themes/colors';
 
 interface Props {
   riderName: string;
@@ -31,16 +32,16 @@ const TripInfoCard: React.FC<Props> = ({
     <Text style={styles.eta}>{eta}</Text>
     <View style={styles.row}>
       <TouchableOpacity style={styles.iconButton} onPress={onChat}>
-        <Icon name="chat" size={24} color="#9C27B0" />
+        <Icon name="chat" size={24} color={Colors.primary} />
         <Text style={styles.iconText}>Chat</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.iconButton} onPress={onCall}>
-        <Icon name="phone" size={24} color="#9C27B0" />
+        <Icon name="phone" size={24} color={Colors.primary} />
         <Text style={styles.iconText}>Call</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.iconButton} onPress={onCancel}>
-        <Icon name="close" size={24} color="#9C27B0" />
-        <Text style={styles.iconText}>{distance} km</Text>
+        <Icon name="close" size={24} color={Colors.primary} />
+        <Text style={styles.iconText}>{distance}</Text>
       </TouchableOpacity>
     </View>
     <TouchableOpacity style={styles.button} onPress={onArrived}>
@@ -86,7 +87,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   button: {
-    backgroundColor: '#9C27B0',
+    backgroundColor: Colors.primary,
     borderRadius: 24,
     paddingVertical: 10,
     paddingHorizontal: 50,

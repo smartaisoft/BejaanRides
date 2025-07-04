@@ -22,6 +22,7 @@ import {setDriverPersonalInfo} from '../../redux/actions/vehicleActions';
 import {AppDispatch} from '../../redux/store';
 import auth from '@react-native-firebase/auth';
 import {updateUser, getUserByUid} from '../../services/realTimeUserService';
+import Colors from '../../themes/colors';
 
 type DriverPersonalInfoNavigationProp = StackNavigationProp<
   DriverStackParamList,
@@ -119,7 +120,7 @@ const DriverPersonalInfo = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#9b2fc2" />
+        <ActivityIndicator size="large" color={Colors.primary} />
         <Text style={styles.loadingText}>Loading your information...</Text>
       </View>
     );
@@ -257,7 +258,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   nextButton: {
-    backgroundColor: '#9b2fc2',
+backgroundColor: Colors.primary,
     padding: 14,
     borderRadius: 10,
     alignItems: 'center',

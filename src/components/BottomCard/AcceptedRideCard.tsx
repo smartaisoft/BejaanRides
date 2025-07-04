@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Colors from '../../themes/colors';
 
 interface Props {
   eta: string;
@@ -20,17 +21,17 @@ const StartTripCard: React.FC<Props> = ({ eta, fare, rating, distance, onStart }
     </TouchableOpacity>
     <View style={styles.infoRow}>
       <View style={styles.infoItem}>
-        <Icon name="cash" size={20} color="#9C27B0" />
+        <Icon name="cash" size={20} color={Colors.primary} />
         <Text style={styles.infoValue}>RS:{fare}</Text>
         <Text style={styles.infoLabel}>Cash</Text>
       </View>
       <View style={styles.infoItem}>
-        <Icon name="star" size={20} color="#9C27B0" />
+        <Icon name="star" size={20} color={Colors.primary} />
         <Text style={styles.infoValue}>{rating}</Text>
         <Text style={styles.infoLabel}>Rating</Text>
       </View>
       <View style={styles.infoItem}>
-        <Icon name="map-marker-distance" size={20} color="#9C27B0" />
+        <Icon name="map-marker-distance" size={20} color={Colors.primary} />
         <Text style={styles.infoValue}>{distance}</Text>
         <Text style={styles.infoLabel}>Ride</Text>
       </View>
@@ -61,7 +62,7 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   button: {
-    backgroundColor: '#9C27B0',
+    backgroundColor:Colors.primary,
     borderRadius: 24,
     paddingVertical: 10,
     paddingHorizontal: 50,

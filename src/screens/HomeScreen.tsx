@@ -5,6 +5,7 @@ import Button from '../components/Button';
 import {useNavigation} from '@react-navigation/native'; // Import useNavigation hook
 import { AuthStackParamList } from '../navigation/AuthNavigator'; // Adjust the import path based on your project structure
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'; // Import the correct type
+import Colors from '../themes/colors';
 
 // Define navigation prop type
 type HomeScreenNavigationProp = NativeStackNavigationProp<
@@ -24,7 +25,7 @@ const HomeScreen = () => {
   return (
     <View style={styles.container}>
       <Image
-        source={require('../../assets/images/BeejanLogo.png')}
+        source={require('../../assets/images/SalamRider.png')} // Adjust the path based on your project structure
         style={styles.logoImage}
       />
       <CarLogo width={300} height={300} style={styles.logo} />
@@ -45,6 +46,7 @@ const HomeScreen = () => {
         title="Continue with Phone"
         onPress={handlePhonePress} // Trigger the handlePhonePress function on press
         style={styles.button}
+        backgroundColor={Colors.primary} // Use a consistent color
       />
 
       {/* Custom Button */}

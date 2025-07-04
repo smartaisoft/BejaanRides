@@ -324,6 +324,7 @@ import type {AppDispatch, RootState} from '../../redux/store';
 import {getUserByPhone} from '../../services/realTimeUserService';
 import PhoneNumberInput from '../../components/PhoneNumberInput';
 import Button from '../../components/Button';
+import Colors from '../../themes/colors';
 
 type LoginWithPhoneNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -396,7 +397,7 @@ const LoginWithPhone: React.FC = () => {
           {isLoading ? (
             <ActivityIndicator
               size="large"
-              color="#9C27B0"
+              color={Colors.primary} // Use a consistent color
               style={styles.loader}
             />
           ) : (
@@ -417,6 +418,7 @@ const LoginWithPhone: React.FC = () => {
                     title="Next"
                     onPress={handleSubmit}
                     style={styles.button}
+                    backgroundColor={Colors.primary}// Use a consistent color
                   />
                 </>
               )}

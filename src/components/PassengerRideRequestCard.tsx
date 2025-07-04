@@ -2,7 +2,8 @@
 import React from 'react';
 import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { RideData } from '../redux/types/driverTypes';
+import {RideData} from '../redux/types/driverTypes';
+import Colors from '../themes/colors';
 
 interface Props {
   ride: RideData;
@@ -49,7 +50,6 @@ const PassengerRideRequestCard: React.FC<Props> = ({
   </View>
 );
 
-
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#fff',
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   },
   rejectButton: {
     flex: 1,
-    backgroundColor: '#E1D7EE',
+    backgroundColor: Colors.primaryLight,
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   },
   acceptButton: {
     flex: 1,
-    backgroundColor: '#9C27B0',
+    backgroundColor: Colors.primary,
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',

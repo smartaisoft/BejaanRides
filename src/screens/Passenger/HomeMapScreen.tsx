@@ -1,5 +1,6 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import React, {useEffect, useState, useRef, useCallback} from 'react';
+// i am giving you my whole HomeMapScreenCode,
+// please analyze it and read it carefully , its every feature and every function carefully,  becuase this code rely on 681 lines, and its very messy code, when you read it then i will give you a task to refactor this complete code with fully optimized way. and each line aligned like a pro "/* eslint-disable react-hooks/exhaustive-deps */
+import React, {useEffect, useState, useRef} from 'react';
 import {
   View,
   StyleSheet,
@@ -15,7 +16,6 @@ import MapView, {
   Circle,
   Marker,
   Region,
-  MapPressEvent,
 } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import TripSummaryCard from '../../components/PassengerCommonCard/TripSummaryCard';
@@ -38,9 +38,8 @@ import SearchingDriverOverlay from '../../components/PassengerCommonCard/ Search
 import database from '@react-native-firebase/database';
 import DriverArrivedCard from '../../components/PassengerCommonCard/DriverArrivedCard';
 import {getVehicleInfoByDriverId} from '../../services/vehicleService';
-import {useSelector} from 'react-redux';
-import {RootState} from '../../redux/store';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Colors from '../../themes/colors';
 
 const defaultLat = 31.5497;
 const defaultLng = 74.3436;
@@ -266,15 +265,6 @@ const HomeMapScreen: React.FC = () => {
       return 'Unknown Location';
     }
   };
-
-  // const handleMapPress = useCallback(async (event: MapPressEvent) => {
-  //   const {latitude, longitude} = event.nativeEvent.coordinate;
-  //   const address = await reverseGeocode(latitude, longitude);
-  //   setDestinationCoords({latitude, longitude});
-  //   setDestinationDescription(address);
-  //   setShowLocationModal(false);
-  //   setShowTripSummary(true);
-  // }, []);
 
   const handleRequestRide = async () => {
     if (
@@ -653,7 +643,7 @@ const styles = StyleSheet.create({
   container: {flex: 1},
   map: {flex: 1},
   locateButton: {position: 'absolute', top: 40, right: 10},
-  locateIcon: {width: 24, height: 24, tintColor: '#9b2fc2'},
+  locateIcon: {width: 24, height: 24, tintColor: Colors.primary},
   markerWrapper: {
     alignItems: 'center',
     justifyContent: 'center',

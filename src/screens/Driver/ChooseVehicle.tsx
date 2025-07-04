@@ -14,6 +14,7 @@ import type {DriverStackParamList} from '../../navigation/DriverStack';
 import {useDispatch} from 'react-redux';
 import {setVehicleType} from '../../redux/actions/vehicleActions';
 import {AppDispatch} from '../../redux/store';
+import Colors from '../../themes/colors';
 
 type Vehicle = {
   id: string;
@@ -104,7 +105,7 @@ const styles = StyleSheet.create({
   iconBox: {
     width: 50,
     height: 50,
-    backgroundColor: '#d4b8f9',
+    backgroundColor: Colors.primary,
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',

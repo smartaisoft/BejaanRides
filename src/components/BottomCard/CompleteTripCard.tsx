@@ -1,6 +1,7 @@
 // src/components/BottomCard/CompleteTripCard.tsx
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import Colors from '../../themes/colors';
 
 interface Props {
   onComplete: () => void;
@@ -32,7 +33,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   button: {
-    backgroundColor: '#9C27B0',
+    backgroundColor: Colors.primary,
     borderRadius: 24,
     paddingVertical: 12,
     paddingHorizontal: 50,

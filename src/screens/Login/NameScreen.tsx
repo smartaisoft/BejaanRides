@@ -24,6 +24,7 @@ import {AppDispatch, RootState} from '../../redux/store';
 import LoaderScreen from '../../components/LoaderScreen';
 import * as yup from 'yup';
 import PhoneNumberInput from '../../components/PhoneNumberInput';
+import Colors from '../../themes/colors';
 
 type NameScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -257,7 +258,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   nextButton: {
-    backgroundColor: '#9C27B0',
+    backgroundColor: Colors.primary,
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',

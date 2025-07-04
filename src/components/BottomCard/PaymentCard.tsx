@@ -1,6 +1,7 @@
 import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Colors from '../../themes/colors';
 
 interface Props {
   amount: number;
@@ -15,7 +16,7 @@ const PaymentCard: React.FC<Props> = ({amount, onConfirm}) => (
 
     <View style={styles.methodsRow}>
       <View style={styles.method}>
-        <Icon name="cash" size={24} color="#9C27B0" />
+        <Icon name="cash" size={24} color={Colors.primary} />
         <Text style={styles.methodTextSelected}>Cash</Text>
       </View>
     </View>
@@ -66,11 +67,11 @@ const styles = StyleSheet.create({
   methodTextSelected: {
     marginTop: 4,
     fontSize: 14,
-    color: '#9C27B0',
+    color:Colors.primary,
     fontWeight: '600',
   },
   button: {
-    backgroundColor: '#9C27B0',
+    backgroundColor: Colors.primary,
     borderRadius: 24,
     paddingVertical: 10,
     paddingHorizontal: 50,

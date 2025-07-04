@@ -1,6 +1,7 @@
 import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Image} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Colors from '../../themes/colors';
 
 interface Props {
   onGoOnline: () => void;
@@ -34,17 +35,17 @@ const OfflinePanel: React.FC<Props> = ({onGoOnline, driverName}) => (
 
     <View style={styles.statsRow}>
       <View style={styles.statItem}>
-        <Icon name="check-circle" size={24} color="#9C27B0" />
+        <Icon name="check-circle" size={24} color={Colors.primary} />
         <Text style={styles.statValue}>90.0%</Text>
         <Text style={styles.statLabel}>Acceptance</Text>
       </View>
       <View style={styles.statItem}>
-        <Icon name="star-circle" size={24} color="#9C27B0" />
+        <Icon name="star-circle" size={24} color={Colors.primary} />
         <Text style={styles.statValue}>4.25</Text>
         <Text style={styles.statLabel}>Rating</Text>
       </View>
       <View style={styles.statItem}>
-        <Icon name="close-circle" size={24} color="#9C27B0" />
+        <Icon name="close-circle" size={24} color={Colors.primary} />
         <Text style={styles.statValue}>2.5%</Text>
         <Text style={styles.statLabel}>Cancellation</Text>
       </View>
@@ -101,7 +102,7 @@ const styles = StyleSheet.create({
     color: '#777',
   },
   goButton: {
-    backgroundColor: '#9C27B0',
+backgroundColor: Colors.primary,
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 20,

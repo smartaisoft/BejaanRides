@@ -9,6 +9,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {setAuthLoading, setRole} from '../../redux/actions/authActions';
 import {AppDispatch, RootState} from '../../redux/store';
 import LoaderScreen from '../../components/LoaderScreen';
+import Colors from '../../themes/colors';
 
 type RoleScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -56,7 +57,7 @@ const RoleScreen = () => {
       <Button
         title="Passenger"
         onPress={handlePassengerPress}
-        backgroundColor="#9C27B0"
+        backgroundColor={Colors.primary}
         textColor="white"
         style={styles.button}
         textStyle={styles.passengerText}

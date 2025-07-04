@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
@@ -9,6 +10,7 @@ import {ActivityIndicator, View} from 'react-native';
 import {setVehicleDetails} from '../redux/actions/vehicleActions';
 import {getVehicleInfo} from '../services/vehicleService';
 import HomeMapScreen from '../screens/Passenger/HomeMapScreen';
+import Colors from '../themes/colors';
 
 const RootNavigator: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -49,7 +51,7 @@ const RootNavigator: React.FC = () => {
   if (loading) {
     return (
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <ActivityIndicator size="large" color="#9C27B0" />
+        <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
   }
@@ -76,7 +78,7 @@ const RootNavigator: React.FC = () => {
     // Still deciding (e.g., loading not yet started)
     return (
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <ActivityIndicator size="large" color="#9C27B0" />
+        <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
   }

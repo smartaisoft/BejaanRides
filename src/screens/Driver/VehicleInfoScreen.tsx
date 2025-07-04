@@ -28,6 +28,7 @@ import {Formik} from 'formik';
 import * as yup from 'yup';
 import LoaderScreen from '../../components/LoaderScreen';
 import { setAuthLoading } from '../../redux/actions/authActions';
+import Colors from '../../themes/colors';
 
 interface ImageMap {
   certificateFront: string | null;
@@ -334,7 +335,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   nextButton: {
-    backgroundColor: '#9C27B0',
+backgroundColor: Colors.primary,
     padding: 14,
     borderRadius: 10,
     alignItems: 'center',

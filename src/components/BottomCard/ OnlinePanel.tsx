@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import Colors from '../../themes/colors';
 
 interface Props {
   onFindTrips: () => void;
@@ -33,7 +34,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   onlineText: {
-    color: '#9C27B0',
+    color: Colors.primary,
     fontWeight: '600',
     fontSize: 16,
     marginBottom: 12,

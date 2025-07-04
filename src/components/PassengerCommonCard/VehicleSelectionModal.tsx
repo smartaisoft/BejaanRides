@@ -1,11 +1,14 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {
-  Modal,
+  Animated,
   View,
   StyleSheet,
   TouchableOpacity,
   Text,
   FlatList,
+  Dimensions,
+  Alert,
+  TextInput,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -29,17 +32,54 @@ interface Props {
   } | null;
 }
 
-const categories = ['All', 'Bike', 'Car', 'Limousine', 'Luxury', 'ElectricCar'];
+const categories = ['All', 'Car', 'Bike', 'Rikhsha', 'Pickup'];
 
-const VehicleSelectionModal: React.FC<Props> = ({
+const categoryTypeMap: Record<string, string[]> = {
+  All: ['Bike', 'Car', 'Limousine', 'Luxury', 'ElectricCar'],
+  Car: ['Car', 'Limousine', 'Luxury', 'ElectricCar'],
+  Bike: ['Bike'],
+  Rikhsha: ['Rikhsha'],
+  Pickup: ['Pickup'],
+};
+
+const VehicleSelectionSheet: React.FC<Props> = ({
   visible,
   onRequest,
-  onClose,
   onSelectVehicle,
   routeInfo,
+  onClose,
 }) => {
-  const [selectedVehicle, setSelectedVehicle] = useState<string>('1');
+  const [selectedVehicle, setSelectedVehicle] = useState<VehicleOption | null>(
+    null,
+  );
   const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [editingFare, setEditingFare] = useState<boolean>(false);
+  const [customFare, setCustomFare] = useState<string | null>(null);
+
+  const slideAnim = useRef(new Animated.Value(0)).current;
+
+  const screenHeight = Dimensions.get('window').height;
+
+  useEffect(() => {
+    Animated.timing(slideAnim, {
+      toValue: visible ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [slideAnim, visible]);
+
+  const translateY = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [screenHeight, 0],
+  });
+  const getFareRange = (vehicle: VehicleOption) => {
+    // For example, allow +/- 20% flexibility
+    const baseFare = parseInt(vehicle.price.replace('RS:', ''));
+    return {
+      min: Math.floor(baseFare * 0.8),
+      max: Math.ceil(baseFare * 1.2),
+    };
+  };
 
   const getVehicleOptions = (): VehicleOption[] => {
     if (!routeInfo) return [];
@@ -94,101 +134,200 @@ const VehicleSelectionModal: React.FC<Props> = ({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.overlay}>
-        <View style={styles.sheet}>
-          <View style={styles.handle} />
-          <Text style={{fontSize: 16, fontWeight: 'bold', marginBottom: 12}}>
-            Select Vehicle
-          </Text>
+    <Animated.View
+      pointerEvents={visible ? 'auto' : 'none'}
+      style={[styles.sheetContainer, {transform: [{translateY}]}]}>
+      <View style={styles.sheet}>
+        {/* Back Button */}
+        <TouchableOpacity onPress={onClose} style={styles.backButton}>
+          <Icon name="arrow-left" size={28} color="#333" />
+        </TouchableOpacity>
 
-          <FlatList
-            data={categories}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={item => item}
-            contentContainerStyle={styles.categories}
-            renderItem={({item: cat}) => (
-              <TouchableOpacity
+        <Text style={styles.title}>Vehicle category</Text>
+
+        {/* Categories */}
+        <FlatList
+          data={categories}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={item => item}
+          contentContainerStyle={styles.categories}
+          renderItem={({item: cat}) => (
+            <TouchableOpacity
+              style={[
+                styles.categoryButton,
+                activeCategory === cat && styles.categoryButtonActive,
+              ]}
+              onPress={() => setActiveCategory(cat)}>
+              <Text
                 style={[
-                  styles.categoryButton,
-                  activeCategory === cat && styles.categoryButtonActive,
-                ]}
-                onPress={() => setActiveCategory(cat)}>
+                  styles.categoryText,
+                  activeCategory === cat && styles.categoryTextActive,
+                ]}>
+                {cat}
+              </Text>
+            </TouchableOpacity>
+          )}
+        />
+
+        {/* Vehicles */}
+        <FlatList
+          data={getVehicleOptions().filter(v =>
+            categoryTypeMap[activeCategory]?.includes(v.type),
+          )}
+          keyExtractor={item => item.id}
+          renderItem={({item}) => (
+            <TouchableOpacity
+              style={[
+                styles.vehicleRow,
+                selectedVehicle?.id === item.id && styles.vehicleRowSelected,
+              ]}
+              onPress={() => {
+                setSelectedVehicle(item);
+                onSelectVehicle(item);
+              }}>
+              <Icon
+                name={item.icon}
+                size={28}
+                color={selectedVehicle?.id === item.id ? '#fff' : '#333'}
+              />
+              <View style={styles.vehicleInfo}>
                 <Text
                   style={[
-                    styles.categoryText,
-                    activeCategory === cat && styles.categoryTextActive,
+                    styles.vehicleType,
+                    selectedVehicle?.id === item.id && {color: '#fff'},
                   ]}>
-                  {cat}
+                  {item.type}
                 </Text>
-              </TouchableOpacity>
-            )}
-          />
-
-          <FlatList
-            data={
-              activeCategory === 'All'
-                ? getVehicleOptions()
-                : getVehicleOptions().filter(v => v.type === activeCategory)
-            }
-            keyExtractor={item => item.id}
-            renderItem={({item}) => (
-              <TouchableOpacity
-                style={[
-                  styles.vehicleRow,
-                  selectedVehicle === item.id && styles.vehicleRowSelected,
-                ]}
-                onPress={() => {
-                  setSelectedVehicle(item.id);
-                  onSelectVehicle(item);
-                }}>
-                <Icon name={item.icon} size={30} color="#333" />
-                <View style={styles.vehicleInfo}>
-                  <Text style={styles.vehicleType}>{item.type}</Text>
-                  <Text style={styles.vehicleDetails}>{item.distance}</Text>
-                </View>
-                <View style={styles.vehiclePrice}>
-                  <Text style={styles.priceText}>{item.price}</Text>
-                  <Text style={styles.etaText}>{item.eta}</Text>
-                </View>
-              </TouchableOpacity>
-            )}
-          />
-
-          <View style={styles.actions}>
-            <TouchableOpacity onPress={onClose}>
-              <Text style={styles.cancelText}>Cancel request</Text>
+                <Text
+                  style={[
+                    styles.vehicleDetails,
+                    selectedVehicle?.id === item.id && {color: '#fff'},
+                  ]}>
+                  {item.distance}
+                </Text>
+              </View>
+              <View style={styles.vehiclePrice}>
+                <Text
+                  style={[
+                    styles.priceText,
+                    selectedVehicle?.id === item.id && {color: '#fff'},
+                  ]}>
+                  {item.price}
+                </Text>
+                <Text
+                  style={[
+                    styles.etaText,
+                    selectedVehicle?.id === item.id && {color: '#fff'},
+                  ]}>
+                  {item.eta}
+                </Text>
+              </View>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.requestButton} onPress={onRequest}>
-              <Text style={styles.requestText}>Request</Text>
-            </TouchableOpacity>
+          )}
+        />
+
+        {/* Selected Fare Box */}
+        {selectedVehicle && (
+          <View style={styles.fareBox}>
+            <View style={styles.fareLeft}>
+              <Icon name={selectedVehicle.icon} size={28} color="#000" />
+              <Text style={styles.fareVehicle}>{selectedVehicle.type}</Text>
+            </View>
+            <View style={styles.fareRight}>
+              {editingFare ? (
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <TextInput
+                    style={styles.fareInput}
+                    value={
+                      customFare ?? selectedVehicle.price.replace('RS:', '')
+                    }
+                    keyboardType="numeric"
+                    onChangeText={setCustomFare}
+                    placeholder="Enter fare"
+                  />
+                  <TouchableOpacity
+                    onPress={() => {
+                      const {min, max} = getFareRange(selectedVehicle);
+                      const fareNumber = parseInt(customFare ?? '0');
+
+                      if (
+                        isNaN(fareNumber) ||
+                        fareNumber < min ||
+                        fareNumber > max
+                      ) {
+                        Alert.alert(
+                          'Invalid Fare',
+                          `Please enter a fare between RS:${min} and RS:${max}.`,
+                        );
+                        return;
+                      }
+
+                      setEditingFare(false);
+                      setSelectedVehicle({
+                        ...selectedVehicle,
+                        price: `RS:${fareNumber}`,
+                      });
+                    }}>
+                    <Icon name="check" size={22} color="#4CAF50" />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <>
+                  <Text style={styles.fareText}>
+                    Recommended fare: {selectedVehicle.price}
+                  </Text>
+                  <TouchableOpacity onPress={() => setEditingFare(true)}>
+                    <Icon name="pencil" size={20} color="#333" />
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
           </View>
-        </View>
+        )}
+
+        {/* CTA */}
+        <TouchableOpacity
+          style={styles.requestButton}
+          onPress={onRequest}
+          disabled={!selectedVehicle}>
+          <Text style={styles.requestText}>Find Offers</Text>
+        </TouchableOpacity>
       </View>
-    </Modal>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
+  sheetContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   sheet: {
     backgroundColor: '#fff',
     padding: 16,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    maxHeight: '90%',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '100%',
   },
-  handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#ccc',
+  backButton: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    zIndex: 2,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: 'bold',
     alignSelf: 'center',
     marginBottom: 12,
+  },
+  categories: {
+    flexDirection: 'row',
+    marginBottom: 12,
+    paddingHorizontal: 4,
   },
   categoryButton: {
     borderWidth: 1,
@@ -199,8 +338,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   categoryButtonActive: {
-    backgroundColor: '#9C27B0',
-    borderColor: '#9C27B0',
+    backgroundColor: '#000',
+    borderColor: '#000',
   },
   categoryText: {
     fontSize: 13,
@@ -213,12 +352,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     borderBottomWidth: 1,
     borderColor: '#eee',
   },
   vehicleRowSelected: {
-    backgroundColor: '#f2e1f5',
+    backgroundColor: '#4CAF50',
     borderRadius: 8,
   },
   vehicleInfo: {
@@ -244,52 +383,54 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
   },
-  driversContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 16,
-    marginBottom: 12,
-  },
-  avatars: {
-    flexDirection: 'row',
-  },
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  driversText: {
-    fontSize: 13,
-    color: '#555',
-    marginLeft: 8,
-  },
-  actions: {
+  fareBox: {
+    backgroundColor: '#E8F5E9',
+    borderRadius: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 8,
+    padding: 12,
+    marginTop: 12,
   },
-  cancelText: {
-    color: '#9C27B0',
+  fareLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  fareVehicle: {
+    fontSize: 16,
     fontWeight: '600',
+    marginLeft: 8,
+  },
+  fareRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  fareText: {
+    fontSize: 14,
+    marginRight: 8,
   },
   requestButton: {
-    backgroundColor: '#9C27B0',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
+    backgroundColor: '#4CAF50',
+    paddingVertical: 14,
+    borderRadius: 30,
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 12,
   },
   requestText: {
     color: '#fff',
     fontWeight: '600',
+    fontSize: 16,
   },
-  categories: {
-    flexDirection: 'row',
-    marginBottom: 12,
-    paddingHorizontal: 4,
+  fareInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    width: 80,
+    marginRight: 8,
+    fontSize: 14,
   },
 });
 
-export default VehicleSelectionModal;
+export default VehicleSelectionSheet;

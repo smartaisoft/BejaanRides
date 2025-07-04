@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, {useEffect, useState, useRef, useCallback} from 'react';
 import {
   View,
@@ -86,6 +87,11 @@ const HomeMapScreen: React.FC = () => {
     latitudeDelta: 0.01,
     longitudeDelta: 0.01,
   });
+  const [currentLocation, setCurrentLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+
   const [rideStatus, setRideStatus] = useState<
     'idle' | 'accepted' | 'arrived' | 'started'
   >('idle');
@@ -196,6 +202,7 @@ const HomeMapScreen: React.FC = () => {
         console.log('✅ Got High Accuracy Location');
         const {latitude, longitude} = position.coords;
 
+        setCurrentLocation({latitude, longitude}); // <--- NEW
         setPickupCoords({latitude, longitude});
         setMapRegion({
           latitude,
@@ -215,6 +222,7 @@ const HomeMapScreen: React.FC = () => {
           async (fallbackPosition: GeolocationResponse) => {
             console.log('✅ Got Low Accuracy Location');
             const {latitude, longitude} = fallbackPosition.coords;
+            setCurrentLocation({latitude, longitude}); // <--- NEW
 
             setPickupCoords({latitude, longitude});
             setMapRegion({
@@ -259,14 +267,14 @@ const HomeMapScreen: React.FC = () => {
     }
   };
 
-  const handleMapPress = useCallback(async (event: MapPressEvent) => {
-    const {latitude, longitude} = event.nativeEvent.coordinate;
-    const address = await reverseGeocode(latitude, longitude);
-    setDestinationCoords({latitude, longitude});
-    setDestinationDescription(address);
-    setShowLocationModal(false);
-    setShowTripSummary(true);
-  }, []);
+  // const handleMapPress = useCallback(async (event: MapPressEvent) => {
+  //   const {latitude, longitude} = event.nativeEvent.coordinate;
+  //   const address = await reverseGeocode(latitude, longitude);
+  //   setDestinationCoords({latitude, longitude});
+  //   setDestinationDescription(address);
+  //   setShowLocationModal(false);
+  //   setShowTripSummary(true);
+  // }, []);
 
   const handleRequestRide = async () => {
     if (
@@ -390,14 +398,22 @@ const HomeMapScreen: React.FC = () => {
         ref={mapRef}
         style={styles.map}
         initialRegion={mapRegion}
-        onRegionChangeComplete={newRegion => {
+        onRegionChangeComplete={async newRegion => {
           setMapRegion(newRegion);
+
           // ✅ Only update pickupCoords if no destination is selected
           if (!destinationCoords) {
             setPickupCoords({
               latitude: newRegion.latitude,
               longitude: newRegion.longitude,
             });
+
+            // Fetch address and update pickupDescription
+            const address = await reverseGeocode(
+              newRegion.latitude,
+              newRegion.longitude,
+            );
+            setPickupDescription(address);
           }
         }}>
         {pickupCoords && (
@@ -475,13 +491,14 @@ const HomeMapScreen: React.FC = () => {
         )}
       </MapView>
 
-      {pickupCoords && (
+      {currentLocation && !destinationCoords && (
         <TouchableOpacity
           style={styles.locateButton}
           onPress={() => {
+            setPickupCoords(currentLocation); // reset pickup
             mapRef.current?.animateToRegion({
-              latitude: pickupCoords.latitude,
-              longitude: pickupCoords.longitude,
+              latitude: currentLocation.latitude,
+              longitude: currentLocation.longitude,
               latitudeDelta: 0.01,
               longitudeDelta: 0.01,
             });
@@ -540,7 +557,30 @@ const HomeMapScreen: React.FC = () => {
           setShowVehicleModal(false);
           handleRequestRide();
         }}
-        onClose={() => setShowVehicleModal(false)}
+        onClose={() => {
+          // Reset everything when cancelling vehicle selection
+          setDestinationCoords(null);
+          setDestinationDescription(null);
+          setRouteInfo(null);
+          setShowVehicleModal(false);
+          setShowLocationModal(true);
+
+          // Animate back to current location if available
+          if (currentLocation) {
+            mapRef.current?.animateToRegion({
+              latitude: currentLocation.latitude,
+              longitude: currentLocation.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            });
+            // Optionally update pickup marker and description
+            setPickupCoords(currentLocation);
+            reverseGeocode(
+              currentLocation.latitude,
+              currentLocation.longitude,
+            ).then(address => setPickupDescription(address));
+          }
+        }}
         onSelectVehicle={vehicle => {
           setSelectedVehicle(vehicle.type);
         }}
@@ -550,11 +590,23 @@ const HomeMapScreen: React.FC = () => {
         <SearchingDriverOverlay
           onCancel={() => {
             setIsSearchingDriver(false);
+
+            // Stop any ride updates
             if (unsubscribeListener.current) {
               unsubscribeListener.current();
               unsubscribeListener.current = null;
             }
+
             setCurrentRideId(null);
+
+            // Reset locations and route
+            setDestinationCoords(null);
+            setDestinationDescription(null);
+            setRouteInfo(null);
+
+            // Show location search modal again
+            setShowLocationModal(true);
+
             Alert.alert(
               'Ride Cancelled',
               'You have cancelled the ride request.',
@@ -562,6 +614,7 @@ const HomeMapScreen: React.FC = () => {
           }}
         />
       )}
+
       {hasDriverArrived && driverInfo && (
         <DriverArrivedCard
           driver={{
@@ -584,9 +637,6 @@ const HomeMapScreen: React.FC = () => {
           driverInfo && {
             name: driverInfo.name,
             phone: driverInfo.phone,
-            // vehicleName: driverInfo.vehicleName,
-            // vehicleColor: driverInfo.vehicleColor,
-            // vehicleNumber: driverInfo.vehicleNumber,
             vehicleName: driverInfo.vehicleName,
             vehicleColor: driverInfo.vehicleColor,
             vehicleNumber: driverInfo.vehicleNumber,

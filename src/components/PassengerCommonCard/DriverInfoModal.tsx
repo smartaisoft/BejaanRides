@@ -8,6 +8,7 @@ import {
   Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Colors from '../../themes/colors';
 
 interface Props {
   visible: boolean;
@@ -51,7 +52,7 @@ const DriverInfoModal: React.FC<Props> = ({ visible, onClose, driver }) => (
               <Icon name="message" size={20} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.iconButton, { backgroundColor: '#9C27B0' }]}
+              style={[styles.iconButton, { backgroundColor: Colors.primary }]}
               onPress={onClose}
             >
               <Icon name="phone" size={20} color="#fff" />
@@ -192,7 +193,7 @@ const styles = StyleSheet.create({
   },
   arrivalButton: {
     marginTop: 16,
-    backgroundColor: '#9C27B0',
+    backgroundColor: Colors.primary,
     paddingVertical: 12,
     borderRadius: 8,
   },

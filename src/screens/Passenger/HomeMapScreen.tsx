@@ -485,7 +485,7 @@ const HomeMapScreen: React.FC = () => {
         <TouchableOpacity
           style={styles.locateButton}
           onPress={() => {
-            setPickupCoords(currentLocation); // reset pickup
+            setPickupCoords(currentLocation);
             mapRef.current?.animateToRegion({
               latitude: currentLocation.latitude,
               longitude: currentLocation.longitude,

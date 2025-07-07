@@ -12,11 +12,7 @@ import {
 import Geolocation, {
   GeolocationResponse,
 } from '@react-native-community/geolocation';
-import MapView, {
-  Circle,
-  Marker,
-  Region,
-} from 'react-native-maps';
+import MapView, {Circle, Marker, Region} from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import TripSummaryCard from '../../components/PassengerCommonCard/TripSummaryCard';
 import LocationSearchModal from '../../components/PassengerCommonCard/LocationSearchModal';
@@ -40,6 +36,10 @@ import DriverArrivedCard from '../../components/PassengerCommonCard/DriverArrive
 import {getVehicleInfoByDriverId} from '../../services/vehicleService';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Colors from '../../themes/colors';
+import {
+  DriverLocation,
+  subscribeToAvailableDrivers,
+} from '../../services/driverPresenceService';
 
 const defaultLat = 31.5497;
 const defaultLng = 74.3436;
@@ -79,6 +79,10 @@ const HomeMapScreen: React.FC = () => {
   } | null>(null);
   const [hasDriverArrived, setHasDriverArrived] = useState(false);
   const [isTripSummaryLoading, setIsTripSummaryLoading] = useState(false);
+  const [availableDrivers, setAvailableDrivers] = useState<any[]>([]);
+  const [routeInfoToPickup, setRouteInfoToPickup] = useState<RouteInfo | null>(
+    null,
+  );
 
   const [mapRegion, setMapRegion] = useState<Region>({
     latitude: defaultLat,
@@ -148,6 +152,19 @@ const HomeMapScreen: React.FC = () => {
         unsubscribeListener.current();
       }
     };
+  }, []);
+  useEffect(() => {
+    const ref = database().ref('driversOnline');
+    const listener = ref.on('value', snapshot => {
+      const data = snapshot.val() || {};
+      const driversArray = Object.keys(data).map(id => ({
+        id,
+        ...data[id],
+      }));
+      setAvailableDrivers(driversArray);
+    });
+
+    return () => ref.off('value', listener);
   }, []);
 
   const calculateFare = (
@@ -439,27 +456,38 @@ const HomeMapScreen: React.FC = () => {
           </>
         )}
 
-        {destinationCoords && (
+        {/* {destinationCoords && (
           <Marker
             coordinate={destinationCoords}
             title="Destination"
             pinColor="#F44336"
           />
-        )}
-        {driverLiveCoords && (
+        )} */}
+        {driverLiveCoords && driverInfo && (
           <Marker
             coordinate={driverLiveCoords}
             title="Driver"
-            pinColor="#4CAF50"
+            image={getVehicleMarkerIcon(driverInfo.vehicleType || 'Car')}
           />
         )}
-        {driverLiveCoords && destinationCoords && (
+
+        {driverLiveCoords && pickupCoords && rideStatus === 'accepted' && (
           <MapViewDirections
             origin={driverLiveCoords}
-            destination={destinationCoords}
+            destination={pickupCoords}
             apikey={GOOGLE_MAPS_API_KEY}
             strokeWidth={4}
-            strokeColor="#9C27B0"
+            strokeColor="#4CAF50"
+            onReady={result => {
+              // You can store this ETA in state for your modal:
+              setRouteInfoToPickup({
+                distanceText: `${result.distance.toFixed(1)} km`,
+                durationText: `${Math.ceil(result.duration)} min`,
+              });
+            }}
+            onError={err =>
+              console.error('Directions error (driver to pickup):', err)
+            }
           />
         )}
 
@@ -480,6 +508,19 @@ const HomeMapScreen: React.FC = () => {
           />
         )}
       </MapView>
+      {availableDrivers
+        .filter(d => d.vehicleType === selectedVehicle)
+        .map(driver => (
+          <Marker
+            key={driver.id}
+            coordinate={{
+              latitude: driver.latitude,
+              longitude: driver.longitude,
+            }}
+            title={`${driver.vehicleType}`}
+            image={getVehicleMarkerIcon(driver.vehicleType)}
+          />
+        ))}
 
       {currentLocation && !destinationCoords && (
         <TouchableOpacity
@@ -634,6 +675,14 @@ const HomeMapScreen: React.FC = () => {
             avatarUrl: driverInfo.avatarUrl,
           }
         }
+        etaToPickup={routeInfoToPickup?.durationText}
+        distance={routeInfoToPickup?.distanceText}
+        duration={routeInfoToPickup?.durationText}
+        fare={calculateFare(
+          routeInfoToPickup?.distanceText,
+          routeInfoToPickup?.durationText,
+          driverInfo?.vehicleType || 'Car',
+        )}
       />
     </View>
   );

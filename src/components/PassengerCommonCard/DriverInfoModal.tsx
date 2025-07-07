@@ -22,9 +22,21 @@ interface Props {
     rating?: number;
     avatarUrl?: string;
   };
+  distance?: string; // e.g., "1.2 km"
+  duration?: string; // e.g., "4 min"
+  fare?: number;
+  etaToPickup?: string;
 }
 
-const DriverInfoModal: React.FC<Props> = ({ visible, onClose, driver }) => (
+const DriverInfoModal: React.FC<Props> = ({
+  visible,
+  onClose,
+  driver,
+  etaToPickup,
+  distance,
+  duration,
+  fare,
+}) => (
   <Modal visible={visible} transparent animationType="slide">
     <View style={styles.overlay}>
       <View style={styles.container}>
@@ -39,7 +51,9 @@ const DriverInfoModal: React.FC<Props> = ({ visible, onClose, driver }) => (
             style={styles.avatar}
           />
           <View style={styles.driverInfo}>
-            <Text style={styles.driverName}>{driver?.name ?? 'Driver Name'}</Text>
+            <Text style={styles.driverName}>
+              {driver?.name ?? 'Driver Name'}
+            </Text>
             <View style={styles.ratingRow}>
               <Icon name="star" size={16} color="#FFC107" />
               <Text style={styles.ratingText}>
@@ -52,9 +66,8 @@ const DriverInfoModal: React.FC<Props> = ({ visible, onClose, driver }) => (
               <Icon name="message" size={20} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.iconButton, { backgroundColor: Colors.primary }]}
-              onPress={onClose}
-            >
+              style={[styles.iconButton, {backgroundColor: Colors.primary}]}
+              onPress={onClose}>
               <Icon name="phone" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
@@ -64,15 +77,21 @@ const DriverInfoModal: React.FC<Props> = ({ visible, onClose, driver }) => (
         <View style={styles.vehicleDetails}>
           <View style={styles.vehicleItem}>
             <Text style={styles.vehicleLabel}>Vehicle</Text>
-            <Text style={styles.vehicleValue}>{driver?.vehicleName ?? 'N/A'}</Text>
+            <Text style={styles.vehicleValue}>
+              {driver?.vehicleName ?? 'N/A'}
+            </Text>
           </View>
           <View style={styles.vehicleItem}>
             <Text style={styles.vehicleLabel}>Colour</Text>
-            <Text style={styles.vehicleValue}>{driver?.vehicleColor ?? 'N/A'}</Text>
+            <Text style={styles.vehicleValue}>
+              {driver?.vehicleColor ?? 'N/A'}
+            </Text>
           </View>
           <View style={styles.vehicleItem}>
             <Text style={styles.vehicleLabel}>Number</Text>
-            <Text style={styles.vehicleValue}>{driver?.vehicleNumber ?? 'N/A'}</Text>
+            <Text style={styles.vehicleValue}>
+              {driver?.vehicleNumber ?? 'N/A'}
+            </Text>
           </View>
         </View>
 
@@ -84,20 +103,26 @@ const DriverInfoModal: React.FC<Props> = ({ visible, onClose, driver }) => (
           <Icon name="car" size={32} color="#333" />
           <View style={styles.infoBlock}>
             <Text style={styles.infoLabel}>DISTANCE</Text>
-            <Text style={styles.infoValue}>0.2 km</Text>
+            <Text style={styles.infoValue}>{distance ?? 'N/A'}</Text>
           </View>
           <View style={styles.infoBlock}>
             <Text style={styles.infoLabel}>TIME</Text>
-            <Text style={styles.infoValue}>2 min</Text>
+            <Text style={styles.infoValue}>{duration ?? 'N/A'}</Text>
           </View>
           <View style={styles.infoBlock}>
             <Text style={styles.infoLabel}>PRICE</Text>
-            <Text style={styles.infoValue}>RS:450</Text>
+            <Text style={styles.infoValue}>
+              {fare != null ? `RS: ${fare}` : 'N/A'}
+            </Text>
           </View>
         </View>
 
-         <TouchableOpacity style={styles.arrivalButton}>
-          <Text style={styles.arrivalText}>Driver will arrive in few minutes</Text>
+        <TouchableOpacity style={styles.arrivalButton}>
+          <Text style={styles.arrivalText}>
+            {etaToPickup
+              ? `Driver will arrive in approx ${etaToPickup}`
+              : 'Driver is on the way'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>

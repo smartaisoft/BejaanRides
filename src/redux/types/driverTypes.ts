@@ -36,3 +36,11 @@ export interface DriverState {
   rideRequests: RideData[]; // ✅ NEW: All incoming ride requests
 
 }
+export interface OnlineDriverInfo {
+  driverId: string;
+  name: string;
+  vehicleType: string;
+  latitude: number;
+  longitude: number;
+}
+

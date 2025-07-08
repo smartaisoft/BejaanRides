@@ -428,6 +428,8 @@ import database from '@react-native-firebase/database';
 import {getDriverByUid} from '../../services/realTimeUserService';
 import Colors from '../../themes/colors';
 import Locate from '../../../assets/SVG/Locate';
+import {removeDriverPresence, updateDriverPresence} from '../../services/driverPresenceService';
+import {getVehicleInfo} from '../../services/vehicleService';
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyCb2ys2AD6NTFhnEGXNsDrjSXde6d569vU';
 
@@ -463,6 +465,20 @@ const DriverMapScreen: React.FC = () => {
     fetchDriverName();
   }, []);
 
+useEffect(() => {
+  return () => {
+    (async () => {
+      try {
+        await removeDriverPresence();
+        console.log('✅ Driver presence removed successfully');
+      } catch (err) {
+        console.warn('Failed to remove driver presence:', err);
+      }
+    })();
+  };
+}, []);
+
+
   // Watch driver location
   useEffect(() => {
     const watchId = Geolocation.watchPosition(
@@ -485,8 +501,47 @@ const DriverMapScreen: React.FC = () => {
   }, [currentRide]);
 
   // Listen for ride requests
-  useEffect(() => {
+  // useEffect(() => {
+  //   if (status === DriverStatus.ONLINE) {
+  //     unsubscribeRef.current = listenForPendingRideRequests(rides => {
+  //       const formatted = rides.map(ride => ({
+  //         id: ride.id,
+  //         riderName: ride.passengerName ?? 'Unknown Passenger',
+  //         riderPhone: ride.passengerPhone ?? 'N/A',
+  //         pickupLocation: ride.pickup,
+  //         dropoffLocation: ride.dropoff,
+  //         distanceText: ride.distanceText ?? 'N/A',
+  //         durationText: ride.durationText ?? 'N/A',
+  //         fare: ride.fareEstimate,
+  //       }));
+  //       dispatch(setRideRequests(formatted));
+  //     });
+  //   } else {
+  //     unsubscribeRef.current?.();
+  //     dispatch(clearRideRequests());
+  //   }
+  //   return () => {
+  //     unsubscribeRef.current?.();
+  //   };
+  // }, [status, dispatch]);
+
+useEffect(() => {
+  const setup = async () => {
     if (status === DriverStatus.ONLINE) {
+      const vehicleInfo = await getVehicleInfo();
+
+      if (driverCoords && vehicleInfo) {
+        try {
+          await updateDriverPresence(
+            driverCoords,
+            driverName,
+            vehicleInfo.vehicleType,
+          );
+        } catch (error) {
+          console.error('❌ Failed to update driver presence:', error);
+        }
+      }
+
       unsubscribeRef.current = listenForPendingRideRequests(rides => {
         const formatted = rides.map(ride => ({
           id: ride.id,
@@ -504,10 +559,15 @@ const DriverMapScreen: React.FC = () => {
       unsubscribeRef.current?.();
       dispatch(clearRideRequests());
     }
-    return () => {
-      unsubscribeRef.current?.();
-    };
-  }, [status, dispatch]);
+  };
+
+  setup();
+
+  return () => {
+    unsubscribeRef.current?.();
+  };
+}, [status, dispatch, driverCoords, driverName]);
+
 
   const getVehicleMarkerIcon = (vehicleType: string) => {
     switch (vehicleType) {
@@ -596,7 +656,6 @@ const DriverMapScreen: React.FC = () => {
         )}
         {renderMapMarkersAndDirections()}
       </MapView>
-
       {driverCoords && (
         <TouchableOpacity
           style={styles.locateButtonContainer}
@@ -604,14 +663,12 @@ const DriverMapScreen: React.FC = () => {
           <Locate width={50} height={50} />
         </TouchableOpacity>
       )}
-
       {status === DriverStatus.OFFLINE && (
         <OfflinePanel
           onGoOnline={() => dispatch(setDriverStatus(DriverStatus.ONLINE))}
           driverName={driverName}
         />
       )}
-
       {status === DriverStatus.ONLINE && (
         <View style={styles.rideRequestsContainer}>
           {rideRequests.length === 0 ? (
@@ -647,7 +704,6 @@ const DriverMapScreen: React.FC = () => {
           )}
         </View>
       )}
-
       {status === DriverStatus.ON_THE_WAY && currentRide && (
         <TripInfoCard
           eta={currentRide.durationText}
@@ -674,7 +730,6 @@ const DriverMapScreen: React.FC = () => {
           }}
         />
       )}
-
       {status === DriverStatus.WAITING_FOR_PASSENGER && currentRide && (
         <StartTripCard
           eta="Ready"
@@ -687,13 +742,11 @@ const DriverMapScreen: React.FC = () => {
           }}
         />
       )}
-
       {status === DriverStatus.TRIP_STARTED && (
         <CompleteTripCard
           onComplete={() => dispatch(setDriverStatus(DriverStatus.PAYMENT))}
         />
       )}
-
       {status === DriverStatus.PAYMENT && currentRide && (
         <PaymentCard
           amount={currentRide.fare}

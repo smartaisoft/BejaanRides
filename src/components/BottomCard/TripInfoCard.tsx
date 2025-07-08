@@ -6,8 +6,8 @@ import Colors from '../../themes/colors';
 interface Props {
   riderName: string;
   riderPhone: string;
-  eta: string;
-  distance: string;
+  eta: string;       // e.g., "4 min"
+  distance: string;  // e.g., "1.5 km"
   onChat: () => void;
   onCall: () => void;
   onCancel: () => void;
@@ -15,21 +15,34 @@ interface Props {
 }
 
 const TripInfoCard: React.FC<Props> = ({
+  riderName,
+  riderPhone,
   eta,
   distance,
   onChat,
   onCall,
   onCancel,
   onArrived,
-  riderName,
-  riderPhone,
 }) => (
   <View style={styles.container}>
     <View style={styles.handle} />
+
     <Text style={styles.riderName}>{riderName}</Text>
     <Text style={styles.riderPhone}>{riderPhone}</Text>
 
-    <Text style={styles.eta}>{eta}</Text>
+    {/* Distance and ETA Row */}
+    <View style={styles.infoRow}>
+      <View style={styles.infoItem}>
+        <Icon name="map-marker-distance" size={20} color={Colors.primary} />
+        <Text style={styles.infoText}>{distance}</Text>
+      </View>
+      <View style={styles.infoItem}>
+        <Icon name="clock-outline" size={20} color={Colors.primary} />
+        <Text style={styles.infoText}>{eta}</Text>
+      </View>
+    </View>
+
+    {/* Action Buttons */}
     <View style={styles.row}>
       <TouchableOpacity style={styles.iconButton} onPress={onChat}>
         <Icon name="chat" size={24} color={Colors.primary} />
@@ -41,15 +54,15 @@ const TripInfoCard: React.FC<Props> = ({
       </TouchableOpacity>
       <TouchableOpacity style={styles.iconButton} onPress={onCancel}>
         <Icon name="close" size={24} color={Colors.primary} />
-        <Text style={styles.iconText}>{distance}</Text>
+        <Text style={styles.iconText}>Cancel</Text>
       </TouchableOpacity>
     </View>
+
     <TouchableOpacity style={styles.button} onPress={onArrived}>
       <Text style={styles.buttonText}>Arrived</Text>
     </TouchableOpacity>
   </View>
 );
-
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#fff',
@@ -66,11 +79,32 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
     marginBottom: 12,
   },
-  eta: {
-    fontWeight: 'bold',
+  riderName: {
     fontSize: 16,
-    marginBottom: 16,
+    fontWeight: 'bold',
     color: '#000',
+    marginBottom: 4,
+  },
+  riderPhone: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 12,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 12,
+  },
+  infoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  infoText: {
+    fontSize: 14,
+    color: '#333',
+    marginLeft: 4,
   },
   row: {
     flexDirection: 'row',
@@ -100,17 +134,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 16,
   },
-  riderName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 4,
-  },
-  riderPhone: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 8,
-  },
 });
-
 export default TripInfoCard;

@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Modal,
   View,
   StyleSheet,
   Text,
@@ -22,13 +21,13 @@ interface Props {
     rating?: number;
     avatarUrl?: string;
   };
-  distance?: string; // e.g., "1.2 km"
-  duration?: string; // e.g., "4 min"
+  distance?: string;
+  duration?: string;
   fare?: number;
   etaToPickup?: string;
 }
 
-const DriverInfoModal: React.FC<Props> = ({
+const DriverInfoPanel: React.FC<Props> = ({
   visible,
   onClose,
   driver,
@@ -36,109 +35,98 @@ const DriverInfoModal: React.FC<Props> = ({
   distance,
   duration,
   fare,
-}) => (
-  <Modal visible={visible} transparent animationType="slide">
-    <View style={styles.overlay}>
-      <View style={styles.container}>
-        {/* Top Section */}
-        <View style={styles.topSection}>
-          <Image
-            source={{
-              uri:
-                driver?.avatarUrl ??
-                'https://randomuser.me/api/portraits/men/1.jpg',
-            }}
-            style={styles.avatar}
-          />
-          <View style={styles.driverInfo}>
-            <Text style={styles.driverName}>
-              {driver?.name ?? 'Driver Name'}
-            </Text>
-            <View style={styles.ratingRow}>
-              <Icon name="star" size={16} color="#FFC107" />
-              <Text style={styles.ratingText}>
-                {driver?.rating?.toFixed(1) ?? '4.9'}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.iconButton}>
-              <Icon name="message" size={20} color="#fff" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.iconButton, {backgroundColor: Colors.primary}]}
-              onPress={onClose}>
-              <Icon name="phone" size={20} color="#fff" />
-            </TouchableOpacity>
-          </View>
-        </View>
+}) => {
+  if (!visible) return null;
 
-        {/* Vehicle Details */}
-        <View style={styles.vehicleDetails}>
-          <View style={styles.vehicleItem}>
-            <Text style={styles.vehicleLabel}>Vehicle</Text>
-            <Text style={styles.vehicleValue}>
-              {driver?.vehicleName ?? 'N/A'}
-            </Text>
-          </View>
-          <View style={styles.vehicleItem}>
-            <Text style={styles.vehicleLabel}>Colour</Text>
-            <Text style={styles.vehicleValue}>
-              {driver?.vehicleColor ?? 'N/A'}
-            </Text>
-          </View>
-          <View style={styles.vehicleItem}>
-            <Text style={styles.vehicleLabel}>Number</Text>
-            <Text style={styles.vehicleValue}>
-              {driver?.vehicleNumber ?? 'N/A'}
+  return (
+    <View style={styles.panel}>
+      <View style={styles.topSection}>
+        <Image
+          source={{
+            uri:
+              driver?.avatarUrl ??
+              'https://randomuser.me/api/portraits/men/1.jpg',
+          }}
+          style={styles.avatar}
+        />
+        <View style={styles.driverInfo}>
+          <Text style={styles.driverName}>{driver?.name ?? 'Driver Name'}</Text>
+          <View style={styles.ratingRow}>
+            <Icon name="star" size={16} color="#FFC107" />
+            <Text style={styles.ratingText}>
+              {driver?.rating?.toFixed(1) ?? '4.9'}
             </Text>
           </View>
         </View>
-
-        {/* Divider */}
-        <View style={styles.divider} />
-
-        {/* Distance / Time / Price */}
-        <View style={styles.bottomRow}>
-          <Icon name="car" size={32} color="#333" />
-          <View style={styles.infoBlock}>
-            <Text style={styles.infoLabel}>DISTANCE</Text>
-            <Text style={styles.infoValue}>{distance ?? 'N/A'}</Text>
-          </View>
-          <View style={styles.infoBlock}>
-            <Text style={styles.infoLabel}>TIME</Text>
-            <Text style={styles.infoValue}>{duration ?? 'N/A'}</Text>
-          </View>
-          <View style={styles.infoBlock}>
-            <Text style={styles.infoLabel}>PRICE</Text>
-            <Text style={styles.infoValue}>
-              {fare != null ? `RS: ${fare}` : 'N/A'}
-            </Text>
-          </View>
+        <View style={styles.actions}>
+          <TouchableOpacity style={styles.iconButton}>
+            <Icon name="message" size={20} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.iconButton, { backgroundColor: Colors.primary }]}
+            onPress={onClose}
+          >
+            <Icon name="phone" size={20} color="#fff" />
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity style={styles.arrivalButton}>
-          <Text style={styles.arrivalText}>
-            {etaToPickup
-              ? `Driver will arrive in approx ${etaToPickup}`
-              : 'Driver is on the way'}
-          </Text>
-        </TouchableOpacity>
       </View>
+
+      <View style={styles.vehicleDetails}>
+        <View style={styles.vehicleItem}>
+          <Text style={styles.vehicleLabel}>Vehicle</Text>
+          <Text style={styles.vehicleValue}>{driver?.vehicleName ?? 'N/A'}</Text>
+        </View>
+        <View style={styles.vehicleItem}>
+          <Text style={styles.vehicleLabel}>Colour</Text>
+          <Text style={styles.vehicleValue}>{driver?.vehicleColor ?? 'N/A'}</Text>
+        </View>
+        <View style={styles.vehicleItem}>
+          <Text style={styles.vehicleLabel}>Number</Text>
+          <Text style={styles.vehicleValue}>{driver?.vehicleNumber ?? 'N/A'}</Text>
+        </View>
+      </View>
+
+      <View style={styles.divider} />
+
+      <View style={styles.bottomRow}>
+        <Icon name="car" size={32} color="#333" />
+        <View style={styles.infoBlock}>
+          <Text style={styles.infoLabel}>DISTANCE</Text>
+          <Text style={styles.infoValue}>{distance ?? 'N/A'}</Text>
+        </View>
+        <View style={styles.infoBlock}>
+          <Text style={styles.infoLabel}>TIME</Text>
+          <Text style={styles.infoValue}>{duration ?? 'N/A'}</Text>
+        </View>
+        <View style={styles.infoBlock}>
+          <Text style={styles.infoLabel}>PRICE</Text>
+          <Text style={styles.infoValue}>
+            {fare != null ? `RS: ${fare}` : 'N/A'}
+          </Text>
+        </View>
+      </View>
+
+      <TouchableOpacity style={styles.arrivalButton}>
+        <Text style={styles.arrivalText}>
+          {etaToPickup
+            ? `Driver will arrive in approx ${etaToPickup}`
+            : 'Driver is on the way'}
+        </Text>
+      </TouchableOpacity>
     </View>
-  </Modal>
-);
+  );
+};
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  container: {
+  panel: {
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
     backgroundColor: '#fff',
     padding: 16,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
+    elevation: 10,
   },
   topSection: {
     flexDirection: 'row',
@@ -229,4 +217,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DriverInfoModal;
+export default DriverInfoPanel;

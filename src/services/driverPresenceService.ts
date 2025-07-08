@@ -1,34 +1,57 @@
+// services/driverPresenceService.ts
 import database from '@react-native-firebase/database';
 import auth from '@react-native-firebase/auth';
+import { VehicleInfo } from './vehicleService';
+import { getVehicleInfo } from './vehicleService';
 
-let updateInterval: NodeJS.Timeout | null = null;
+export interface DriverPresence {
+  driverId: string;
+  name: string;
+  vehicleType: string;
+  latitude: number;
+  longitude: number;
+  updatedAt: number;
+}
 
-export const startDriverPresence = (vehicleType: string) => {
+export const updateDriverPresence = async (
+  coords: { latitude: number; longitude: number },
+  name: string,
+  vehicleType: string,
+) => {
   const uid = auth().currentUser?.uid;
   if (!uid) return;
 
-  updateInterval = setInterval(() => {
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        database().ref(`driversOnline/${uid}`).set({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-          vehicleType,
-          isAvailable: true,
-          timestamp: Date.now(),
-        });
-      },
-      err => {
-        console.error('Driver location error:', err);
-      },
-      {enableHighAccuracy: true},
-    );
-  }, 5000); // Update every 5 seconds
+  await database()
+    .ref(`driversOnline/${uid}`)
+    .set({
+      driverId: uid,
+      name,
+      vehicleType,
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      updatedAt: Date.now(),
+    });
 };
 
-export const stopDriverPresence = () => {
+export const removeDriverPresence = async () => {
   const uid = auth().currentUser?.uid;
   if (!uid) return;
-  if (updateInterval) clearInterval(updateInterval);
-  database().ref(`driversOnline/${uid}`).remove();
+  await database().ref(`driversOnline/${uid}`).remove();
+};
+
+// For passengers to subscribe to available drivers
+export const subscribeToAvailableDrivers = (
+  callback: (drivers: DriverPresence[]) => void,
+) => {
+  const ref = database().ref('driversOnline');
+  const onValueChange = ref.on('value', snapshot => {
+    const data = snapshot.val() || {};
+    const drivers = Object.keys(data).map(id => ({
+      id,
+      ...data[id],
+    }));
+    callback(drivers);
+  });
+
+  return () => ref.off('value', onValueChange);
 };

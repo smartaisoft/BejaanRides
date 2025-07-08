@@ -30,11 +30,9 @@ const PassengerRideRequestCard: React.FC<Props> = ({
         </View>
       </View>
       <View style={styles.timeDistance}>
-        <Text style={styles.timeText}>25 min</Text>
+        <Text style={styles.timeText}>{ride.durationText ?? 'ETA N/A'}</Text>
         <Text style={styles.distanceText}>
-          {ride.distance != null
-            ? `${ride.distance.toFixed(1)} km`
-            : ride.distance ?? 'Distance N/A'}
+          {ride.distanceText ?? 'Distance N/A'}
         </Text>
       </View>
     </View>

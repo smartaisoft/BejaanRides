@@ -6,8 +6,10 @@ import {
   StyleSheet,
   PermissionsAndroid,
   Platform,
+  FlatList,
   TouchableOpacity,
   Alert,
+  ScrollView,
 } from 'react-native';
 import Geolocation, {
   GeolocationResponse,
@@ -36,10 +38,7 @@ import DriverArrivedCard from '../../components/PassengerCommonCard/DriverArrive
 import {getVehicleInfoByDriverId} from '../../services/vehicleService';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Colors from '../../themes/colors';
-import {
-  DriverLocation,
-  subscribeToAvailableDrivers,
-} from '../../services/driverPresenceService';
+import DriverOfferCard from '../../components/PassengerCommonCard/DriverOfferCard';
 
 const defaultLat = 31.5497;
 const defaultLng = 74.3436;
@@ -80,6 +79,8 @@ const HomeMapScreen: React.FC = () => {
   const [hasDriverArrived, setHasDriverArrived] = useState(false);
   const [isTripSummaryLoading, setIsTripSummaryLoading] = useState(false);
   const [availableDrivers, setAvailableDrivers] = useState<any[]>([]);
+  const [incomingOffers, setIncomingOffers] = useState<any[]>([]);
+
   const [routeInfoToPickup, setRouteInfoToPickup] = useState<RouteInfo | null>(
     null,
   );
@@ -161,11 +162,43 @@ const HomeMapScreen: React.FC = () => {
         id,
         ...data[id],
       }));
-      setAvailableDrivers(driversArray);
+
+      console.log('🟢 All Online Drivers:', driversArray);
+      console.log('📌 Current selectedVehicle:', selectedVehicle);
+
+      const filtered = driversArray.filter(
+        d => d.vehicleType?.toLowerCase() === selectedVehicle.toLowerCase(),
+      );
+      console.log(
+        `🚗 Online Drivers Matching Selected Vehicle (${selectedVehicle}):`,
+        filtered,
+      );
+
+      setAvailableDrivers(filtered); // ✅ FIX: only set filtered list
     });
 
     return () => ref.off('value', listener);
-  }, []);
+  }, [selectedVehicle]);
+  useEffect(() => {
+    if (!currentRideId) return;
+
+    const offersRef = database().ref(`rideRequests/${currentRideId}/offers`);
+    const handleOffers = (snapshot: {val: () => any}) => {
+      const data = snapshot.val();
+      if (data) {
+        const offers = Object.keys(data).map(driverId => ({
+          driverId,
+          ...data[driverId],
+        }));
+        setIncomingOffers(offers); // NEW STATE: const [incomingOffers, setIncomingOffers] = useState([]);
+      } else {
+        setIncomingOffers([]);
+      }
+    };
+
+    offersRef.on('value', handleOffers);
+    return () => offersRef.off('value', handleOffers);
+  }, [currentRideId]);
 
   const calculateFare = (
     distanceText: string | undefined,
@@ -399,6 +432,23 @@ const HomeMapScreen: React.FC = () => {
     }
   };
 
+  const handleAcceptDriver = async (driverId: string) => {
+    await database().ref(`rideRequests/${currentRideId}`).update({
+      status: 'accepted',
+      driverId,
+    });
+
+    // Optionally remove other offers
+    await database().ref(`rideRequests/${currentRideId}/offers`).remove();
+
+    // Navigate to trip screen or modal
+  };
+  const handleRejectDriver = (driverId: string) => {
+    setIncomingOffers(prev =>
+      prev.filter(offer => offer.driverId !== driverId),
+    );
+  };
+
   return (
     <View style={styles.container}>
       <MapView
@@ -455,14 +505,6 @@ const HomeMapScreen: React.FC = () => {
             )}
           </>
         )}
-
-        {/* {destinationCoords && (
-          <Marker
-            coordinate={destinationCoords}
-            title="Destination"
-            pinColor="#F44336"
-          />
-        )} */}
         {driverLiveCoords && driverInfo && (
           <Marker
             coordinate={driverLiveCoords}
@@ -509,7 +551,9 @@ const HomeMapScreen: React.FC = () => {
         )}
       </MapView>
       {availableDrivers
-        .filter(d => d.vehicleType === selectedVehicle)
+        .filter(
+          d => d.vehicleType?.toLowerCase() === selectedVehicle.toLowerCase(),
+        )
         .map(driver => (
           <Marker
             key={driver.id}
@@ -517,7 +561,8 @@ const HomeMapScreen: React.FC = () => {
               latitude: driver.latitude,
               longitude: driver.longitude,
             }}
-            title={`${driver.vehicleType}`}
+            title={driver.name}
+            description={`Vehicle: ${driver.vehicleType}`}
             image={getVehicleMarkerIcon(driver.vehicleType)}
           />
         ))}
@@ -613,11 +658,35 @@ const HomeMapScreen: React.FC = () => {
           }
         }}
         onSelectVehicle={vehicle => {
-          setSelectedVehicle(vehicle.type);
+          setSelectedVehicle(vehicle.type.toLowerCase()); // 👈 Normalize to lowercase
         }}
         routeInfo={routeInfo}
       />
-      {isSearchingDriver && (
+      {incomingOffers.length > 0 && (
+  <View style={styles.offerOverlay}>
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      {incomingOffers.map(item => (
+        <DriverOfferCard
+          key={item.driverId}
+          driver={{
+            name: item.driverName,
+            rating: 4.9, // Replace with dynamic rating if needed
+            totalRides: 300,
+            vehicleName: item.vehicleType,
+            fare: item.fare,
+            eta: item.eta,
+            distance: item.distance,
+          }}
+          onAccept={() => handleAcceptDriver(item.driverId)}
+          onReject={() => handleRejectDriver(item.driverId)}
+        />
+      ))}
+    </ScrollView>
+  </View>
+)}
+
+
+      {isSearchingDriver && incomingOffers.length <= 0 && (
         <SearchingDriverOverlay
           onCancel={() => {
             setIsSearchingDriver(false);
@@ -689,6 +758,23 @@ const HomeMapScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  offerOverlay: {
+  position: 'absolute',
+  top: 0,
+  bottom: 0,
+  left: 0,
+  right: 0,
+  backgroundColor: 'rgba(255,255,255,0.96)', // or '#fff'
+  zIndex: 999,
+  paddingTop: 40,
+  paddingHorizontal: 12,
+},
+
+scrollContent: {
+  paddingBottom: 100,
+},
+
+
   container: {flex: 1},
   map: {flex: 1},
   locateButton: {position: 'absolute', top: 40, right: 10},

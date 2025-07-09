@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-} from 'react-native';
+import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 interface Props {
@@ -41,7 +35,12 @@ const DriverOfferCard: React.FC<Props> = ({driver, onAccept, onReject}) => {
         <View style={{flex: 1, marginHorizontal: 10}}>
           <View style={{flexDirection: 'row', alignItems: 'center'}}>
             <Text style={styles.name}>Driver name</Text>
-            <Icon name="star" size={16} color="#FFC107" style={{marginLeft: 6}} />
+            <Icon
+              name="star"
+              size={16}
+              color="#FFC107"
+              style={{marginLeft: 6}}
+            />
             <Text style={styles.rating}>{driver.rating}</Text>
             <Text style={styles.rides}> ({driver.totalRides} rides)</Text>
           </View>

@@ -30,7 +30,7 @@ export const listenForPendingRideRequests = (
               .catch(err =>
                 console.error(`❌ Failed to auto-delete ride ${ride.id}`, err),
               );
-          }, 15000); // 20 seconds
+          }, 10000); // 20 seconds
         }
       });
 

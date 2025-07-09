@@ -32,13 +32,14 @@ import {
   getUserByUid,
   UserData,
 } from '../../services/realTimeUserService';
-import SearchingDriverOverlay from '../../components/PassengerCommonCard/ SearchingDriverOverlay';
 import database from '@react-native-firebase/database';
 import DriverArrivedCard from '../../components/PassengerCommonCard/DriverArrivedCard';
 import {getVehicleInfoByDriverId} from '../../services/vehicleService';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Colors from '../../themes/colors';
 import DriverOfferCard from '../../components/PassengerCommonCard/DriverOfferCard';
+import SearchingDriverOverlay from '../../components/PassengerCommonCard/SearchingDriverOverlay';
+// import {AppDispatch} from '../../redux/store';
 
 const defaultLat = 31.5497;
 const defaultLng = 74.3436;
@@ -190,7 +191,9 @@ const HomeMapScreen: React.FC = () => {
           driverId,
           ...data[driverId],
         }));
-        setIncomingOffers(offers); // NEW STATE: const [incomingOffers, setIncomingOffers] = useState([]);
+        setIncomingOffers(offers);
+        // dispatch(setIncomingOffers(offers));
+        console.log('📥 Incoming Offers:', offers);
       } else {
         setIncomingOffers([]);
       }
@@ -199,6 +202,22 @@ const HomeMapScreen: React.FC = () => {
     offersRef.on('value', handleOffers);
     return () => offersRef.off('value', handleOffers);
   }, [currentRideId]);
+
+  // useEffect(() => {
+  //   if (!currentRideId) return;
+
+  //   const ref = database().ref(`rideRequests/${currentRideId}/offers`);
+  //   const listener = ref.on('value', snapshot => {
+  //     const data = snapshot.val() || {};
+  //     const offers = Object.keys(data).map(id => ({
+  //       driverId: id,
+  //       ...data[id],
+  //     }));
+  //     dispatch(setIncomingOffers(offers));
+  //   });
+
+  //   return () => ref.off('value', listener);
+  // }, [currentRideId, dispatch]); // ✅ Add dispatch here
 
   const calculateFare = (
     distanceText: string | undefined,
@@ -443,6 +462,8 @@ const HomeMapScreen: React.FC = () => {
 
     // Navigate to trip screen or modal
   };
+
+
   const handleRejectDriver = (driverId: string) => {
     setIncomingOffers(prev =>
       prev.filter(offer => offer.driverId !== driverId),
@@ -663,28 +684,27 @@ const HomeMapScreen: React.FC = () => {
         routeInfo={routeInfo}
       />
       {incomingOffers.length > 0 && (
-  <View style={styles.offerOverlay}>
-    <ScrollView contentContainerStyle={styles.scrollContent}>
-      {incomingOffers.map(item => (
-        <DriverOfferCard
-          key={item.driverId}
-          driver={{
-            name: item.driverName,
-            rating: 4.9, // Replace with dynamic rating if needed
-            totalRides: 300,
-            vehicleName: item.vehicleType,
-            fare: item.fare,
-            eta: item.eta,
-            distance: item.distance,
-          }}
-          onAccept={() => handleAcceptDriver(item.driverId)}
-          onReject={() => handleRejectDriver(item.driverId)}
-        />
-      ))}
-    </ScrollView>
-  </View>
-)}
-
+        <ScrollView
+          style={styles.offerOverlay}
+          contentContainerStyle={styles.scrollContent}>
+          {incomingOffers.map(offer => (
+            <DriverOfferCard
+              key={offer.driverId}
+              driver={{
+                name: offer.driverName,
+                rating: 4.8,
+                totalRides: 200,
+                vehicleName: offer.vehicleType,
+                fare: offer.fare,
+                eta: offer.eta,
+                distance: offer.distance,
+              }}
+              onAccept={() => handleAcceptDriver(offer.driverId)}
+              onReject={() => handleRejectDriver(offer.driverId)}
+            />
+          ))}
+        </ScrollView>
+      )}
 
       {isSearchingDriver && incomingOffers.length <= 0 && (
         <SearchingDriverOverlay
@@ -759,21 +779,20 @@ const HomeMapScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   offerOverlay: {
-  position: 'absolute',
-  top: 0,
-  bottom: 0,
-  left: 0,
-  right: 0,
-  backgroundColor: 'rgba(255,255,255,0.96)', // or '#fff'
-  zIndex: 999,
-  paddingTop: 40,
-  paddingHorizontal: 12,
-},
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    // backgroundColor: 'rgba(255,255,255,0.96)', // or '#fff'
+    zIndex: 999,
+    paddingTop: 40,
+    paddingHorizontal: 12,
+  },
 
-scrollContent: {
-  paddingBottom: 100,
-},
-
+  scrollContent: {
+    paddingBottom: 100,
+  },
 
   container: {flex: 1},
   map: {flex: 1},

@@ -199,13 +199,6 @@ const VehicleSelectionSheet: React.FC<Props> = ({
                   ]}>
                   {item.type}
                 </Text>
-                <Text
-                  style={[
-                    styles.vehicleDetails,
-                    selectedVehicle?.id === item.id && {color: '#fff'},
-                  ]}>
-                  {item.distance}
-                </Text>
               </View>
               <View style={styles.vehiclePrice}>
                 <Text
@@ -214,13 +207,6 @@ const VehicleSelectionSheet: React.FC<Props> = ({
                     selectedVehicle?.id === item.id && {color: '#fff'},
                   ]}>
                   {item.price}
-                </Text>
-                <Text
-                  style={[
-                    styles.etaText,
-                    selectedVehicle?.id === item.id && {color: '#fff'},
-                  ]}>
-                  {item.eta}
                 </Text>
               </View>
             </TouchableOpacity>

@@ -214,7 +214,7 @@ const VehicleSelectionSheet: React.FC<Props> = ({
         />
 
         {/* Selected Fare Box */}
-        {selectedVehicle && (
+        {/* {selectedVehicle && (
           <View style={styles.fareBox}>
             <View style={styles.fareLeft}>
               <Icon name={selectedVehicle.icon} size={28} color="#000" />
@@ -270,7 +270,7 @@ const VehicleSelectionSheet: React.FC<Props> = ({
               )}
             </View>
           </View>
-        )}
+        )} */}
 
         {/* CTA */}
         <TouchableOpacity

@@ -1,12 +1,9 @@
-// i am giving you my whole HomeMapScreenCode,
-// please analyze it and read it carefully , its every feature and every function carefully,  becuase this code rely on 681 lines, and its very messy code, when you read it then i will give you a task to refactor this complete code with fully optimized way. and each line aligned like a pro "/* eslint-disable react-hooks/exhaustive-deps */
 import React, {useEffect, useState, useRef} from 'react';
 import {
   View,
   StyleSheet,
   PermissionsAndroid,
   Platform,
-  FlatList,
   TouchableOpacity,
   Alert,
   ScrollView,
@@ -18,7 +15,9 @@ import MapView, {Circle, Marker, Region} from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import TripSummaryCard from '../../components/PassengerCommonCard/TripSummaryCard';
 import LocationSearchModal from '../../components/PassengerCommonCard/LocationSearchModal';
-import VehicleSelectionModal from '../../components/PassengerCommonCard/VehicleSelectionModal';
+import VehicleSelectionModal, {
+  VehicleOption,
+} from '../../components/PassengerCommonCard/VehicleSelectionModal';
 import DriverInfoModal from '../../components/PassengerCommonCard/DriverInfoModal';
 import {RouteInfo} from '../../utils/getRouteInfo';
 import Locate from '../../../assets/SVG/Locate';
@@ -39,11 +38,20 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import Colors from '../../themes/colors';
 import DriverOfferCard from '../../components/PassengerCommonCard/DriverOfferCard';
 import SearchingDriverOverlay from '../../components/PassengerCommonCard/SearchingDriverOverlay';
-// import {AppDispatch} from '../../redux/store';
+import BookingSuccessModal from '../../components/PassengerCommonCard/BookingSuccessModal';
 
 const defaultLat = 31.5497;
 const defaultLng = 74.3436;
 const GOOGLE_MAPS_API_KEY = 'AIzaSyCb2ys2AD6NTFhnEGXNsDrjSXde6d569vU';
+
+type IncomingOffer = {
+  driverId: string;
+  driverName: string;
+  fare: number;
+  eta: string;
+  distance: string;
+  vehicleType: string;
+};
 
 const HomeMapScreen: React.FC = () => {
   const mapRef = useRef<MapView>(null);
@@ -81,6 +89,13 @@ const HomeMapScreen: React.FC = () => {
   const [isTripSummaryLoading, setIsTripSummaryLoading] = useState(false);
   const [availableDrivers, setAvailableDrivers] = useState<any[]>([]);
   const [incomingOffers, setIncomingOffers] = useState<any[]>([]);
+  const [selectedVehicleOption, setSelectedVehicleOption] =
+    useState<VehicleOption | null>(null);
+  const [selectedOffer, setSelectedOffer] = useState<IncomingOffer | null>(
+    null,
+  );
+  const [showBookingSuccess, setShowBookingSuccess] = useState(false);
+
 
   const [routeInfoToPickup, setRouteInfoToPickup] = useState<RouteInfo | null>(
     null,
@@ -155,6 +170,7 @@ const HomeMapScreen: React.FC = () => {
       }
     };
   }, []);
+
   useEffect(() => {
     const ref = database().ref('driversOnline');
     const listener = ref.on('value', snapshot => {
@@ -180,6 +196,7 @@ const HomeMapScreen: React.FC = () => {
 
     return () => ref.off('value', listener);
   }, [selectedVehicle]);
+
   useEffect(() => {
     if (!currentRideId) return;
 
@@ -202,22 +219,6 @@ const HomeMapScreen: React.FC = () => {
     offersRef.on('value', handleOffers);
     return () => offersRef.off('value', handleOffers);
   }, [currentRideId]);
-
-  // useEffect(() => {
-  //   if (!currentRideId) return;
-
-  //   const ref = database().ref(`rideRequests/${currentRideId}/offers`);
-  //   const listener = ref.on('value', snapshot => {
-  //     const data = snapshot.val() || {};
-  //     const offers = Object.keys(data).map(id => ({
-  //       driverId: id,
-  //       ...data[id],
-  //     }));
-  //     dispatch(setIncomingOffers(offers));
-  //   });
-
-  //   return () => ref.off('value', listener);
-  // }, [currentRideId, dispatch]); // ✅ Add dispatch here
 
   const calculateFare = (
     distanceText: string | undefined,
@@ -250,8 +251,9 @@ const HomeMapScreen: React.FC = () => {
     }
 
     const distanceKm = distanceText
-      ? parseFloat(distanceText.replace('km', '').trim())
+      ? parseFloat(parseFloat(distanceText.replace('km', '').trim()).toFixed(1))
       : 0;
+
     const durationMin = durationText
       ? parseInt(durationText.replace('min', '').trim(), 10)
       : 0;
@@ -340,7 +342,8 @@ const HomeMapScreen: React.FC = () => {
       !pickupCoords ||
       !destinationCoords ||
       !currentUser ||
-      !destinationDescription
+      !destinationDescription ||
+      !selectedVehicleOption
     ) {
       Alert.alert('Error', 'Missing data to create ride request.');
       return;
@@ -348,7 +351,18 @@ const HomeMapScreen: React.FC = () => {
 
     try {
       setIsSearchingDriver(true); // <-- Show the overlay
-
+      // const fareEstimate = calculateFare(
+      //   routeInfo?.distanceText,
+      //   routeInfo?.durationText,
+      //   selectedVehicle,
+      // );
+      const fareEstimate = parseInt(
+        selectedVehicleOption.price.replace('RS:', ''),
+      );
+      console.log(
+        `🚗 Fare Estimate for ${selectedVehicleOption.type}: PKR ${fareEstimate}`,
+      );
+      const vehicleType = selectedVehicleOption.type.toLowerCase();
       const rideId = await createRideRequest({
         passengerId: currentUser.uid,
         passengerName: currentUser.name ?? 'Passenger',
@@ -363,15 +377,12 @@ const HomeMapScreen: React.FC = () => {
           longitude: destinationCoords.longitude,
           address: destinationDescription,
         },
-        vehicleType: selectedVehicle,
-        fareEstimate: calculateFare(
-          routeInfo?.distanceText,
-          routeInfo?.durationText,
-          selectedVehicle,
-        ),
+        vehicleType,
+        fareEstimate,
         distanceText: routeInfo?.distanceText ?? 'N/A',
         durationText: routeInfo?.durationText ?? 'N/A',
       });
+      console.log('fare estimate', fareEstimate);
 
       if (!rideId) {
         console.error('❌ Failed to create ride: rideId was null.');
@@ -451,17 +462,49 @@ const HomeMapScreen: React.FC = () => {
     }
   };
 
+  // const handleAcceptDriver = async (driverId: string) => {
+  //   const offer = incomingOffers.find(o => o.driverId === driverId);
+  //   if (offer) {
+  //     setSelectedOffer(offer); // ✅ Save selected offer (fare, eta, distance)
+  //     setShowDriverModal(true);
+  //   }
+  //   await database().ref(`rideRequests/${currentRideId}`).update({
+  //     status: 'accepted',
+  //     driverId,
+  //   });
+
+  //   // Optionally remove other offers
+  //   await database().ref(`rideRequests/${currentRideId}/offers`).remove();
+
+  //   // Navigate to trip screen or modal
+  // };
+
   const handleAcceptDriver = async (driverId: string) => {
-    await database().ref(`rideRequests/${currentRideId}`).update({
-      status: 'accepted',
-      driverId,
-    });
+  const offer = incomingOffers.find(o => o.driverId === driverId);
+  if (!offer) return;
 
-    // Optionally remove other offers
-    await database().ref(`rideRequests/${currentRideId}/offers`).remove();
+  setSelectedOffer(offer); // Save for modal
+  setShowDriverModal(true);
 
-    // Navigate to trip screen or modal
-  };
+  // 1. Mark ride as accepted
+  await database().ref(`rideRequests/${currentRideId}`).update({
+    status: 'accepted',
+    driverId,
+  });
+
+  // 2. Notify selected driver
+  await database().ref(`driverAcceptedOffers/${driverId}`).set({
+    rideId: currentRideId,
+    status: 'accepted',
+  });
+
+  // 3. Optional: clean up offers so others can't accept
+  await database().ref(`rideRequests/${currentRideId}/offers`).remove();
+  setTimeout(() => {
+    setShowBookingSuccess(true);
+  }, 1000);
+
+};
 
 
   const handleRejectDriver = (driverId: string) => {
@@ -634,6 +677,11 @@ const HomeMapScreen: React.FC = () => {
           }}
         />
       )}
+      <BookingSuccessModal
+  visible={showBookingSuccess}
+  onDone={() => setShowBookingSuccess(false)}
+/>
+
 
       <LocationSearchModal
         visible={showLocationModal}
@@ -679,7 +727,8 @@ const HomeMapScreen: React.FC = () => {
           }
         }}
         onSelectVehicle={vehicle => {
-          setSelectedVehicle(vehicle.type.toLowerCase()); // 👈 Normalize to lowercase
+          setSelectedVehicleOption(vehicle); // Store full object including edited fare
+          setSelectedVehicle(vehicle.type.toLowerCase());
         }}
         routeInfo={routeInfo}
       />
@@ -764,14 +813,10 @@ const HomeMapScreen: React.FC = () => {
             avatarUrl: driverInfo.avatarUrl,
           }
         }
-        etaToPickup={routeInfoToPickup?.durationText}
-        distance={routeInfoToPickup?.distanceText}
-        duration={routeInfoToPickup?.durationText}
-        fare={calculateFare(
-          routeInfoToPickup?.distanceText,
-          routeInfoToPickup?.durationText,
-          driverInfo?.vehicleType || 'Car',
-        )}
+        etaToPickup={selectedOffer?.eta}
+        distance={selectedOffer?.distance}
+        duration={selectedOffer?.eta} // or reuse eta if no separate duration
+        fare={selectedOffer?.fare}
       />
     </View>
   );

@@ -1,52 +1,74 @@
-// components/BottomCard/PassengerRideRequestCard.tsx
-import React from 'react';
-import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  TextInput,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {RideData} from '../redux/types/driverTypes';
 import Colors from '../themes/colors';
 
 interface Props {
   ride: RideData;
-  onAccept: () => void;
+  passengerFare: number;
+  onAccept: (customFare: number) => void;
   onReject: () => void;
 }
 
 const PassengerRideRequestCard: React.FC<Props> = ({
   ride,
+  passengerFare,
   onAccept,
   onReject,
-}) => (
-  <View style={styles.container}>
-    <View style={styles.row}>
-      <Image
-        source={require('../../assets/images/DriverAvatar.png')}
-        style={styles.avatar}
-      />
-      <View style={{flex: 1, marginHorizontal: 10}}>
-        <Text style={styles.name}>{ride.riderName}</Text>
-        <View style={styles.ratingRow}>
-          <Icon name="star" size={16} color="#FFC107" />
-          <Text style={styles.rating}>4.9</Text>
+}) => {
+  const [customFare, setCustomFare] = useState(String(passengerFare));
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.row}>
+        <Image
+          source={require('../../assets/images/DriverAvatar.png')}
+          style={styles.avatar}
+        />
+        <View style={{flex: 1, marginHorizontal: 10}}>
+          <Text style={styles.name}>{ride.riderName}</Text>
+          <View style={styles.ratingRow}>
+            <Icon name="star" size={16} color="#FFC107" />
+            <Text style={styles.rating}>4.9</Text>
+          </View>
+          <Text style={{color: '#000', fontSize: 14}}>Set Your Fare:</Text>
+          <TextInput
+            style={styles.input}
+            keyboardType="numeric"
+            value={customFare}
+            onChangeText={setCustomFare}
+            placeholder="PKR"
+          />
+        </View>
+        <View style={styles.timeDistance}>
+          <Text style={styles.timeText}>{ride.durationText ?? 'ETA N/A'}</Text>
+          <Text style={styles.distanceText}>
+            {ride.distanceText ?? 'Distance N/A'}
+          </Text>
         </View>
       </View>
-      <View style={styles.timeDistance}>
-        <Text style={styles.timeText}>{ride.durationText ?? 'ETA N/A'}</Text>
-        <Text style={styles.distanceText}>
-          {ride.distanceText ?? 'Distance N/A'}
-        </Text>
+
+      <View style={styles.buttonsRow}>
+        <TouchableOpacity style={styles.rejectButton} onPress={onReject}>
+          <Text style={styles.rejectText}>Reject</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.acceptButton}
+          onPress={() => onAccept(Number(customFare))}>
+          <Text style={styles.acceptText}>Send Offer</Text>
+        </TouchableOpacity>
       </View>
     </View>
-
-    <View style={styles.buttonsRow}>
-      <TouchableOpacity style={styles.rejectButton} onPress={onReject}>
-        <Text style={styles.rejectText}>Reject</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.acceptButton} onPress={onAccept}>
-        <Text style={styles.acceptText}>Tap to Accept</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -72,6 +94,15 @@ const styles = StyleSheet.create({
   timeDistance: {alignItems: 'flex-end'},
   timeText: {fontWeight: '500', fontSize: 14},
   distanceText: {fontSize: 12, color: '#777'},
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginTop: 6,
+    fontSize: 14,
+  },
   buttonsRow: {
     flexDirection: 'row',
     marginTop: 12,

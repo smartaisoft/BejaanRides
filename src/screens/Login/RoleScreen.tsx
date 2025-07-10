@@ -57,7 +57,7 @@ const RoleScreen = () => {
       <Button
         title="Passenger"
         onPress={handlePassengerPress}
-        backgroundColor={Colors.primary}
+        backgroundColor="#E4E4E4"
         textColor="white"
         style={styles.button}
         textStyle={styles.passengerText}
@@ -66,7 +66,8 @@ const RoleScreen = () => {
       <Button
         title="Driver"
         onPress={handleDriverPress}
-        backgroundColor="#E4E4E4"
+                backgroundColor={Colors.primary}
+
         textColor="white"
         style={styles.button}
         textStyle={styles.DriverText}
@@ -78,7 +79,7 @@ const RoleScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
@@ -96,8 +97,8 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   imageContainer: {
-    marginBottom: 40,
-    marginRight: 45,
+    // marginBottom: 40,
+    // marginRight: 45,
   },
   button: {
     width: '100%',

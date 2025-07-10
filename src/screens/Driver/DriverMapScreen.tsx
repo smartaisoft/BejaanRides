@@ -65,7 +65,9 @@ const DriverMapScreen: React.FC = () => {
     const fetchDriverName = async () => {
       try {
         const uid = auth().currentUser?.uid;
-        if (!uid) {return;}
+        if (!uid) {
+          return;
+        }
         const profile = await getDriverByUid(uid);
         if (profile?.name) {
           setDriverName(profile.name);
@@ -128,19 +130,24 @@ const DriverMapScreen: React.FC = () => {
           }
         }
 
-        unsubscribeRef.current = listenForPendingRideRequests(rides => {
-          const formatted = rides.map(ride => ({
-            id: ride.id,
-            riderName: ride.passengerName ?? 'Unknown Passenger',
-            riderPhone: ride.passengerPhone ?? 'N/A',
-            pickupLocation: ride.pickup,
-            dropoffLocation: ride.dropoff,
-            distanceText: ride.distanceText ?? 'N/A',
-            durationText: ride.durationText ?? 'N/A',
-            fare: ride.fareEstimate,
-          }));
-          dispatch(setRideRequests(formatted));
-        });
+        unsubscribeRef.current = listenForPendingRideRequests(
+          myDriverId,
+          rides => {
+            const formatted = rides.map(ride => ({
+              id: ride.id,
+              riderName: ride.passengerName ?? 'Unknown Passenger',
+              riderPhone: ride.passengerPhone ?? 'N/A',
+              pickupLocation: ride.pickup,
+              dropoffLocation: ride.dropoff,
+              distanceText: ride.distanceText ?? 'N/A',
+              durationText: ride.durationText ?? 'N/A',
+              fare: ride.fareEstimate, // this maps to your DB field
+              status: ride.status, // ✅ Include ride status here
+
+            }));
+            dispatch(setRideRequests(formatted));
+          },
+        );
       } else {
         unsubscribeRef.current?.();
         dispatch(clearRideRequests());
@@ -163,6 +170,20 @@ const DriverMapScreen: React.FC = () => {
         return require('../../../assets/images/vehicles/carRoute.png');
     }
   };
+  useEffect(() => {
+  if (!currentRide?.id) return;
+
+  const ref = database().ref(`rideRequests/${currentRide.id}/status`);
+  const listener = ref.on('value', snapshot => {
+    const status = snapshot.val();
+    if (status) {
+      dispatch(setCurrentRide({...currentRide, status}));
+    }
+  });
+
+  return () => ref.off('value', listener);
+}, [currentRide?.id]);
+
 
   const renderMapMarkersAndDirections = useCallback(() => {
     if (!currentRide || !driverCoords) return null;
@@ -270,13 +291,26 @@ const DriverMapScreen: React.FC = () => {
               renderItem={({item}) => (
                 <PassengerRideRequestCard
                   ride={item}
-                  onAccept={() => {
-                    acceptRideRequest(item.id, myDriverId);
+                  passengerFare={item.fare}
+                  onAccept={customFare => {
+                    acceptRideRequest(
+                      item.id,
+                      myDriverId,
+                      driverName,
+                      item.durationText ?? '5 min',
+                      item.distanceText ?? '1.2 km',
+                      customFare,
+                    );
                     dispatch(setCurrentRide(item));
                     dispatch(clearRideRequests());
                     dispatch(setDriverStatus(DriverStatus.ON_THE_WAY));
                   }}
                   onReject={() => {
+                    database()
+                      .ref(
+                        `rideRequests/${item.id}/rejectedDrivers/${myDriverId}`,
+                      )
+                      .set(true);
                     dispatch(
                       setRideRequests(
                         rideRequests.filter(r => r.id !== item.id),
@@ -289,32 +323,43 @@ const DriverMapScreen: React.FC = () => {
           )}
         </View>
       )}
-      {status === DriverStatus.ON_THE_WAY && currentRide && (
-        <TripInfoCard
-          eta={currentRide.durationText}
-          distance={currentRide.distanceText}
-          riderName={currentRide.riderName}
-          riderPhone={currentRide.riderPhone}
-          onChat={() => Alert.alert('Chat', 'Chat not implemented')}
-          onCall={() => Linking.openURL(`tel:${currentRide.riderPhone}`)}
-          onCancel={() => {
-            dispatch(setCurrentRide(null));
-            dispatch(setDriverStatus(DriverStatus.ONLINE));
-          }}
-          onArrived={() => {
-            database()
-              .ref(`rideRequests/${currentRide.id}/status`)
-              .set('arrived')
-              .then(() =>
-                dispatch(setDriverStatus(DriverStatus.WAITING_FOR_PASSENGER)),
-              )
-              .catch(err => {
-                console.error('Failed to update ride status to arrived', err);
-                Alert.alert('Error', 'Failed to update ride status.');
-              });
-          }}
-        />
-      )}
+      {status === DriverStatus.ON_THE_WAY &&
+        currentRide?.status === 'accepted' && (
+          <TripInfoCard
+            eta={currentRide.durationText}
+            distance={currentRide.distanceText}
+            riderName={currentRide.riderName}
+            riderPhone={currentRide.riderPhone}
+            onChat={() => Alert.alert('Chat', 'Chat not implemented')}
+            onCall={() => Linking.openURL(`tel:${currentRide.riderPhone}`)}
+            onCancel={() => {
+              dispatch(setCurrentRide(null));
+              dispatch(setDriverStatus(DriverStatus.ONLINE));
+            }}
+            onArrived={() => {
+              database()
+                .ref(`rideRequests/${currentRide.id}/status`)
+                .set('arrived')
+                .then(() =>
+                  dispatch(setDriverStatus(DriverStatus.WAITING_FOR_PASSENGER)),
+                )
+                .catch(err => {
+                  console.error('Failed to update ride status to arrived', err);
+                  Alert.alert('Error', 'Failed to update ride status.');
+                });
+            }}
+          />
+        )}
+      {status === DriverStatus.ON_THE_WAY &&
+        currentRide?.status === 'pending' && (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <Text style={styles.loaderText}>
+              Waiting for passenger to accept your offer...
+            </Text>
+          </View>
+        )}
+
       {status === DriverStatus.WAITING_FOR_PASSENGER && currentRide && (
         <StartTripCard
           eta="Ready"

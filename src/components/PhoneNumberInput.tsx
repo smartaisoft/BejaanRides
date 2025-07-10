@@ -53,11 +53,14 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 45,
     borderRadius: 12,
-    backgroundColor: '#fff',
+    borderColor: '#000',
+    backgroundColor: '#e5e5e5',
   },
   textInput: {
+    borderRadius: 12,
+
     paddingVertical: 0,
-    backgroundColor: '#fff',
+    backgroundColor: '#e5e5e5',
   },
   errorText: {
     color: 'red',

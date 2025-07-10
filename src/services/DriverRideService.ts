@@ -4,6 +4,7 @@ import database from '@react-native-firebase/database';
 const cleanupTimers: Record<string, NodeJS.Timeout> = {};
 
 export const listenForPendingRideRequests = (
+  driverId: string,
   onUpdate: (rides: any[]) => void,
 ) => {
   const ref = database()
@@ -13,13 +14,17 @@ export const listenForPendingRideRequests = (
 
   const listener = ref.on('value', snapshot => {
     const data = snapshot.val();
-    if (data) {
-      const rides = Object.keys(data).map(key => ({
-        id: key,
-        ...data[key],
-      }));
 
-      // Start 20-second timers for new rides
+    if (data) {
+      const rides = Object.keys(data)
+        .map(key => ({
+          id: key,
+          ...data[key],
+        }))
+        // ✅ Filter out rides rejected by this driver
+        .filter(ride => !(ride.rejectedDrivers && ride.rejectedDrivers[driverId]));
+
+      // Start 20-second auto-delete timers for new rides
       rides.forEach(ride => {
         if (!cleanupTimers[ride.id]) {
           cleanupTimers[ride.id] = setTimeout(() => {
@@ -30,11 +35,11 @@ export const listenForPendingRideRequests = (
               .catch(err =>
                 console.error(`❌ Failed to auto-delete ride ${ride.id}`, err),
               );
-          }, 10000); // 20 seconds
+          }, 30000); // 30 seconds
         }
       });
 
-      // Clear any timers for rides no longer in the list
+      // Clear timers for rides no longer in list
       const currentIds = new Set(rides.map(r => r.id));
       Object.keys(cleanupTimers).forEach(id => {
         if (!currentIds.has(id)) {
@@ -45,7 +50,7 @@ export const listenForPendingRideRequests = (
 
       onUpdate(rides);
     } else {
-      // Clear all timers when no rides
+      // No rides → clear all timers
       Object.keys(cleanupTimers).forEach(id => {
         clearTimeout(cleanupTimers[id]);
         delete cleanupTimers[id];
@@ -85,6 +90,7 @@ export const acceptRideRequest = async (
     fare,
     vehicleType,
     timestamp: Date.now(),
+    status: 'pending', 
   });
 };
 

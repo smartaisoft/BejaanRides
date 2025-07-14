@@ -56,18 +56,18 @@ const HomeScreen = () => {
             style={styles.link}
             onPress={() =>
               navigation.navigate('WebViewScreen', {
-                url: 'https://example.com/terms',
-                title: 'Terms of Use',
+                url: 'http://salamrides.com/terms&conditions',
+                title: 'Terms & Conditions',
               })
             }>
-            Terms of Use
+            Terms & Conditions
           </Text>{' '}
           and{' '}
           <Text
             style={styles.link}
             onPress={() =>
               navigation.navigate('WebViewScreen', {
-                url: 'https://www.instagram.com/',
+                url: 'http://salamrides.com/privacyPolicy',
                 title: 'Privacy Policy',
               })
             }>

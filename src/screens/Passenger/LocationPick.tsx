@@ -24,7 +24,6 @@ import Locate from '../../../assets/SVG/Locate';
 import {DrawerActions, useNavigation} from '@react-navigation/native';
 import {DrawerNavigationProp} from '@react-navigation/drawer';
 import {DrawerParamList} from '../../navigation/DrawerNavigator';
-import {getAllLocations} from '../../services/locationService';
 import {
   getRouteDirections,
   Coordinate,

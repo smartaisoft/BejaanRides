@@ -12,12 +12,12 @@ import {setLoggedIn} from '../redux/actions/authActions';
 import SettingsScreen from '../screens/Passenger/SettingsScreen';
 import NotificationsScreen from '../screens/Passenger/NotificationsScreen';
 import HistoryScreen from '../screens/Passenger/HistoryScreen';
-import LocationPick from '../screens/Passenger/LocationPick';
 import PaymentScreen from '../screens/Passenger/PaymentScreen';
 import type {AppDispatch} from '../redux/store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getUserByUid, UserData} from '../services/realTimeUserService';
 import auth from '@react-native-firebase/auth';
+import HomeMapScreen from '../screens/Passenger/HomeMapScreen';
 
 export type DrawerParamList = {
   History: undefined;
@@ -26,6 +26,7 @@ export type DrawerParamList = {
   Logout: undefined;
   Location: undefined;
   Payment: undefined;
+  HomeMapScreen: undefined;
 };
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
@@ -84,7 +85,8 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
 const DrawerNavigator = () => {
   return (
     <Drawer.Navigator
-      initialRouteName="Location"
+      initialRouteName="HomeMapScreen"
+      detachInactiveScreens={false} // ✅ Important
       screenOptions={{
         headerShown: false,
         drawerActiveTintColor: '#000',
@@ -96,9 +98,11 @@ const DrawerNavigator = () => {
       }}
       drawerContent={props => <CustomDrawerContent {...props} />}>
       <Drawer.Screen
-        name="Location"
-        component={LocationPick}
-        options={{drawerItemStyle: {height: 0}}}
+        name="HomeMapScreen"
+        component={HomeMapScreen}
+        options={{
+          drawerItemStyle: {height: 0},
+        }}
       />
       <Drawer.Screen
         name="History"

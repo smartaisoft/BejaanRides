@@ -39,7 +39,6 @@ import Colors from '../../themes/colors';
 import DriverOfferCard from '../../components/PassengerCommonCard/DriverOfferCard';
 import SearchingDriverOverlay from '../../components/PassengerCommonCard/SearchingDriverOverlay';
 import BookingSuccessModal from '../../components/PassengerCommonCard/BookingSuccessModal';
-
 const defaultLat = 31.5497;
 const defaultLng = 74.3436;
 const GOOGLE_MAPS_API_KEY = 'AIzaSyCb2ys2AD6NTFhnEGXNsDrjSXde6d569vU';
@@ -95,7 +94,6 @@ const HomeMapScreen: React.FC = () => {
     null,
   );
   const [showBookingSuccess, setShowBookingSuccess] = useState(false);
-
 
   const [routeInfoToPickup, setRouteInfoToPickup] = useState<RouteInfo | null>(
     null,
@@ -462,50 +460,31 @@ const HomeMapScreen: React.FC = () => {
     }
   };
 
-  // const handleAcceptDriver = async (driverId: string) => {
-  //   const offer = incomingOffers.find(o => o.driverId === driverId);
-  //   if (offer) {
-  //     setSelectedOffer(offer); // ✅ Save selected offer (fare, eta, distance)
-  //     setShowDriverModal(true);
-  //   }
-  //   await database().ref(`rideRequests/${currentRideId}`).update({
-  //     status: 'accepted',
-  //     driverId,
-  //   });
-
-  //   // Optionally remove other offers
-  //   await database().ref(`rideRequests/${currentRideId}/offers`).remove();
-
-  //   // Navigate to trip screen or modal
-  // };
-
   const handleAcceptDriver = async (driverId: string) => {
-  const offer = incomingOffers.find(o => o.driverId === driverId);
-  if (!offer) return;
+    const offer = incomingOffers.find(o => o.driverId === driverId);
+    if (!offer) return;
 
-  setSelectedOffer(offer); // Save for modal
-  setShowDriverModal(true);
+    setSelectedOffer(offer); // Save for modal
+    setShowDriverModal(true);
 
-  // 1. Mark ride as accepted
-  await database().ref(`rideRequests/${currentRideId}`).update({
-    status: 'accepted',
-    driverId,
-  });
+    // 1. Mark ride as accepted
+    await database().ref(`rideRequests/${currentRideId}`).update({
+      status: 'accepted',
+      driverId,
+    });
 
-  // 2. Notify selected driver
-  await database().ref(`driverAcceptedOffers/${driverId}`).set({
-    rideId: currentRideId,
-    status: 'accepted',
-  });
+    // 2. Notify selected driver
+    await database().ref(`driverAcceptedOffers/${driverId}`).set({
+      rideId: currentRideId,
+      status: 'accepted',
+    });
 
-  // 3. Optional: clean up offers so others can't accept
-  await database().ref(`rideRequests/${currentRideId}/offers`).remove();
-  setTimeout(() => {
-    setShowBookingSuccess(true);
-  }, 1000);
-
-};
-
+    // 3. Optional: clean up offers so others can't accept
+    await database().ref(`rideRequests/${currentRideId}/offers`).remove();
+    setTimeout(() => {
+      setShowBookingSuccess(true);
+    }, 1000);
+  };
 
   const handleRejectDriver = (driverId: string) => {
     setIncomingOffers(prev =>
@@ -678,10 +657,9 @@ const HomeMapScreen: React.FC = () => {
         />
       )}
       <BookingSuccessModal
-  visible={showBookingSuccess}
-  onDone={() => setShowBookingSuccess(false)}
-/>
-
+        visible={showBookingSuccess}
+        onDone={() => setShowBookingSuccess(false)}
+      />
 
       <LocationSearchModal
         visible={showLocationModal}
@@ -823,6 +801,18 @@ const HomeMapScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  avatarButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 999,
+    padding: 4,
+    borderRadius: 30,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+
   offerOverlay: {
     position: 'absolute',
     top: 0,
@@ -838,9 +828,22 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 100,
   },
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+  },
 
   container: {flex: 1},
   map: {flex: 1},
+  drawerButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    borderRadius: 20,
+    padding: 8,
+    zIndex: 999,
+  },
   locateButton: {position: 'absolute', top: 40, right: 10},
   locateIcon: {width: 24, height: 24, tintColor: Colors.primary},
   markerWrapper: {

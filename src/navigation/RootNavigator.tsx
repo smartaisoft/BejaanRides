@@ -63,8 +63,8 @@ const RootNavigator: React.FC = () => {
 
   // 🔹 Passenger
   if (role === 'passenger') {
-    // return <DrawerNavigator />;
-    return <HomeMapScreen />;
+    return <DrawerNavigator />;
+    // return <HomeMapScreen />;
   }
 
   // 🔹 Driver

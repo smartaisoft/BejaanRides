@@ -9,6 +9,7 @@ import HomeScreen from '../screens/HomeScreen';
 import LocationPick from '../screens/Passenger/LocationPick';
 import {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import PaymentScreen from '../screens/Passenger/PaymentScreen';
+import WebViewScreen from '../screens/WebViewScreen';
 
 export type AuthStackParamList = {
   Splash: undefined;
@@ -23,6 +24,10 @@ export type AuthStackParamList = {
   Home: undefined;
   Location: undefined;
   Payment: undefined;
+  WebViewScreen: {
+    url: string;
+    title?: string;
+  };
 };
 
 const Stack = createStackNavigator<AuthStackParamList>();
@@ -40,6 +45,11 @@ const AuthStack = () => {
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Location" component={LocationPick} />
       <Stack.Screen name="Payment" component={PaymentScreen} />
+      <Stack.Screen
+        name="WebViewScreen"
+        component={WebViewScreen}
+        options={({route}) => ({title: route.params?.title || 'Web Page'})}
+      />
     </Stack.Navigator>
   );
 };

@@ -3,7 +3,7 @@ import {Text, View, StyleSheet, Image} from 'react-native';
 import CarLogo from '../../assets/SVG/CarLogo';
 import Button from '../components/Button';
 import {useNavigation} from '@react-navigation/native'; // Import useNavigation hook
-import { AuthStackParamList } from '../navigation/AuthNavigator'; // Adjust the import path based on your project structure
+import {AuthStackParamList} from '../navigation/AuthNavigator'; // Adjust the import path based on your project structure
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'; // Import the correct type
 import Colors from '../themes/colors';
 
@@ -49,22 +49,31 @@ const HomeScreen = () => {
         backgroundColor={Colors.primary} // Use a consistent color
       />
 
-      {/* Custom Button */}
-      <Button
-        title="Continue with Google"
-        onPress={handlePhonePress}
-        backgroundColor="#E4E4E4"
-        textColor="white"
-        icon={require('../../assets/images/Google.png')} // Use image as icon
-        style={styles.button}
-        textStyle={styles.customButtonText}
-      />
-
-      {/* Terms and Privacy */}
       <View style={styles.termsContainer}>
         <Text style={styles.termsText}>
-          Joining our app means you agree with our Terms of Use and Privacy
-          Policy.
+          Joining our app means you agree with our{' '}
+          <Text
+            style={styles.link}
+            onPress={() =>
+              navigation.navigate('WebViewScreen', {
+                url: 'https://example.com/terms',
+                title: 'Terms of Use',
+              })
+            }>
+            Terms of Use
+          </Text>{' '}
+          and{' '}
+          <Text
+            style={styles.link}
+            onPress={() =>
+              navigation.navigate('WebViewScreen', {
+                url: 'https://www.instagram.com/',
+                title: 'Privacy Policy',
+              })
+            }>
+            Privacy Policy
+          </Text>
+          .
         </Text>
       </View>
     </View>
@@ -121,6 +130,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     textAlign: 'center',
+  },
+  link: {
+    color: '#007BFF',
+    textDecorationLine: 'underline',
   },
 });
 

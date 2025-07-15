@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
+  Text,
 } from 'react-native';
 import Geolocation, {
   GeolocationResponse,
@@ -113,6 +114,9 @@ const HomeMapScreen: React.FC = () => {
   const [rideStatus, setRideStatus] = useState<
     'idle' | 'accepted' | 'arrived' | 'started'
   >('idle');
+  useEffect(() => {
+    console.log('🚦 Ride status changed:', rideStatus);
+  }, [rideStatus]);
 
   const getVehicleMarkerIcon = (vehicleType: string) => {
     switch (vehicleType) {
@@ -217,6 +221,11 @@ const HomeMapScreen: React.FC = () => {
     offersRef.on('value', handleOffers);
     return () => offersRef.off('value', handleOffers);
   }, [currentRideId]);
+  useEffect(() => {
+    console.log('🎯 pickupCoords updated:', pickupCoords);
+    console.log('🗺️ mapRegion:', mapRegion);
+
+  }, [pickupCoords]);
 
   const calculateFare = (
     distanceText: string | undefined,
@@ -348,12 +357,8 @@ const HomeMapScreen: React.FC = () => {
     }
 
     try {
-      setIsSearchingDriver(true); // <-- Show the overlay
-      // const fareEstimate = calculateFare(
-      //   routeInfo?.distanceText,
-      //   routeInfo?.durationText,
-      //   selectedVehicle,
-      // );
+      setIsSearchingDriver(true);
+      console.log('🚦 Creating ride request...');
       const fareEstimate = parseInt(
         selectedVehicleOption.price.replace('RS:', ''),
       );
@@ -435,8 +440,6 @@ const HomeMapScreen: React.FC = () => {
         const mergedInfo = {
           name: profile.name,
           phone: profile.phone,
-          // avatarUrl: profile.avatarUrl,
-          // rating: profile.rating,
           vehicleName: vehicle?.brand
             ? `${vehicle.brand} ${vehicle.model}`
             : 'N/A',
@@ -491,7 +494,6 @@ const HomeMapScreen: React.FC = () => {
       prev.filter(offer => offer.driverId !== driverId),
     );
   };
-  
 
   return (
     <View style={styles.container}>
@@ -502,14 +504,12 @@ const HomeMapScreen: React.FC = () => {
         onRegionChangeComplete={async newRegion => {
           setMapRegion(newRegion);
 
-          // ✅ Only update pickupCoords if no destination is selected
           if (!destinationCoords) {
             setPickupCoords({
               latitude: newRegion.latitude,
               longitude: newRegion.longitude,
             });
 
-            // Fetch address and update pickupDescription
             const address = await reverseGeocode(
               newRegion.latitude,
               newRegion.longitude,
@@ -520,7 +520,6 @@ const HomeMapScreen: React.FC = () => {
         {pickupCoords && (
           <>
             {rideStatus === 'started' && driverInfo ? (
-              // Show vehicle icon when ride started
               <Marker
                 coordinate={pickupCoords}
                 image={getVehicleMarkerIcon(driverInfo.vehicleType || 'Car')}
@@ -528,7 +527,6 @@ const HomeMapScreen: React.FC = () => {
               />
             ) : (
               <>
-                {/* Circle */}
                 <Circle
                   center={pickupCoords}
                   radius={200}
@@ -536,14 +534,11 @@ const HomeMapScreen: React.FC = () => {
                   fillColor="rgba(25,175,24,0.2)"
                 />
 
-                <Marker
-                  coordinate={pickupCoords}
-                  anchor={{x: 0.5, y: 0.5}}
-                  tracksViewChanges={false}>
+                <Marker coordinate={pickupCoords} anchor={{x: 0.5, y: 0.5}}>
                   <View style={styles.markerWrapper}>
                     <View style={styles.outerCircle}>
                       <View style={styles.innerCircle}>
-                        <Icon name="navigation" size={18} color="#fff" />
+                        <Icon name="navigation" size={24} color="#fff" />
                       </View>
                     </View>
                   </View>
@@ -552,6 +547,7 @@ const HomeMapScreen: React.FC = () => {
             )}
           </>
         )}
+
         {driverLiveCoords && driverInfo && (
           <Marker
             coordinate={driverLiveCoords}
@@ -597,7 +593,7 @@ const HomeMapScreen: React.FC = () => {
           />
         )}
       </MapView>
-      {availableDrivers
+      {/* {availableDrivers
         .filter(
           d => d.vehicleType?.toLowerCase() === selectedVehicle.toLowerCase(),
         )
@@ -612,7 +608,7 @@ const HomeMapScreen: React.FC = () => {
             description={`Vehicle: ${driver.vehicleType}`}
             image={getVehicleMarkerIcon(driver.vehicleType)}
           />
-        ))}
+        ))} */}
 
       {currentLocation && !destinationCoords && (
         <TouchableOpacity
@@ -823,7 +819,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    // backgroundColor: 'rgba(255,255,255,0.96)', // or '#fff'
     zIndex: 999,
     paddingTop: 40,
     paddingHorizontal: 12,
@@ -856,9 +851,9 @@ const styles = StyleSheet.create({
   },
   outerCircle: {
     backgroundColor: '#19AF18',
-    width: 40,
-    height: 40,
-    borderRadius: 20, // half of width/height
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     borderWidth: 2,
     borderColor: '#fff',
     alignItems: 'center',
@@ -866,9 +861,9 @@ const styles = StyleSheet.create({
   },
   innerCircle: {
     backgroundColor: '#19AF18',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
   },

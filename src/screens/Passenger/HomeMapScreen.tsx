@@ -491,6 +491,7 @@ const HomeMapScreen: React.FC = () => {
       prev.filter(offer => offer.driverId !== driverId),
     );
   };
+  
 
   return (
     <View style={styles.container}>
@@ -535,7 +536,10 @@ const HomeMapScreen: React.FC = () => {
                   fillColor="rgba(25,175,24,0.2)"
                 />
 
-                <Marker coordinate={pickupCoords} anchor={{x: 0.5, y: 0.5}}>
+                <Marker
+                  coordinate={pickupCoords}
+                  anchor={{x: 0.5, y: 0.5}}
+                  tracksViewChanges={false}>
                   <View style={styles.markerWrapper}>
                     <View style={styles.outerCircle}>
                       <View style={styles.innerCircle}>

@@ -1,6 +1,7 @@
-package com.beejan
+package com.salamrides
 
-import android.app.Application
+import com.salamrides.BuildConfig
+import android.app.Application 
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost

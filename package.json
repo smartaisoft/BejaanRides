@@ -1,5 +1,5 @@
 {
-  "name": "Beejan",
+  "name": "SalamRides",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -33,7 +33,7 @@
     "react-native-google-places-autocomplete": "^2.5.7",
     "react-native-image-picker": "^8.2.1",
     "react-native-linear-gradient": "^2.8.3",
-    "react-native-maps": "^1.24.3",
+    "react-native-maps": "^1.24.5",
     "react-native-maps-directions": "^1.9.0",
     "react-native-modalize": "^2.1.1",
     "react-native-paper": "^5.14.5",

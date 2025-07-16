@@ -52,6 +52,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "956115761712-bao9lm976qppg2dl0cfv498ar5hd5k59.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.salamrides",
+            "certificate_hash": "2d5639830afc9b8f1e002d1b54d6bc93f7cb0e3b"
+          }
+        },
+        {
           "client_id": "956115761712-f7v0qi4i70esttnlaopsqilo48bm9b25.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

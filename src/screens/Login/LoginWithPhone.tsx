@@ -42,34 +42,65 @@ const LoginWithPhone: React.FC = () => {
     navigation.goBack();
   };
 
-  const handlePhonePress = async (values: {phone: string}) => {
+  // const handlePhonePress = async (values: {phone: string}) => {
+  //   dispatch(setAuthLoading(true));
+  //   const fullPhoneNumber = values.phone;
+
+  //   try {
+  //     // 🔹 Check if the phone number exists in Firestore
+  //     const user = await getUserByPhone(fullPhoneNumber);
+
+  //     if (user) {
+  //       console.log('✅ Phone number exists in Firestore.');
+  //     } else {
+  //       console.log('✅ Phone number NOT found in Firestore.');
+  //     }
+
+  //     // 🔹 Send OTP
+  //     const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
+
+  //     // 🔹 Save phone to Redux
+  //     dispatch(setPhone(fullPhoneNumber));
+
+  //     // 🔹 Navigate to OTP screen
+  //     navigation.navigate('Otp', {
+  //       method: 'SMS',
+  //       confirmation,
+  //       isNewUser: !user,
+  //     });
+  //   } catch (error) {
+  //     console.error('❌ Failed to send OTP:', error);
+  //   } finally {
+  //     dispatch(setAuthLoading(false));
+  //   }
+  // };
+  const handlePhonePress = async ({phone}: {phone: string}) => {
     dispatch(setAuthLoading(true));
-    const fullPhoneNumber = values.phone;
+    const fullPhoneNumber = phone;
 
     try {
-      // 🔹 Check if the phone number exists in Firestore
+      // Optional: Check if user profile exists (for isNewUser flag)
       const user = await getUserByPhone(fullPhoneNumber);
+      const isNewUser = !user;
 
-      if (user) {
-        console.log('✅ Phone number exists in Firestore.');
-      } else {
-        console.log('✅ Phone number NOT found in Firestore.');
-      }
+      console.log(
+        `📱 Phone number ${isNewUser ? 'NOT ' : ''}found in Firestore.`,
+      );
 
-      // 🔹 Send OTP
+      // Send OTP using Firebase Auth
       const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
 
-      // 🔹 Save phone to Redux
+      // Store phone in Redux
       dispatch(setPhone(fullPhoneNumber));
 
-      // 🔹 Navigate to OTP screen
+      // Navigate to OTP screen
       navigation.navigate('Otp', {
         method: 'SMS',
         confirmation,
-        isNewUser: !user,
+        isNewUser,
       });
     } catch (error) {
-      console.error('❌ Failed to send OTP:', error);
+      console.error('❌ Error sending OTP:', error);
     } finally {
       dispatch(setAuthLoading(false));
     }
@@ -95,7 +126,7 @@ const LoginWithPhone: React.FC = () => {
           {isLoading ? (
             <ActivityIndicator
               size="large"
-              color={Colors.primary} 
+              color={Colors.primary}
               style={styles.loader}
             />
           ) : (

@@ -10,7 +10,7 @@ export interface UserData {
   cnic: string;
   role: UserRole;
   createdAt: string;
-  driverInfo?: any; // You can define a proper type if you want
+  driverInfo?: any;
 }
 
 export const createOrUpdateUser = async (user: UserData) => {
@@ -53,13 +53,12 @@ export const getDriverByUid = async (uid: string): Promise<UserData | null> => {
   }
 };
 
-
 /**
  * Update fields of a user document
  */
 export const updateUser = async (
   uid: string,
-  updatedFields: Partial<Omit<UserData, 'uid'>>
+  updatedFields: Partial<Omit<UserData, 'uid'>>,
 ) => {
   try {
     await firestore().collection('users').doc(uid).update(updatedFields);
@@ -84,7 +83,9 @@ export const deleteUser = async (uid: string) => {
 /**
  * Get user by phone number
  */
-export const getUserByPhone = async (phone: string): Promise<UserData | null> => {
+export const getUserByPhone = async (
+  phone: string,
+): Promise<UserData | null> => {
   try {
     const querySnapshot = await firestore()
       .collection('users')

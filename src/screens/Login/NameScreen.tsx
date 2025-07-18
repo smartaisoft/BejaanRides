@@ -5,6 +5,9 @@ import {
   View,
   TouchableOpacity,
   TextInput,
+  ToastAndroid,
+  Platform,
+  Alert,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -23,7 +26,6 @@ import {createOrUpdateUser} from '../../services/realTimeUserService';
 import {AppDispatch, RootState} from '../../redux/store';
 import LoaderScreen from '../../components/LoaderScreen';
 import * as yup from 'yup';
-import PhoneNumberInput from '../../components/PhoneNumberInput';
 import Colors from '../../themes/colors';
 
 type NameScreenNavigationProp = NativeStackNavigationProp<
@@ -32,9 +34,15 @@ type NameScreenNavigationProp = NativeStackNavigationProp<
 >;
 
 const NameScreen: React.FC = () => {
+  const navigation = useNavigation<NameScreenNavigationProp>();
+  const dispatch = useDispatch<AppDispatch>();
+  const phoneFromRedux = useSelector((state: RootState) => state.auth.phone);
+
+  const role = useSelector((state: RootState) => state.auth.role);
+  const isLoading = useSelector((state: RootState) => state.auth.isLoading);
   const [name, setNameInput] = useState('');
   const [email, setEmailInput] = useState('');
-  const [phoneInput, setPhoneInput] = useState('');
+  const [phoneInput, setPhoneInput] = useState(phoneFromRedux || '');
   const [cnic, setCnicInput] = useState('');
   const [errors, setErrors] = useState<{
     name?: string;
@@ -42,12 +50,6 @@ const NameScreen: React.FC = () => {
     phone?: string;
     cnic?: string;
   }>({});
-
-  const navigation = useNavigation<NameScreenNavigationProp>();
-  const dispatch = useDispatch<AppDispatch>();
-
-  const role = useSelector((state: RootState) => state.auth.role);
-  const isLoading = useSelector((state: RootState) => state.auth.isLoading);
 
   const handleGoBack = () => {
     navigation.goBack();
@@ -129,7 +131,12 @@ const NameScreen: React.FC = () => {
       };
 
       await createOrUpdateUser(userData);
-
+        // ✅ Show success toast/modal
+    if (Platform.OS === 'android') {
+      ToastAndroid.show('🎉 User created successfully!', ToastAndroid.SHORT);
+    } else {
+      Alert.alert('Success', '🎉 User created successfully!');
+    }
       console.log('✅ User registered in Firestore');
 
       dispatch(setUserData(userData));
@@ -170,6 +177,7 @@ const NameScreen: React.FC = () => {
       <Text style={styles.label}>Enter your Name</Text>
       <TextInput
         style={styles.input}
+        placeholderTextColor="#999"
         placeholder="Name"
         value={name}
         onChangeText={setNameInput}
@@ -178,16 +186,25 @@ const NameScreen: React.FC = () => {
 
       {/* Phone */}
       <Text style={styles.label}>Enter your Phone</Text>
-      <PhoneNumberInput
+      {/* <PhoneNumberInput
         value={phoneInput}
         onChange={setPhoneInput}
         error={errors.phone}
+      /> */}
+      <TextInput
+        style={styles.input}
+        placeholder="phone number"
+        placeholderTextColor="#999"
+        value={phoneInput}
+        onChangeText={setNameInput}
+        editable={false}
       />
 
       {/* Email */}
       <Text style={styles.label}>Enter your Email</Text>
       <TextInput
         style={styles.input}
+        placeholderTextColor="#999"
         placeholder="Email"
         value={email}
         onChangeText={setEmailInput}
@@ -200,6 +217,7 @@ const NameScreen: React.FC = () => {
       <Text style={styles.label}>Enter your CNIC</Text>
       <TextInput
         style={styles.input}
+        placeholderTextColor="#999"
         placeholder="CNIC number"
         value={cnic}
         onChangeText={setCnicInput}

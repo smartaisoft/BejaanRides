@@ -20,19 +20,35 @@ const InviteFriend = () => {
   const navigation = useNavigation();
   // const inviteCode = 'RIDE1234';
   const user = useSelector((state: RootState) => state.auth.user);
-  const inviteCode = user?.referralLink || 'N/A';
+const inviteCode = user?.referralLink ?? 'N/A';
 
   const handleCopy = () => {
     Clipboard.setString(inviteCode);
     Alert.alert('Copied!', 'Invite code copied to clipboard.');
   };
+  // const handleInvite = async () => {
+  //   try {
+  //     const dynamicLink = `https://salamrides.page.link/ref?refCode=${inviteCode}&utm_source=app&utm_medium=invite&utm_campaign=mlm_share`;
+
+  //     const message = `🚗 Join Salam Rides and start earning with your network!\n\nUse my referral link to sign up and unlock cash rewards or discounts:\n\n${dynamicLink}`;
+
+  //     // const message = `Join Salam Rides and earn rewards! Use my referral code: ${inviteCode} 🚗\nDownload the app now: https://salamrides.com`;
+
+  //     await Share.share({
+  //       message,
+  //     });
+  //   } catch (error) {
+  //     console.error('Error sharing referral code:', error);
+  //     Alert.alert('Error', 'Could not share invite. Please try again.');
+  //   }
+  // };
   const handleInvite = async () => {
     try {
-      const message = `Join Salam Rides and earn rewards! Use my referral code: ${inviteCode} 🚗\nDownload the app now: https://salamrides.com`;
+      const dynamicLink = `https://salamrides.page.link/ref?refCode=${inviteCode}`;
 
-      await Share.share({
-        message,
-      });
+      const message = `🚗 Join Salam Rides and start earning with your network!\n\nUse my referral link to sign up and unlock cash rewards or discounts:\n\n${dynamicLink}`;
+
+      await Share.share({message});
     } catch (error) {
       console.error('Error sharing referral code:', error);
       Alert.alert('Error', 'Could not share invite. Please try again.');

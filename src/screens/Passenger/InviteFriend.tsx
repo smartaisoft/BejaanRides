@@ -8,18 +8,35 @@ import {
   Image,
   Clipboard,
   Alert,
+  Share,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Colors from '../../themes/colors';
+import {useSelector} from 'react-redux';
+import {RootState} from '../../redux/store';
 
 const InviteFriend = () => {
   const navigation = useNavigation();
-  const inviteCode = 'RIDE1234';
+  // const inviteCode = 'RIDE1234';
+  const user = useSelector((state: RootState) => state.auth.user);
+  const inviteCode = user?.referralLink || 'N/A';
 
   const handleCopy = () => {
     Clipboard.setString(inviteCode);
     Alert.alert('Copied!', 'Invite code copied to clipboard.');
+  };
+  const handleInvite = async () => {
+    try {
+      const message = `Join Salam Rides and earn rewards! Use my referral code: ${inviteCode} 🚗\nDownload the app now: https://salamrides.com`;
+
+      await Share.share({
+        message,
+      });
+    } catch (error) {
+      console.error('Error sharing referral code:', error);
+      Alert.alert('Error', 'Could not share invite. Please try again.');
+    }
   };
 
   return (
@@ -58,7 +75,7 @@ const InviteFriend = () => {
 
       {/* Invite Button */}
       <View style={styles.bottomContainer}>
-        <TouchableOpacity style={styles.inviteButton}>
+        <TouchableOpacity style={styles.inviteButton} onPress={handleInvite}>
           <Text style={styles.inviteButtonText}>Invite Friends</Text>
         </TouchableOpacity>
       </View>
@@ -135,7 +152,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     // backgroundColor: '#EFEFEF',
-    borderBottomWidth:1,
+    borderBottomWidth: 1,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,

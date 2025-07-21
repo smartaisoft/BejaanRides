@@ -27,6 +27,7 @@ import {AppDispatch, RootState} from '../../redux/store';
 import LoaderScreen from '../../components/LoaderScreen';
 import * as yup from 'yup';
 import Colors from '../../themes/colors';
+import {generateReferralCode} from '../../services/mlmUserService';
 
 type NameScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -119,24 +120,46 @@ const NameScreen: React.FC = () => {
         dispatch(setAuthLoading(false));
         return;
       }
+      const referralLink = generateReferralCode(name, currentUser.uid);
 
       const userData = {
         uid: currentUser.uid,
         name: name.trim(),
-        phone: phoneInput.trim(), // Save in +92 format
+        phone: phoneInput.trim(),
         email: email.trim(),
         cnic: cnic.trim(),
         role,
         createdAt: new Date().toISOString(),
+        referralLink, // 👈 Generated here dynamically
+        referredBy: null,
+        mlmNetwork: {
+          level1: [],
+          level2: [],
+          level3: [],
+          level4: [],
+          level5: [],
+          level6: [],
+          level7: [],
+        },
+        isSubscribed: false,
+        subscriptionExpiry: null,
+        isActive: true,
+        isApproved: false,
+        wallet: {
+          rideBalance: 0,
+          commissionIncome: 0,
+          withdrawalBalance: 0,
+          transactionHistory: [],
+        },
       };
 
       await createOrUpdateUser(userData);
-        // ✅ Show success toast/modal
-    if (Platform.OS === 'android') {
-      ToastAndroid.show('🎉 User created successfully!', ToastAndroid.SHORT);
-    } else {
-      Alert.alert('Success', '🎉 User created successfully!');
-    }
+      // ✅ Show success toast/modal
+      if (Platform.OS === 'android') {
+        ToastAndroid.show('🎉 User created successfully!', ToastAndroid.SHORT);
+      } else {
+        Alert.alert('Success', '🎉 User created successfully!');
+      }
       console.log('✅ User registered in Firestore');
 
       dispatch(setUserData(userData));

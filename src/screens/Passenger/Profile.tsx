@@ -10,12 +10,18 @@ import {
 import {useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Colors from '../../themes/colors';
-import { RootStackParamList } from '../../navigation/types';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {RootStackParamList} from '../../navigation/types';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {useSelector} from 'react-redux';
+import {RootState} from '../../redux/store';
 
-type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'InviteFriend'>;
+type ProfileScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'InviteFriend'
+>;
 const Profile = () => {
-const navigation = useNavigation<ProfileScreenNavigationProp>();
+  const navigation = useNavigation<ProfileScreenNavigationProp>();
+  const user = useSelector((state: RootState) => state.auth.user);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -32,8 +38,12 @@ const navigation = useNavigation<ProfileScreenNavigationProp>();
             source={require('../../../assets/images/Avatar.png')}
             style={styles.avatar}
           />
-          <Text style={styles.headerTitle}>Passenger Name</Text>
-          <Text style={styles.cash}>Cash $250</Text>
+          <Text style={styles.headerTitle}>
+            {user?.name || 'Passenger Name'}
+          </Text>
+          <Text style={styles.cash}>
+            Cash ${user?.wallet?.rideBalance ?? 0}
+          </Text>
         </View>
       </View>
 
@@ -45,7 +55,12 @@ const navigation = useNavigation<ProfileScreenNavigationProp>();
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.item}>
-          <Icon name="notifications" size={24} color="#666" style={styles.icon} />
+          <Icon
+            name="notifications"
+            size={24}
+            color="#666"
+            style={styles.icon}
+          />
           <Text style={styles.itemText}>Notifications</Text>
         </TouchableOpacity>
 
@@ -59,7 +74,9 @@ const navigation = useNavigation<ProfileScreenNavigationProp>();
           <Text style={styles.itemText}>Profile Settings</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.item}  onPress={() => navigation.navigate('InviteFriend')}>
+        <TouchableOpacity
+          style={styles.item}
+          onPress={() => navigation.navigate('InviteFriend')}>
           <Icon name="group-add" size={24} color="#666" style={styles.icon} />
           <Text style={styles.itemText}>Invite Friends</Text>
         </TouchableOpacity>

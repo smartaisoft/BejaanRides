@@ -1,5 +1,7 @@
 // File: src/redux/types/authTypes.ts
 
+import {MLMUserData} from '../../services/mlmUserService';
+
 export const SET_PHONE = 'SET_PHONE';
 export const SET_OTP_METHOD = 'SET_OTP_METHOD';
 export const SET_OTP = 'SET_OTP';
@@ -10,7 +12,6 @@ export const SET_LOGGED_IN = 'SET_LOGGED_IN';
 export const SET_AUTH_LOADING = 'SET_AUTH_LOADING';
 export const SET_USER_DATA = 'SET_USER_DATA';
 
-
 export interface AuthState {
   phone: string;
   otpMethod: string | null;
@@ -20,7 +21,8 @@ export interface AuthState {
   name: string;
   isLoggedIn: boolean;
   isLoading: boolean;
-  user: UserData | null; // ✅ New field
+  // user: UserData | null; // ✅ New field
+  user: MLMUserData | null; // ✅ Use MLM version
 }
 
 export interface UserData {
@@ -32,7 +34,6 @@ export interface UserData {
   role: 'passenger' | 'driver';
   createdAt: string;
 }
-
 
 interface SetPhoneAction {
   type: typeof SET_PHONE;
@@ -76,9 +77,8 @@ interface SetAuthLoadingAction {
 
 interface SetUserDataAction {
   type: typeof SET_USER_DATA;
-  payload: UserData;
+  payload: MLMUserData;
 }
-
 
 export type AuthActionTypes =
   | SetPhoneAction

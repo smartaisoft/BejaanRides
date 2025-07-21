@@ -18,6 +18,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getUserByUid, UserData} from '../services/realTimeUserService';
 import auth from '@react-native-firebase/auth';
 import HomeMapScreen from '../screens/Passenger/HomeMapScreen';
+import Profile from '../screens/Passenger/Profile';
+import InviteFriend from '../screens/Passenger/InviteFriend';
 
 export type DrawerParamList = {
   History: undefined;
@@ -27,6 +29,8 @@ export type DrawerParamList = {
   Location: undefined;
   Payment: undefined;
   HomeMapScreen: undefined;
+  Profile:undefined;
+  InviteFriend:undefined;
 };
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
@@ -125,6 +129,24 @@ const DrawerNavigator = () => {
       <Drawer.Screen
         name="Settings"
         component={SettingsScreen}
+        options={{
+          drawerIcon: ({color, size}) => (
+            <Icon name="cog-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="Profile"
+        component={Profile}
+        options={{
+          drawerIcon: ({color, size}) => (
+            <Icon name="cog-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="InviteFriend"
+        component={InviteFriend}
         options={{
           drawerIcon: ({color, size}) => (
             <Icon name="cog-outline" color={color} size={size} />

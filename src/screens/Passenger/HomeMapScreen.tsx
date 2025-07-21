@@ -8,6 +8,7 @@ import {
   Alert,
   ScrollView,
   Text,
+  Image,
 } from 'react-native';
 import Geolocation, {
   GeolocationResponse,
@@ -43,6 +44,7 @@ import BookingSuccessModal from '../../components/PassengerCommonCard/BookingSuc
 const defaultLat = 31.5497;
 const defaultLng = 74.3436;
 const GOOGLE_MAPS_API_KEY = 'AIzaSyCb2ys2AD6NTFhnEGXNsDrjSXde6d569vU';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 
 type IncomingOffer = {
   driverId: string;
@@ -55,7 +57,7 @@ type IncomingOffer = {
 
 const HomeMapScreen: React.FC = () => {
   const mapRef = useRef<MapView>(null);
-
+  const navigation = useNavigation();
   const [pickupDescription, setPickupDescription] = useState(
     'Fetching current location...',
   );
@@ -224,7 +226,6 @@ const HomeMapScreen: React.FC = () => {
   useEffect(() => {
     console.log('🎯 pickupCoords updated:', pickupCoords);
     console.log('🗺️ mapRegion:', mapRegion);
-
   }, [pickupCoords]);
 
   const calculateFare = (
@@ -497,6 +498,16 @@ const HomeMapScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity
+        style={styles.avatarButton}
+        onPress={() => navigation.navigate('Profile')}
+          accessibilityLabel="Open Settings"
+>
+        <Image
+          source={require('../../../assets/images/Avatar.png')}
+          style={styles.avatar}
+        />
+      </TouchableOpacity>
       <MapView
         ref={mapRef}
         style={styles.map}
@@ -843,7 +854,7 @@ const styles = StyleSheet.create({
     padding: 8,
     zIndex: 999,
   },
-  locateButton: {position: 'absolute', top: 40, right: 10},
+  locateButton: {position: 'absolute', top: 380, right: 10},
   locateIcon: {width: 24, height: 24, tintColor: Colors.primary},
   markerWrapper: {
     alignItems: 'center',

@@ -7,4 +7,6 @@ export type RootStackParamList = {
   Name: undefined;
   Location: { name: string };
   DriverPersonalInfo: undefined;
+    InviteFriend: undefined;
+
 };

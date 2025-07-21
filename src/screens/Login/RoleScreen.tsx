@@ -21,7 +21,7 @@ const RoleScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
   const isLoading = useSelector((state: RootState) => state.auth.isLoading);
 
- const handlePassengerPress = () => {
+  const handlePassengerPress = () => {
     dispatch(setAuthLoading(true));
     dispatch(setRole('passenger'));
 
@@ -51,13 +51,13 @@ const RoleScreen = () => {
       <Text style={styles.subtitle}>You can change the mode.</Text>
 
       <View style={styles.imageContainer}>
-        <Ride width={400} height={400} />
+        <Ride />
       </View>
 
       <Button
         title="Passenger"
         onPress={handlePassengerPress}
-        backgroundColor="#E4E4E4"
+        backgroundColor={Colors.primary}
         textColor="white"
         style={styles.button}
         textStyle={styles.passengerText}
@@ -66,8 +66,7 @@ const RoleScreen = () => {
       <Button
         title="Driver"
         onPress={handleDriverPress}
-                backgroundColor={Colors.primary}
-
+        backgroundColor="#E4E4E4"
         textColor="white"
         style={styles.button}
         textStyle={styles.DriverText}

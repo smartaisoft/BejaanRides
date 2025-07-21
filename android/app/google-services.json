@@ -8,49 +8,20 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:956115761712:android:7eb5f619c5bd86fb3c4bf5",
-        "android_client_info": {
-          "package_name": "com.beejan"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "956115761712-ro9ps908rtsf94vjh15puh034mbf8kga.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.beejan",
-            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
-          }
-        },
-        {
-          "client_id": "956115761712-hgma6hq415rrhp4ogg7uj9kcnmdannn5.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyBVRWtK4l4kl4uWUNhqeA6bpmsVV-RPtMs"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "956115761712-hgma6hq415rrhp4ogg7uj9kcnmdannn5.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
         "mobilesdk_app_id": "1:956115761712:android:e0d92cf51209df463c4bf5",
         "android_client_info": {
           "package_name": "com.salamrides"
         }
       },
       "oauth_client": [
+        {
+          "client_id": "956115761712-41t94ko093hlhfj8m66hng6vf01k2e70.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.salamrides",
+            "certificate_hash": "a673d2b8495fda22d31e0550ae6672375fe6cd91"
+          }
+        },
         {
           "client_id": "956115761712-bao9lm976qppg2dl0cfv498ar5hd5k59.apps.googleusercontent.com",
           "client_type": 1,

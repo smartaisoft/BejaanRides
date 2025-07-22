@@ -11,7 +11,7 @@ export interface UserData {
   cnic: string;
   role: UserRole;
   createdAt: string;
-  driverInfo?: any; // You can define a proper type if you want
+  driverInfo?: any;
 }
 
 export const createOrUpdateUser = async (user: UserData) => {
@@ -22,22 +22,6 @@ export const createOrUpdateUser = async (user: UserData) => {
     console.error('❌ Failed to create/update user:', error);
   }
 };
-
-/**
- * Get a user document
- */
-// export const getUserByUid = async (uid: string): Promise<UserData | null> => {
-//   try {
-//     const doc = await firestore().collection('users').doc(uid).get();
-//     if (doc.exists()) {
-//       return doc.data() as UserData;
-//     }
-//     return null;
-//   } catch (error) {
-//     console.error('❌ Failed to fetch user:', error);
-//     return null;
-//   }
-// };
 
 export const getUserByUid = async (uid: string): Promise<MLMUserData | null> => {
   try {
@@ -51,9 +35,7 @@ export const getUserByUid = async (uid: string): Promise<MLMUserData | null> => 
     return null;
   }
 };
-// src/services/realTimeUserService.ts
 
-// ✅ Firestore version
 export const getDriverByUid = async (uid: string): Promise<UserData | null> => {
   try {
     const doc = await firestore().collection('users').doc(uid).get();

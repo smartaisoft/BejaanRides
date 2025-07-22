@@ -117,7 +117,6 @@ export const createUserWithReferral = async (
     }
 
     const referralCode = generateReferralCode(user.name, user.uid);
-    // const referralLink = `https://salamrides.page.link/ref?refCode=${referralCode}`;
 
     const mlmNetwork: MLMLevelNetwork = {
       level1: [],
@@ -142,18 +141,24 @@ export const createUserWithReferral = async (
 
         const parentNetwork = refData.mlmNetwork;
         if (parentNetwork) {
-          if (parentNetwork.level1?.[0])
+          if (parentNetwork.level1?.[0]) {
             mlmNetwork.level2.push(parentNetwork.level1[0]);
-          if (parentNetwork.level2?.[0])
+          }
+          if (parentNetwork.level2?.[0]) {
             mlmNetwork.level3.push(parentNetwork.level2[0]);
-          if (parentNetwork.level3?.[0])
+          }
+          if (parentNetwork.level3?.[0]) {
             mlmNetwork.level4.push(parentNetwork.level3[0]);
-          if (parentNetwork.level4?.[0])
+          }
+          if (parentNetwork.level4?.[0]) {
             mlmNetwork.level5.push(parentNetwork.level4[0]);
-          if (parentNetwork.level5?.[0])
+          }
+          if (parentNetwork.level5?.[0]) {
             mlmNetwork.level6.push(parentNetwork.level5[0]);
-          if (parentNetwork.level6?.[0])
+          }
+          if (parentNetwork.level6?.[0]) {
             mlmNetwork.level7.push(parentNetwork.level6[0]);
+          }
         }
       }
     }

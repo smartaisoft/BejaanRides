@@ -43,7 +43,6 @@ const NameScreen: React.FC = () => {
   const isLoading = useSelector((state: RootState) => state.auth.isLoading);
   const [name, setNameInput] = useState('');
   const [email, setEmailInput] = useState('');
-  const [phoneInput, setPhoneInput] = useState(phoneFromRedux || '');
   const [cnic, setCnicInput] = useState('');
   const [errors, setErrors] = useState<{
     name?: string;
@@ -72,13 +71,6 @@ const NameScreen: React.FC = () => {
           .trim()
           .email('Enter a valid email.')
           .required('Email is required.'),
-        phone: yup
-          .string()
-          .trim()
-          .matches(
-            /^\+92\d{10}$/,
-            'Enter a valid phone number starting with +92.',
-          ),
         cnic: yup
           .string()
           .trim()
@@ -89,7 +81,6 @@ const NameScreen: React.FC = () => {
         {
           name,
           email,
-          phone: phoneInput.trim(),
           cnic: cnic.trim(),
         },
         {abortEarly: false},
@@ -120,17 +111,17 @@ const NameScreen: React.FC = () => {
         dispatch(setAuthLoading(false));
         return;
       }
-      const referralLink = generateReferralCode(name, currentUser.uid);
+      const referralCode = generateReferralCode(name, currentUser.uid);
 
       const userData = {
         uid: currentUser.uid,
         name: name.trim(),
-        phone: phoneInput.trim(),
+        phone: phoneFromRedux,
         email: email.trim(),
         cnic: cnic.trim(),
         role,
         createdAt: new Date().toISOString(),
-        referralLink, // 👈 Generated here dynamically
+        referralCode,
         referredBy: null,
         mlmNetwork: {
           level1: [],
@@ -209,16 +200,11 @@ const NameScreen: React.FC = () => {
 
       {/* Phone */}
       <Text style={styles.label}>Enter your Phone</Text>
-      {/* <PhoneNumberInput
-        value={phoneInput}
-        onChange={setPhoneInput}
-        error={errors.phone}
-      /> */}
       <TextInput
         style={styles.input}
         placeholder="phone number"
         placeholderTextColor="#999"
-        value={phoneInput}
+        value={phoneFromRedux}
         onChangeText={setNameInput}
         editable={false}
       />

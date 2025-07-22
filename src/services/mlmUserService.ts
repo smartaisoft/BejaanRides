@@ -24,9 +24,7 @@ export interface Wallet {
 }
 
 export interface MLMUserData extends UserData {
-  referralLink: string;
   referralCode: string; // <-- ✅ ADD THIS
-
   referredBy: string | null;
   mlmNetwork: MLMLevelNetwork;
   isSubscribed: boolean;
@@ -119,7 +117,7 @@ export const createUserWithReferral = async (
     }
 
     const referralCode = generateReferralCode(user.name, user.uid);
-    const referralLink = `https://salamrides.page.link/ref?refCode=${referralCode}`;
+    // const referralLink = `https://salamrides.page.link/ref?refCode=${referralCode}`;
 
     const mlmNetwork: MLMLevelNetwork = {
       level1: [],
@@ -162,7 +160,6 @@ export const createUserWithReferral = async (
 
     const fullUserData: MLMUserData = {
       ...user,
-      referralLink,
       referralCode,
       referredBy: referrerUid || null,
       mlmNetwork,

@@ -20,7 +20,7 @@ const InviteFriend = () => {
   const navigation = useNavigation();
   // const inviteCode = 'RIDE1234';
   const user = useSelector((state: RootState) => state.auth.user);
-const inviteCode = user?.referralLink ?? 'N/A';
+const inviteCode = user?.referralCode ?? 'N/A';
 
   const handleCopy = () => {
     Clipboard.setString(inviteCode);

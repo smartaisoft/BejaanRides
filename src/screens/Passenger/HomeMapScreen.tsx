@@ -497,8 +497,7 @@ const HomeMapScreen: React.FC = () => {
           ref={mapRef}
           key={mapKey}
           style={styles.map}
-          region={region}
-          // initialRegion={region}
+          initialRegion={region}
           onRegionChangeComplete={async newRegion => {
             dispatch(setRegion(newRegion));
 

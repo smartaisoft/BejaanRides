@@ -116,9 +116,6 @@ const HomeMapScreen: React.FC = () => {
   const [rideStatus, setRideStatus] = useState<
     'idle' | 'accepted' | 'arrived' | 'started'
   >('idle');
-  useEffect(() => {
-    console.log('🚦 Ride status changed:', rideStatus);
-  }, [rideStatus]);
 
   const getVehicleMarkerIcon = (vehicleType: string) => {
     switch (vehicleType) {
@@ -184,17 +181,9 @@ const HomeMapScreen: React.FC = () => {
         ...data[id],
       }));
 
-      console.log('🟢 All Online Drivers:', driversArray);
-      console.log('📌 Current selectedVehicle:', selectedVehicle);
-
       const filtered = driversArray.filter(
         d => d.vehicleType?.toLowerCase() === selectedVehicle.toLowerCase(),
       );
-      console.log(
-        `🚗 Online Drivers Matching Selected Vehicle (${selectedVehicle}):`,
-        filtered,
-      );
-
       setAvailableDrivers(filtered); // ✅ FIX: only set filtered list
     });
 
@@ -214,7 +203,6 @@ const HomeMapScreen: React.FC = () => {
         }));
         setIncomingOffers(offers);
         // dispatch(setIncomingOffers(offers));
-        console.log('📥 Incoming Offers:', offers);
       } else {
         setIncomingOffers([]);
       }
@@ -223,10 +211,6 @@ const HomeMapScreen: React.FC = () => {
     offersRef.on('value', handleOffers);
     return () => offersRef.off('value', handleOffers);
   }, [currentRideId]);
-  useEffect(() => {
-    console.log('🎯 pickupCoords updated:', pickupCoords);
-    console.log('🗺️ mapRegion:', mapRegion);
-  }, [pickupCoords]);
 
   const calculateFare = (
     distanceText: string | undefined,
@@ -277,7 +261,6 @@ const HomeMapScreen: React.FC = () => {
     // First, try High Accuracy
     Geolocation.getCurrentPosition(
       async (position: GeolocationResponse) => {
-        console.log('✅ Got High Accuracy Location');
         const {latitude, longitude} = position.coords;
 
         setCurrentLocation({latitude, longitude}); // <--- NEW
@@ -298,7 +281,6 @@ const HomeMapScreen: React.FC = () => {
         // Fall back to Low Accuracy
         Geolocation.getCurrentPosition(
           async (fallbackPosition: GeolocationResponse) => {
-            console.log('✅ Got Low Accuracy Location');
             const {latitude, longitude} = fallbackPosition.coords;
             setCurrentLocation({latitude, longitude}); // <--- NEW
 
@@ -359,12 +341,8 @@ const HomeMapScreen: React.FC = () => {
 
     try {
       setIsSearchingDriver(true);
-      console.log('🚦 Creating ride request...');
       const fareEstimate = parseInt(
         selectedVehicleOption.price.replace('RS:', ''),
-      );
-      console.log(
-        `🚗 Fare Estimate for ${selectedVehicleOption.type}: PKR ${fareEstimate}`,
       );
       const vehicleType = selectedVehicleOption.type.toLowerCase();
       const rideId = await createRideRequest({
@@ -386,8 +364,6 @@ const HomeMapScreen: React.FC = () => {
         distanceText: routeInfo?.distanceText ?? 'N/A',
         durationText: routeInfo?.durationText ?? 'N/A',
       });
-      console.log('fare estimate', fareEstimate);
-
       if (!rideId) {
         console.error('❌ Failed to create ride: rideId was null.');
         setIsSearchingDriver(false);
@@ -427,15 +403,10 @@ const HomeMapScreen: React.FC = () => {
 
   const fetchDriverInfo = async (driverId: string) => {
     try {
-      console.log(`🔍 Fetching driver profile for UID: ${driverId}`);
-      console.log(`🔍 Fetching vehicle info for UID: ${driverId}`);
-
       const [profile, vehicle] = await Promise.all([
         getDriverByUid(driverId),
         getVehicleInfoByDriverId(driverId),
       ]);
-      console.log('✅ Driver profile fetched:', profile);
-      console.log('✅ Vehicle info fetched:', vehicle);
 
       if (profile) {
         const mergedInfo = {
@@ -448,11 +419,6 @@ const HomeMapScreen: React.FC = () => {
           vehicleNumber: vehicle?.plateNumber ?? 'N/A',
           vehicleType: vehicle?.vehicleType ?? 'Car',
         };
-
-        console.log(
-          '✅ Merged driver+vehicle info to show in modal:',
-          mergedInfo,
-        );
 
         setDriverInfo(mergedInfo);
         setShowDriverModal(true);

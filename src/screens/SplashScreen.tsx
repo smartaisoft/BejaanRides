@@ -1,14 +1,16 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, Image } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import React, {useEffect} from 'react';
+import {StyleSheet, Image} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useDispatch } from 'react-redux';
+import {useDispatch} from 'react-redux';
 import LinearGradient from 'react-native-linear-gradient';
+import auth from '@react-native-firebase/auth';
 
-import { AuthStackParamList } from '../navigation/AuthNavigator';
-import { setLoggedIn, setRole } from '../redux/actions/authActions';
-import type { AppDispatch } from '../redux/store';
+import {AuthStackParamList} from '../navigation/AuthNavigator';
+import {setLoggedIn, setRole, setUserData} from '../redux/actions/authActions';
+import type {AppDispatch} from '../redux/store';
+import { getUserByUid } from '../services/realTimeUserService';
 
 type SplashNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -36,6 +38,17 @@ const SplashScreenComponent: React.FC = () => {
         if (loggedIn && userRole) {
           dispatch(setRole(userRole));
           dispatch(setLoggedIn(true));
+          const currentUser = auth().currentUser;
+          console.log('checking current user:', currentUser);
+           if (currentUser?.uid) {
+            const fullUserData = await getUserByUid(currentUser.uid);
+            if (fullUserData) {
+              dispatch(setUserData(fullUserData));
+              console.log('✅ User data fetched and saved to Redux');
+            } else {
+              console.warn('⚠️ No Firestore user found for UID:', currentUser.uid);
+            }
+          }
         } else {
           navigation.replace('Home');
         }
@@ -49,10 +62,7 @@ const SplashScreenComponent: React.FC = () => {
   }, [dispatch, navigation]);
 
   return (
-    <LinearGradient
-      colors={['#A7FFA7', '#3FFF3F']}
-      style={styles.container}
-    >
+    <LinearGradient colors={['#A7FFA7', '#3FFF3F']} style={styles.container}>
       <Image
         source={require('../../assets/images/SalamRider.png')}
         style={styles.image}

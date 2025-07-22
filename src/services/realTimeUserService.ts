@@ -1,4 +1,5 @@
 import firestore from '@react-native-firebase/firestore';
+import { MLMUserData } from './mlmUserService';
 
 export type UserRole = 'driver' | 'passenger';
 
@@ -25,15 +26,28 @@ export const createOrUpdateUser = async (user: UserData) => {
 /**
  * Get a user document
  */
-export const getUserByUid = async (uid: string): Promise<UserData | null> => {
+// export const getUserByUid = async (uid: string): Promise<UserData | null> => {
+//   try {
+//     const doc = await firestore().collection('users').doc(uid).get();
+//     if (doc.exists()) {
+//       return doc.data() as UserData;
+//     }
+//     return null;
+//   } catch (error) {
+//     console.error('❌ Failed to fetch user:', error);
+//     return null;
+//   }
+// };
+
+export const getUserByUid = async (uid: string): Promise<MLMUserData | null> => {
   try {
     const doc = await firestore().collection('users').doc(uid).get();
     if (doc.exists()) {
-      return doc.data() as UserData;
+      return doc.data() as MLMUserData;
     }
     return null;
   } catch (error) {
-    console.error('❌ Failed to fetch user:', error);
+    console.error('Error fetching user by UID:', error);
     return null;
   }
 };

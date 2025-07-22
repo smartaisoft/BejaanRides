@@ -45,6 +45,9 @@ const defaultLat = 31.5497;
 const defaultLng = 74.3436;
 const GOOGLE_MAPS_API_KEY = 'AIzaSyCb2ys2AD6NTFhnEGXNsDrjSXde6d569vU';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import {useDispatch, useSelector} from 'react-redux';
+import {AppDispatch, RootState} from '../../redux/store';
+import {setPickupLocation, setRegion} from '../../redux/actions/rideActions';
 
 type IncomingOffer = {
   driverId: string;
@@ -101,7 +104,13 @@ const HomeMapScreen: React.FC = () => {
   const [routeInfoToPickup, setRouteInfoToPickup] = useState<RouteInfo | null>(
     null,
   );
-
+  const region = useSelector((state: RootState) => state.ride.region);
+  const pickupLocation = useSelector(
+    (state: RootState) => state.ride.pickupLocation,
+  );
+  console.log('region', region);
+  console.log('pick', pickupLocation);
+  const dispatch = useDispatch<AppDispatch>();
   const [mapRegion, setMapRegion] = useState<Region>({
     latitude: defaultLat,
     longitude: defaultLng,
@@ -264,13 +273,15 @@ const HomeMapScreen: React.FC = () => {
         const {latitude, longitude} = position.coords;
 
         setCurrentLocation({latitude, longitude}); // <--- NEW
-        setPickupCoords({latitude, longitude});
-        setMapRegion({
-          latitude,
-          longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        });
+        dispatch(setPickupLocation({latitude, longitude}));
+        dispatch(
+          setRegion({
+            latitude,
+            longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          }),
+        );
 
         const address = await reverseGeocode(latitude, longitude);
         setPickupDescription(address);
@@ -284,14 +295,16 @@ const HomeMapScreen: React.FC = () => {
             const {latitude, longitude} = fallbackPosition.coords;
             setCurrentLocation({latitude, longitude}); // <--- NEW
 
-            setPickupCoords({latitude, longitude});
-            setMapRegion({
-              latitude,
-              longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            });
-
+            dispatch(setPickupLocation({latitude, longitude}));
+            dispatch(
+              setRegion({
+                latitude,
+                longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+              }),
+            );
+            console.log('errrrrrrr', error);
             const address = await reverseGeocode(latitude, longitude);
             setPickupDescription(address);
           },
@@ -329,7 +342,7 @@ const HomeMapScreen: React.FC = () => {
 
   const handleRequestRide = async () => {
     if (
-      !pickupCoords ||
+      !pickupLocation ||
       !destinationCoords ||
       !currentUser ||
       !destinationDescription ||
@@ -350,8 +363,8 @@ const HomeMapScreen: React.FC = () => {
         passengerName: currentUser.name ?? 'Passenger',
         passengerPhone: currentUser.phone ?? 'N/A',
         pickup: {
-          latitude: pickupCoords.latitude,
-          longitude: pickupCoords.longitude,
+          latitude: pickupLocation.latitude,
+          longitude: pickupLocation.longitude,
           address: pickupDescription,
         },
         dropoff: {
@@ -467,109 +480,113 @@ const HomeMapScreen: React.FC = () => {
       <TouchableOpacity
         style={styles.avatarButton}
         onPress={() => navigation.navigate('Profile')}
-          accessibilityLabel="Open Settings"
->
+        accessibilityLabel="Open Settings">
         <Image
           source={require('../../../assets/images/Avatar.png')}
           style={styles.avatar}
         />
       </TouchableOpacity>
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        initialRegion={mapRegion}
-        onRegionChangeComplete={async newRegion => {
-          setMapRegion(newRegion);
+      {region?.latitude && (
+        <MapView
+          key={region.latitude}
+          ref={mapRef}
+          style={styles.map}
+          region={region}
+          onRegionChangeComplete={async newRegion => {
+            dispatch(setRegion(newRegion));
 
-          if (!destinationCoords) {
-            setPickupCoords({
-              latitude: newRegion.latitude,
-              longitude: newRegion.longitude,
-            });
-
-            const address = await reverseGeocode(
-              newRegion.latitude,
-              newRegion.longitude,
-            );
-            setPickupDescription(address);
-          }
-        }}>
-        {pickupCoords && (
-          <>
-            {rideStatus === 'started' && driverInfo ? (
-              <Marker
-                coordinate={pickupCoords}
-                image={getVehicleMarkerIcon(driverInfo.vehicleType || 'Car')}
-                title="Pickup"
-              />
-            ) : (
-              <>
-                <Circle
-                  center={pickupCoords}
-                  radius={200}
-                  strokeColor="#19AF18"
-                  fillColor="rgba(25,175,24,0.2)"
+            if (!destinationCoords) {
+              dispatch(
+                setPickupLocation({
+                  latitude: newRegion.latitude,
+                  longitude: newRegion.longitude,
+                }),
+              );
+              const address = await reverseGeocode(
+                newRegion.latitude,
+                newRegion.longitude,
+              );
+              setPickupDescription(address);
+            }
+          }}>
+          {pickupLocation && (
+            <>
+              {rideStatus === 'started' && driverInfo ? (
+                <Marker
+                  coordinate={pickupLocation}
+                  image={getVehicleMarkerIcon(driverInfo.vehicleType || 'Car')}
+                  title="Pickup"
                 />
+              ) : (
+                <>
+                  <Circle
+                    center={pickupLocation}
+                    radius={200}
+                    strokeColor="#19AF18"
+                    fillColor="rgba(25,175,24,0.2)"
+                  />
 
-                <Marker coordinate={pickupCoords} anchor={{x: 0.5, y: 0.5}}>
-                  <View style={styles.markerWrapper}>
-                    <View style={styles.outerCircle}>
-                      <View style={styles.innerCircle}>
-                        <Icon name="navigation" size={24} color="#fff" />
+                  <Marker coordinate={pickupLocation} anchor={{x: 0.5, y: 0.5}}>
+                    <View style={styles.markerWrapper}>
+                      <View style={styles.outerCircle}>
+                        <View style={styles.innerCircle}>
+                          <Icon name="navigation" size={24} color="#fff" />
+                        </View>
                       </View>
                     </View>
-                  </View>
-                </Marker>
-              </>
-            )}
-          </>
-        )}
+                  </Marker>
+                </>
+              )}
+            </>
+          )}
 
-        {driverLiveCoords && driverInfo && (
-          <Marker
-            coordinate={driverLiveCoords}
-            title="Driver"
-            image={getVehicleMarkerIcon(driverInfo.vehicleType || 'Car')}
-          />
-        )}
+          {driverLiveCoords && driverInfo && (
+            <Marker
+              coordinate={driverLiveCoords}
+              title="Driver"
+              image={getVehicleMarkerIcon(driverInfo.vehicleType || 'Car')}
+            />
+          )}
 
-        {driverLiveCoords && pickupCoords && rideStatus === 'accepted' && (
-          <MapViewDirections
-            origin={driverLiveCoords}
-            destination={pickupCoords}
-            apikey={GOOGLE_MAPS_API_KEY}
-            strokeWidth={4}
-            strokeColor="#4CAF50"
-            onReady={result => {
-              // You can store this ETA in state for your modal:
-              setRouteInfoToPickup({
-                distanceText: `${result.distance.toFixed(1)} km`,
-                durationText: `${Math.ceil(result.duration)} min`,
-              });
-            }}
-            onError={err =>
-              console.error('Directions error (driver to pickup):', err)
-            }
-          />
-        )}
+          {driverLiveCoords && pickupLocation && rideStatus === 'accepted' && (
+            <MapViewDirections
+              origin={driverLiveCoords}
+              destination={pickupLocation}
+              apikey={GOOGLE_MAPS_API_KEY}
+              strokeWidth={4}
+              strokeColor="#4CAF50"
+              onReady={result => {
+                // You can store this ETA in state for your modal:
+                setRouteInfoToPickup({
+                  distanceText: `${result.distance.toFixed(1)} km`,
+                  durationText: `${Math.ceil(result.duration)} min`,
+                });
+              }}
+              onError={err =>
+                console.error('Directions error (driver to pickup):', err)
+              }
+            />
+          )}
 
-        {pickupCoords && destinationCoords && (
-          <MapViewDirections
-            origin={pickupCoords}
-            destination={destinationCoords}
-            apikey={GOOGLE_MAPS_API_KEY}
-            strokeWidth={4}
-            strokeColor="#9C27B0"
-            onReady={result => {
-              setRouteInfo({
-                distanceText: `${result.distance.toFixed(1)} km`,
-                durationText: `${Math.ceil(result.duration)} min`,
-              });
-            }}
-            onError={err => console.error('Directions error:', err)}
-          />
-        )}
-      </MapView>
+          {pickupLocation && destinationCoords && (
+            <MapViewDirections
+              origin={pickupLocation}
+              destination={destinationCoords}
+              apikey={GOOGLE_MAPS_API_KEY}
+              strokeWidth={4}
+              strokeColor="#9C27B0"
+              onReady={result => {
+                setRouteInfo({
+                  distanceText: `${result.distance.toFixed(1)} km`,
+                  durationText: `${Math.ceil(result.duration)} min`,
+                });
+              }}
+              onError={err => console.error('Directions error:', err)}
+            />
+          )}
+        </MapView>
+      )}
+
       {/* {availableDrivers
         .filter(
           d => d.vehicleType?.toLowerCase() === selectedVehicle.toLowerCase(),
@@ -592,6 +609,7 @@ const HomeMapScreen: React.FC = () => {
           style={styles.locateButton}
           onPress={() => {
             setPickupCoords(currentLocation);
+            dispatch(setPickupLocation(currentLocation));
             mapRef.current?.animateToRegion({
               latitude: currentLocation.latitude,
               longitude: currentLocation.longitude,
@@ -675,6 +693,7 @@ const HomeMapScreen: React.FC = () => {
             });
             // Optionally update pickup marker and description
             setPickupCoords(currentLocation);
+            dispatch(setPickupLocation(currentLocation));
             reverseGeocode(
               currentLocation.latitude,
               currentLocation.longitude,

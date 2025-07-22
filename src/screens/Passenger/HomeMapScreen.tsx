@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef, useCallback} from 'react';
 import {
   View,
   StyleSheet,
@@ -474,7 +474,13 @@ const HomeMapScreen: React.FC = () => {
       prev.filter(offer => offer.driverId !== driverId),
     );
   };
+  const [mapKey, setMapKey] = useState(0);
 
+  useFocusEffect(
+    useCallback(() => {
+      setMapKey(prev => prev + 1);
+    }, [])
+  );
   return (
     <View style={styles.container}>
       <TouchableOpacity
@@ -488,10 +494,11 @@ const HomeMapScreen: React.FC = () => {
       </TouchableOpacity>
       {region?.latitude && (
         <MapView
-          key={region.latitude}
           ref={mapRef}
+          key={mapKey}
           style={styles.map}
           region={region}
+          // initialRegion={region}
           onRegionChangeComplete={async newRegion => {
             dispatch(setRegion(newRegion));
 

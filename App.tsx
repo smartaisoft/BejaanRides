@@ -5,6 +5,7 @@ import AppNavigator from './src/navigation/RootNavigator';
 import firebase from '@react-native-firebase/app';
 import auth from '@react-native-firebase/auth';
 import FirebaseService from './src/services/NotificationService';
+import ReferralListener from './src/services/ReferralListener';
 
 const App = () => {
   console.log('✅ Firebase initialized?', firebase.apps.length > 0);
@@ -28,6 +29,7 @@ const App = () => {
 
   return (
     <Provider store={store}>
+      <ReferralListener />
       <AppNavigator />
     </Provider>
   );

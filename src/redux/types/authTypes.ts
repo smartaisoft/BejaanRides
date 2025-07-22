@@ -77,8 +77,9 @@ interface SetAuthLoadingAction {
 
 interface SetUserDataAction {
   type: typeof SET_USER_DATA;
-  payload: MLMUserData;
+  payload: Partial<MLMUserData>;  // ← allow partial
 }
+
 
 export type AuthActionTypes =
   | SetPhoneAction

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
   Text,
@@ -50,10 +50,31 @@ const NameScreen: React.FC = () => {
     phone?: string;
     cnic?: string;
   }>({});
+    const [referralInfo, setReferralInfo] = useState<{ referredBy: string; referrUid: string } | null>(null);
+
 
   const handleGoBack = () => {
     navigation.goBack();
   };
+  // ✅ Load referralInfo once when screen mounts
+  useEffect(() => {
+    const loadReferralInfo = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('referralInfo');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed?.referredBy && parsed?.referrUid) {
+            setReferralInfo(parsed);
+            console.log('📦 Referral info loaded:', parsed);
+          }
+        }
+      } catch (err) {
+        console.error('❌ Failed to load referralInfo:', err);
+      }
+    };
+
+    loadReferralInfo();
+  }, []);
 
   const handlePress = async () => {
     try {
@@ -113,6 +134,7 @@ const NameScreen: React.FC = () => {
       }
       const referralCode = generateReferralCode(name, currentUser.uid);
 
+
       const userData = {
         uid: currentUser.uid,
         name: name.trim(),
@@ -122,7 +144,8 @@ const NameScreen: React.FC = () => {
         role,
         createdAt: new Date().toISOString(),
         referralCode,
-        referredBy: null,
+         referredBy: referralInfo?.referredBy || null,
+        referrerUid: referralInfo?.referrUid || null,
         mlmNetwork: {
           level1: [],
           level2: [],

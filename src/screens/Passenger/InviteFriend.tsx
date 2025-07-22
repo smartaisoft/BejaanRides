@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Image,
-  Clipboard,
   Alert,
   Share,
 } from 'react-native';
@@ -15,56 +14,68 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import Colors from '../../themes/colors';
 import {useSelector} from 'react-redux';
 import {RootState} from '../../redux/store';
+import dynamicLinks from '@react-native-firebase/dynamic-links';
 
 const InviteFriend = () => {
   const navigation = useNavigation();
-  // const inviteCode = 'RIDE1234';
   const user = useSelector((state: RootState) => state.auth.user);
-const inviteCode = user?.referralCode ?? 'N/A';
+  const inviteCode = user?.referralCode ?? 'N/A';
+  const uid = user?.uid;
 
-  const handleCopy = () => {
-    Clipboard.setString(inviteCode);
-    Alert.alert('Copied!', 'Invite code copied to clipboard.');
-  };
-  // const handleInvite = async () => {
-  //   try {
-  //     const dynamicLink = `https://salamrides.page.link/ref?refCode=${inviteCode}&utm_source=app&utm_medium=invite&utm_campaign=mlm_share`;
-
-  //     const message = `🚗 Join Salam Rides and start earning with your network!\n\nUse my referral link to sign up and unlock cash rewards or discounts:\n\n${dynamicLink}`;
-
-  //     // const message = `Join Salam Rides and earn rewards! Use my referral code: ${inviteCode} 🚗\nDownload the app now: https://salamrides.com`;
-
-  //     await Share.share({
-  //       message,
-  //     });
-  //   } catch (error) {
-  //     console.error('Error sharing referral code:', error);
-  //     Alert.alert('Error', 'Could not share invite. Please try again.');
-  //   }
-  // };
-  const handleInvite = async () => {
-    try {
-      const dynamicLink = `https://salamrides.page.link/ref?refCode=${inviteCode}`;
-
-      const message = `🚗 Join Salam Rides and start earning with your network!\n\nUse my referral link to sign up and unlock cash rewards or discounts:\n\n${dynamicLink}`;
-
-      await Share.share({message});
-    } catch (error) {
-      console.error('Error sharing referral code:', error);
-      Alert.alert('Error', 'Could not share invite. Please try again.');
+const handleInvite = async () => {
+  try {
+    if (!inviteCode || inviteCode === 'N/A') {
+      Alert.alert('Error', 'Referral code is missing.');
+      return;
     }
-  };
+
+    console.log('userid invite friend', uid);
+
+    const deepLink = `https://salamrides.com/invite?refCode=${inviteCode}&uid=${uid}`;
+
+    const dynamicLink = await dynamicLinks().buildLink({
+      link: deepLink,
+      domainUriPrefix: 'https://salamrides.page.link',
+      android: {
+        packageName: 'com.salamrides',
+      },
+      ios: {
+        bundleId: 'com.salamrides.ios',
+      },
+      social: {
+        title: 'Join Salam Rides!',
+        descriptionText:
+          'Use my referral code to get rewards on your first ride.',
+        imageUrl:
+          'https://drive.google.com/uc?export=view&id=13-nLDQ1ViPqLqzjzQUoWAcCZxjrV-DVr',
+      },
+    });
+
+    const message = `
+🚗 My Salam Rides Referral Code: ${inviteCode}
+
+🔗 Sign up using my referral link:
+${dynamicLink}
+
+Join now and earn rewards on your rides!
+    `.trim();
+
+    await Share.share({ message });
+  } catch (error) {
+    console.error('❌ Error sharing referral code:', error);
+    Alert.alert('Error', 'Could not share invite. Please try again.');
+  }
+};
+
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}>
           <Icon name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-
         <View style={styles.profileInfo}>
           <Text style={styles.headerTitle}>Invite Friends</Text>
           <Image
@@ -77,19 +88,13 @@ const inviteCode = user?.referralCode ?? 'N/A';
         </View>
       </View>
 
-      {/* Invite Code Field */}
       <View style={styles.card}>
         <Text style={styles.itemText}>Share your Invite Code</Text>
-
         <View style={styles.codeContainer}>
           <Text style={styles.codeText}>{inviteCode}</Text>
-          <TouchableOpacity onPress={handleCopy}>
-            <Icon name="content-copy" size={24} color="#000" />
-          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Invite Button */}
       <View style={styles.bottomContainer}>
         <TouchableOpacity style={styles.inviteButton} onPress={handleInvite}>
           <Text style={styles.inviteButtonText}>Invite Friends</Text>
@@ -100,44 +105,22 @@ const inviteCode = user?.referralCode ?? 'N/A';
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-
+  container: {flex: 1, backgroundColor: '#F5F5F5'},
   header: {
     backgroundColor: Colors.primary,
     paddingTop: 60,
     paddingBottom: 40,
     paddingHorizontal: 20,
   },
-
   backButton: {
     position: 'absolute',
     top: 60,
     left: 20,
     zIndex: 10,
   },
-
-  profileInfo: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 20,
-  },
-
-  avatar: {
-    width: 180,
-    height: 160,
-    borderRadius: 40,
-    marginVertical: 10,
-  },
-
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-
+  profileInfo: {alignItems: 'center', justifyContent: 'center', paddingTop: 20},
+  avatar: {width: 180, height: 160, borderRadius: 40, marginVertical: 10},
+  headerTitle: {fontSize: 24, fontWeight: 'bold', color: '#fff'},
   subText: {
     fontSize: 16,
     color: '#fff',
@@ -145,59 +128,35 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingHorizontal: 16,
   },
-
   card: {
-    // backgroundColor: '#fff',
-    // marginTop: -20,
     marginHorizontal: 16,
     borderRadius: 12,
     paddingVertical: 20,
     paddingHorizontal: 16,
-    // elevation: 3,
   },
-
-  itemText: {
-    fontSize: 16,
-    color: '#222',
-    marginBottom: 10,
-    fontWeight: '400',
-  },
-
+  itemText: {fontSize: 16, color: '#222', marginBottom: 10, fontWeight: '400'},
   codeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    // backgroundColor: '#EFEFEF',
-    borderBottomWidth: 1,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
+    borderWidth: 1,
   },
-
-  codeText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-  },
-
+  codeText: {fontSize: 16, fontWeight: '600', color: '#000'},
   bottomContainer: {
     marginTop: 'auto',
     paddingHorizontal: 16,
     paddingBottom: 20,
   },
-
   inviteButton: {
     backgroundColor: Colors.primary,
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
   },
-
-  inviteButtonText: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: '#ffffff',
-  },
+  inviteButtonText: {fontSize: 16, fontWeight: '400', color: '#ffffff'},
 });
 
 export default InviteFriend;

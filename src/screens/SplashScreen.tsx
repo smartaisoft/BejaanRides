@@ -44,7 +44,7 @@ const SplashScreenComponent: React.FC = () => {
             const fullUserData = await getUserByUid(currentUser.uid);
             if (fullUserData) {
               dispatch(setUserData(fullUserData));
-              console.log('✅ User data fetched and saved to Redux');
+              console.log('✅ User data fetched and saved to Redux',fullUserData);
             } else {
               console.warn('⚠️ No Firestore user found for UID:', currentUser.uid);
             }

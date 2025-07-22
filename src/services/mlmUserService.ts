@@ -24,12 +24,13 @@ export interface Wallet {
 }
 
 export interface MLMUserData extends UserData {
-  referralCode: string; // <-- ✅ ADD THIS
-  referredBy: string | null;
-  mlmNetwork: MLMLevelNetwork;
-  isSubscribed: boolean;
-  isApproved: boolean;
-  wallet: Wallet;
+  referralCode?: string; // <-- ✅ ADD THIS
+  referrerUid?: string | null; // UID of the referrer ✅ add this
+  referredBy?: string | null;
+  mlmNetwork?: MLMLevelNetwork;
+  isSubscribed?: boolean;
+  isApproved?: boolean;
+  wallet?: Wallet;
 }
 
 // export const createUserWithReferral = async (

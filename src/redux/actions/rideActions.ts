@@ -15,16 +15,28 @@ export const SET_SEARCHING_DRIVER = 'SET_SEARCHING_DRIVER';
 export const SET_DRIVER_ARRIVED = 'SET_DRIVER_ARRIVED';
 export const SET_RIDE_STATUS = 'SET_RIDE_STATUS';
 export const SET_REGION = 'SET_REGION';
+export const SET_SHOW_SUMMARY = 'SET_SHOW_SUMMARY';
+export const SET_SUMMARY = 'SET_SUMMARY';
+export const SET_SEARCH_MODAL = 'SET_SEARCH_MODAL';
 
-export const setCurrentLocation = location => ({
+export const setCurrentLocation = (location: {
+  latitude: number;
+  longitude: number;
+}) => ({
   type: SET_CURRENT_LOCATION,
   payload: location,
 });
-export const setPickupLocation = location => ({
+export const setPickupLocation = (location: {
+  latitude: number;
+  longitude: number;
+}) => ({
   type: SET_PICKUP_LOCATION,
   payload: location,
 });
-export const setDropoffLocation = location => ({
+export const setDropoffLocation = (location: {
+  latitude: number;
+  longitude: number;
+}) => ({
   type: SET_DROPOFF_LOCATION,
   payload: location,
 });
@@ -68,18 +80,15 @@ export const setRegion = region => ({
   type: SET_REGION,
   payload: region,
 });
-export const fetchAndSetInitialRegion = () => async (dispatch) => {
-    try {
-      // Simulated GPS fetch or geolocation
-      const region = {
-        latitude: 37.78825,
-        longitude: -122.4324,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      };
-  
-      dispatch(setRegion(region));
-    } catch (error) {
-      console.error('Error fetching region:', error);
-    }
-  };
+export const setShowSummary = (summary: any) => ({
+  type: SET_SHOW_SUMMARY,
+  payload: summary,
+});
+export const setSummary = (summary: any) => ({
+  type: SET_SUMMARY,
+  payload: summary,
+});
+export const setShowSearchModal = (summary: any) => ({
+  type: SET_SEARCH_MODAL,
+  payload: summary,
+});

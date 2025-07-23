@@ -5,7 +5,13 @@ import {authReducer} from './reducers/authReducers';
 import {vehicleReducer} from './reducers/vehicleReducer';
 import {driverReducer} from './reducers/driverReducer';
 import rideReducer from './reducers/rideReducer';
-
+import { persistReducer, persistStore } from 'redux-persist';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+const persistConfig = {
+  key: 'root',
+  storage: AsyncStorage,
+  whitelist: ['ride'],
+};
 // Combine your reducers
 const rootReducer = combineReducers({
   auth: authReducer, // Add auth reducer here
@@ -14,9 +20,9 @@ const rootReducer = combineReducers({
   ride: rideReducer,
 });
 
-// Create the Redux store and apply the redux-thunk middleware
-const store = createStore(rootReducer, applyMiddleware(thunk)); // Apply redux-thunk middleware
-
+const persistedReducer = persistReducer(persistConfig, rootReducer)
+const store = createStore(persistedReducer, applyMiddleware(thunk));
+export const persistor = persistStore(store);
 export type RootState = ReturnType<typeof rootReducer>;
 export type AppDispatch = typeof store.dispatch; // ✅ Add this
 export default store;

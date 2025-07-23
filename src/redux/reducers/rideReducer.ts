@@ -15,6 +15,7 @@ import {
   SET_SEARCHING_DRIVER,
   SET_DRIVER_ARRIVED,
   SET_RIDE_STATUS,
+  SET_REGION
 } from '../actions/rideActions';
 
 const initialState = {
@@ -33,9 +34,11 @@ const initialState = {
   isSearchingDriver: false,
   hasDriverArrived: false,
   status: 'idle',
+  region: null,
 };
 
 const rideReducer = (state = initialState, action: { type: any; payload: any; }) => {
+  console.log('action', action.type, action, state)
   switch (action.type) {
     case SET_CURRENT_LOCATION:
       return { ...state, currentLocation: action.payload };
@@ -67,6 +70,8 @@ const rideReducer = (state = initialState, action: { type: any; payload: any; })
       return { ...state, hasDriverArrived: action.payload };
     case SET_RIDE_STATUS:
       return { ...state, status: action.payload };
+      case SET_REGION:
+        return { ...state, region: action.payload };
     default:
       return state;
   }

@@ -9,6 +9,7 @@ import {
   Dimensions,
   Alert,
   TextInput,
+  Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -31,9 +32,23 @@ interface Props {
     durationText: string;
   } | null;
 }
-
-const categories = ['All', 'Car', 'Bike', 'Rikhsha', 'Pickup'];
-
+const getImageForType = (type: string) => {
+  switch (type) {
+    case 'Car':
+      return require('../../../assets/images/cars.png');
+    case 'Bike':
+      return require('../../../assets/images/bike.png');
+    case 'Rikhsha':
+      return require('../../../assets/images/rikshaw.png');
+    case 'Pickup':
+      return require('../../../assets/images/pickup.png');
+    case 'delievery':
+      return require('../../../assets/images/delievery.png');
+    default:
+      return require('../../../assets/images/delievery.png'); // fallback
+  }
+};
+const categories = ['Car', 'Bike', 'Rikhsha', 'Pickup', 'delievery'];
 const categoryTypeMap: Record<string, string[]> = {
   All: ['Bike', 'Car', 'Limousine', 'Luxury', 'ElectricCar'],
   Car: ['Car', 'Limousine', 'Luxury', 'ElectricCar'],
@@ -140,35 +155,42 @@ const VehicleSelectionSheet: React.FC<Props> = ({
       <View style={styles.sheet}>
         {/* Back Button */}
         <TouchableOpacity onPress={onClose} style={styles.backButton}>
-          <Icon name="arrow-left" size={28} color="#333" />
+          <Icon name="chevron-down" size={50} color="#333" />
         </TouchableOpacity>
-
-        <Text style={styles.title}>Vehicle category</Text>
-
-        {/* Categories */}
-        <FlatList
-          data={categories}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={item => item}
-          contentContainerStyle={styles.categories}
-          renderItem={({item: cat}) => (
-            <TouchableOpacity
-              style={[
-                styles.categoryButton,
-                activeCategory === cat && styles.categoryButtonActive,
-              ]}
-              onPress={() => setActiveCategory(cat)}>
-              <Text
+        <View style={{paddingHorizontal: 25}}>
+          <Text style={styles.title}>Vehicle category</Text>
+          {/* Categories */}
+          <FlatList
+            data={categories}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={item => item}
+            contentContainerStyle={styles.categories}
+            renderItem={({item: cat}) => (
+              <TouchableOpacity
                 style={[
-                  styles.categoryText,
-                  activeCategory === cat && styles.categoryTextActive,
-                ]}>
-                {cat}
-              </Text>
-            </TouchableOpacity>
-          )}
-        />
+                  styles.categoryButton,
+                  activeCategory === cat && styles.categoryButtonActive,
+                ]}
+                onPress={() => setActiveCategory(cat)}>
+                <View style={{alignItems: 'center'}}>
+                  <Image
+                    source={getImageForType(cat)}
+                    style={styles.image}
+                    resizeMode="contain"
+                  />
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      activeCategory === cat && styles.categoryTextActive,
+                    ]}>
+                    {cat}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
 
         {/* Vehicles */}
         <FlatList
@@ -214,7 +236,7 @@ const VehicleSelectionSheet: React.FC<Props> = ({
         />
 
         {/* Selected Fare Box */}
-        {/* {selectedVehicle && (
+        {selectedVehicle && (
           <View style={styles.fareBox}>
             <View style={styles.fareLeft}>
               <Icon name={selectedVehicle.icon} size={28} color="#000" />
@@ -261,7 +283,8 @@ const VehicleSelectionSheet: React.FC<Props> = ({
               ) : (
                 <>
                   <Text style={styles.fareText}>
-                    Recommended fare: {selectedVehicle.price}
+                    Recommended fare:PKR
+                    {selectedVehicle.price.replace(/^Rs[:\s]*/i, '')}
                   </Text>
                   <TouchableOpacity onPress={() => setEditingFare(true)}>
                     <Icon name="pencil" size={20} color="#333" />
@@ -270,7 +293,7 @@ const VehicleSelectionSheet: React.FC<Props> = ({
               )}
             </View>
           </View>
-        )} */}
+        )}
 
         {/* CTA */}
         <TouchableOpacity
@@ -293,58 +316,51 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: '#fff',
-    padding: 16,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '100%',
   },
   backButton: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    zIndex: 2,
+    alignSelf: 'center',
   },
   title: {
     fontSize: 16,
-    fontWeight: 'bold',
-    alignSelf: 'center',
-    marginBottom: 12,
+    marginBottom: 5,
   },
   categories: {
-    flexDirection: 'row',
     marginBottom: 12,
     paddingHorizontal: 4,
+    gap: 20,
+    alignItems: 'center',
+    width: '100%',
   },
   categoryButton: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    marginRight: 8,
+    justifyContent: 'center',
+    padding: 3,
+    paddingHorizontal: 6,
+    borderRadius: 5,
   },
   categoryButtonActive: {
-    backgroundColor: '#000',
+    backgroundColor: '#BCE1BB',
     borderColor: '#000',
   },
   categoryText: {
-    fontSize: 13,
+    fontSize: 10,
     color: '#333',
   },
   categoryTextActive: {
-    color: '#fff',
+    color: 'black',
   },
   vehicleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderColor: '#eee',
   },
   vehicleRowSelected: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 8,
+    backgroundColor: '#19AF18',
   },
   vehicleInfo: {
     flex: 1,
@@ -370,37 +386,49 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   fareBox: {
-    backgroundColor: '#E8F5E9',
     borderRadius: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     marginTop: 12,
+    gap: 5,
+    borderTopRightRadius: 15,
+    borderTopLeftRadius: 15,
   },
   fareLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#C2F8C2',
+    padding: 7,
+    paddingHorizontal: 10,
+    borderTopRightRadius: 10,
+    borderTopLeftRadius: 10,
   },
   fareVehicle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
+    fontSize: 15,
   },
   fareRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#C2F8C2',
+    padding: 10,
+    paddingHorizontal: 10,
+    borderBottomRightRadius: 10,
+    borderBottomLeftRadius: 10,
+    justifyContent: 'space-between',
   },
   fareText: {
     fontSize: 14,
     marginRight: 8,
   },
   requestButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 14,
-    borderRadius: 30,
-    width: '100%',
+    backgroundColor: '#25B324',
+    paddingVertical: 10,
+    borderRadius: 5,
+    width: '80%',
     alignItems: 'center',
-    marginTop: 12,
+    marginVertical: 12,
+    alignSelf:'center'
   },
   requestText: {
     color: '#fff',
@@ -416,6 +444,10 @@ const styles = StyleSheet.create({
     width: 80,
     marginRight: 8,
     fontSize: 14,
+  },
+  image: {
+    width: 30,
+    height: 30,
   },
 });
 

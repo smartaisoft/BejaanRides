@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef, useCallback} from 'react';
 import {
   View,
   StyleSheet,
@@ -45,6 +45,9 @@ const defaultLat = 31.5497;
 const defaultLng = 74.3436;
 const GOOGLE_MAPS_API_KEY = 'AIzaSyCb2ys2AD6NTFhnEGXNsDrjSXde6d569vU';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import {useDispatch, useSelector} from 'react-redux';
+import {AppDispatch, RootState} from '../../redux/store';
+import {setPickupLocation, setRegion} from '../../redux/actions/rideActions';
 
 type IncomingOffer = {
   driverId: string;
@@ -101,7 +104,13 @@ const HomeMapScreen: React.FC = () => {
   const [routeInfoToPickup, setRouteInfoToPickup] = useState<RouteInfo | null>(
     null,
   );
-
+  const region = useSelector((state: RootState) => state.ride.region);
+  const pickupLocation = useSelector(
+    (state: RootState) => state.ride.pickupLocation,
+  );
+  console.log('region', region);
+  console.log('pick', pickupLocation);
+  const dispatch = useDispatch<AppDispatch>();
   const [mapRegion, setMapRegion] = useState<Region>({
     latitude: defaultLat,
     longitude: defaultLng,
@@ -116,9 +125,6 @@ const HomeMapScreen: React.FC = () => {
   const [rideStatus, setRideStatus] = useState<
     'idle' | 'accepted' | 'arrived' | 'started'
   >('idle');
-  useEffect(() => {
-    console.log('🚦 Ride status changed:', rideStatus);
-  }, [rideStatus]);
 
   const getVehicleMarkerIcon = (vehicleType: string) => {
     switch (vehicleType) {
@@ -184,17 +190,9 @@ const HomeMapScreen: React.FC = () => {
         ...data[id],
       }));
 
-      console.log('🟢 All Online Drivers:', driversArray);
-      console.log('📌 Current selectedVehicle:', selectedVehicle);
-
       const filtered = driversArray.filter(
         d => d.vehicleType?.toLowerCase() === selectedVehicle.toLowerCase(),
       );
-      console.log(
-        `🚗 Online Drivers Matching Selected Vehicle (${selectedVehicle}):`,
-        filtered,
-      );
-
       setAvailableDrivers(filtered); // ✅ FIX: only set filtered list
     });
 
@@ -214,7 +212,6 @@ const HomeMapScreen: React.FC = () => {
         }));
         setIncomingOffers(offers);
         // dispatch(setIncomingOffers(offers));
-        console.log('📥 Incoming Offers:', offers);
       } else {
         setIncomingOffers([]);
       }
@@ -223,10 +220,6 @@ const HomeMapScreen: React.FC = () => {
     offersRef.on('value', handleOffers);
     return () => offersRef.off('value', handleOffers);
   }, [currentRideId]);
-  useEffect(() => {
-    console.log('🎯 pickupCoords updated:', pickupCoords);
-    console.log('🗺️ mapRegion:', mapRegion);
-  }, [pickupCoords]);
 
   const calculateFare = (
     distanceText: string | undefined,
@@ -277,17 +270,18 @@ const HomeMapScreen: React.FC = () => {
     // First, try High Accuracy
     Geolocation.getCurrentPosition(
       async (position: GeolocationResponse) => {
-        console.log('✅ Got High Accuracy Location');
         const {latitude, longitude} = position.coords;
 
         setCurrentLocation({latitude, longitude}); // <--- NEW
-        setPickupCoords({latitude, longitude});
-        setMapRegion({
-          latitude,
-          longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        });
+        dispatch(setPickupLocation({latitude, longitude}));
+        dispatch(
+          setRegion({
+            latitude,
+            longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          }),
+        );
 
         const address = await reverseGeocode(latitude, longitude);
         setPickupDescription(address);
@@ -298,18 +292,19 @@ const HomeMapScreen: React.FC = () => {
         // Fall back to Low Accuracy
         Geolocation.getCurrentPosition(
           async (fallbackPosition: GeolocationResponse) => {
-            console.log('✅ Got Low Accuracy Location');
             const {latitude, longitude} = fallbackPosition.coords;
             setCurrentLocation({latitude, longitude}); // <--- NEW
 
-            setPickupCoords({latitude, longitude});
-            setMapRegion({
-              latitude,
-              longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            });
-
+            dispatch(setPickupLocation({latitude, longitude}));
+            dispatch(
+              setRegion({
+                latitude,
+                longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+              }),
+            );
+            console.log('errrrrrrr', error);
             const address = await reverseGeocode(latitude, longitude);
             setPickupDescription(address);
           },
@@ -347,7 +342,7 @@ const HomeMapScreen: React.FC = () => {
 
   const handleRequestRide = async () => {
     if (
-      !pickupCoords ||
+      !pickupLocation ||
       !destinationCoords ||
       !currentUser ||
       !destinationDescription ||
@@ -359,12 +354,8 @@ const HomeMapScreen: React.FC = () => {
 
     try {
       setIsSearchingDriver(true);
-      console.log('🚦 Creating ride request...');
       const fareEstimate = parseInt(
         selectedVehicleOption.price.replace('RS:', ''),
-      );
-      console.log(
-        `🚗 Fare Estimate for ${selectedVehicleOption.type}: PKR ${fareEstimate}`,
       );
       const vehicleType = selectedVehicleOption.type.toLowerCase();
       const rideId = await createRideRequest({
@@ -372,8 +363,8 @@ const HomeMapScreen: React.FC = () => {
         passengerName: currentUser.name ?? 'Passenger',
         passengerPhone: currentUser.phone ?? 'N/A',
         pickup: {
-          latitude: pickupCoords.latitude,
-          longitude: pickupCoords.longitude,
+          latitude: pickupLocation.latitude,
+          longitude: pickupLocation.longitude,
           address: pickupDescription,
         },
         dropoff: {
@@ -386,8 +377,6 @@ const HomeMapScreen: React.FC = () => {
         distanceText: routeInfo?.distanceText ?? 'N/A',
         durationText: routeInfo?.durationText ?? 'N/A',
       });
-      console.log('fare estimate', fareEstimate);
-
       if (!rideId) {
         console.error('❌ Failed to create ride: rideId was null.');
         setIsSearchingDriver(false);
@@ -427,15 +416,10 @@ const HomeMapScreen: React.FC = () => {
 
   const fetchDriverInfo = async (driverId: string) => {
     try {
-      console.log(`🔍 Fetching driver profile for UID: ${driverId}`);
-      console.log(`🔍 Fetching vehicle info for UID: ${driverId}`);
-
       const [profile, vehicle] = await Promise.all([
         getDriverByUid(driverId),
         getVehicleInfoByDriverId(driverId),
       ]);
-      console.log('✅ Driver profile fetched:', profile);
-      console.log('✅ Vehicle info fetched:', vehicle);
 
       if (profile) {
         const mergedInfo = {
@@ -448,11 +432,6 @@ const HomeMapScreen: React.FC = () => {
           vehicleNumber: vehicle?.plateNumber ?? 'N/A',
           vehicleType: vehicle?.vehicleType ?? 'Car',
         };
-
-        console.log(
-          '✅ Merged driver+vehicle info to show in modal:',
-          mergedInfo,
-        );
 
         setDriverInfo(mergedInfo);
         setShowDriverModal(true);
@@ -495,115 +474,125 @@ const HomeMapScreen: React.FC = () => {
       prev.filter(offer => offer.driverId !== driverId),
     );
   };
+  const [mapKey, setMapKey] = useState(0);
 
+  useFocusEffect(
+    useCallback(() => {
+      setMapKey(prev => prev + 1);
+    }, [])
+  );
   return (
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.avatarButton}
         onPress={() => navigation.navigate('Profile')}
-          accessibilityLabel="Open Settings"
->
+        accessibilityLabel="Open Settings">
         <Image
           source={require('../../../assets/images/Avatar.png')}
           style={styles.avatar}
         />
       </TouchableOpacity>
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        initialRegion={mapRegion}
-        onRegionChangeComplete={async newRegion => {
-          setMapRegion(newRegion);
+      {region?.latitude && (
+        <MapView
+          ref={mapRef}
+          key={mapKey}
+          style={styles.map}
+          initialRegion={region}
+          onRegionChangeComplete={async newRegion => {
+            dispatch(setRegion(newRegion));
 
-          if (!destinationCoords) {
-            setPickupCoords({
-              latitude: newRegion.latitude,
-              longitude: newRegion.longitude,
-            });
-
-            const address = await reverseGeocode(
-              newRegion.latitude,
-              newRegion.longitude,
-            );
-            setPickupDescription(address);
-          }
-        }}>
-        {pickupCoords && (
-          <>
-            {rideStatus === 'started' && driverInfo ? (
-              <Marker
-                coordinate={pickupCoords}
-                image={getVehicleMarkerIcon(driverInfo.vehicleType || 'Car')}
-                title="Pickup"
-              />
-            ) : (
-              <>
-                <Circle
-                  center={pickupCoords}
-                  radius={200}
-                  strokeColor="#19AF18"
-                  fillColor="rgba(25,175,24,0.2)"
+            if (!destinationCoords) {
+              dispatch(
+                setPickupLocation({
+                  latitude: newRegion.latitude,
+                  longitude: newRegion.longitude,
+                }),
+              );
+              const address = await reverseGeocode(
+                newRegion.latitude,
+                newRegion.longitude,
+              );
+              setPickupDescription(address);
+            }
+          }}>
+          {pickupLocation && (
+            <>
+              {rideStatus === 'started' && driverInfo ? (
+                <Marker
+                  coordinate={pickupLocation}
+                  image={getVehicleMarkerIcon(driverInfo.vehicleType || 'Car')}
+                  title="Pickup"
                 />
+              ) : (
+                <>
+                  <Circle
+                    center={pickupLocation}
+                    radius={200}
+                    strokeColor="#19AF18"
+                    fillColor="rgba(25,175,24,0.2)"
+                  />
 
-                <Marker coordinate={pickupCoords} anchor={{x: 0.5, y: 0.5}}>
-                  <View style={styles.markerWrapper}>
-                    <View style={styles.outerCircle}>
-                      <View style={styles.innerCircle}>
-                        <Icon name="navigation" size={24} color="#fff" />
+                  <Marker coordinate={pickupLocation} anchor={{x: 0.5, y: 0.5}}>
+                    <View style={styles.markerWrapper}>
+                      <View style={styles.outerCircle}>
+                        <View style={styles.innerCircle}>
+                          <Icon name="navigation" size={24} color="#fff" />
+                        </View>
                       </View>
                     </View>
-                  </View>
-                </Marker>
-              </>
-            )}
-          </>
-        )}
+                  </Marker>
+                </>
+              )}
+            </>
+          )}
 
-        {driverLiveCoords && driverInfo && (
-          <Marker
-            coordinate={driverLiveCoords}
-            title="Driver"
-            image={getVehicleMarkerIcon(driverInfo.vehicleType || 'Car')}
-          />
-        )}
+          {driverLiveCoords && driverInfo && (
+            <Marker
+              coordinate={driverLiveCoords}
+              title="Driver"
+              image={getVehicleMarkerIcon(driverInfo.vehicleType || 'Car')}
+            />
+          )}
 
-        {driverLiveCoords && pickupCoords && rideStatus === 'accepted' && (
-          <MapViewDirections
-            origin={driverLiveCoords}
-            destination={pickupCoords}
-            apikey={GOOGLE_MAPS_API_KEY}
-            strokeWidth={4}
-            strokeColor="#4CAF50"
-            onReady={result => {
-              // You can store this ETA in state for your modal:
-              setRouteInfoToPickup({
-                distanceText: `${result.distance.toFixed(1)} km`,
-                durationText: `${Math.ceil(result.duration)} min`,
-              });
-            }}
-            onError={err =>
-              console.error('Directions error (driver to pickup):', err)
-            }
-          />
-        )}
+          {driverLiveCoords && pickupLocation && rideStatus === 'accepted' && (
+            <MapViewDirections
+              origin={driverLiveCoords}
+              destination={pickupLocation}
+              apikey={GOOGLE_MAPS_API_KEY}
+              strokeWidth={4}
+              strokeColor="#4CAF50"
+              onReady={result => {
+                // You can store this ETA in state for your modal:
+                setRouteInfoToPickup({
+                  distanceText: `${result.distance.toFixed(1)} km`,
+                  durationText: `${Math.ceil(result.duration)} min`,
+                });
+              }}
+              onError={err =>
+                console.error('Directions error (driver to pickup):', err)
+              }
+            />
+          )}
 
-        {pickupCoords && destinationCoords && (
-          <MapViewDirections
-            origin={pickupCoords}
-            destination={destinationCoords}
-            apikey={GOOGLE_MAPS_API_KEY}
-            strokeWidth={4}
-            strokeColor="#9C27B0"
-            onReady={result => {
-              setRouteInfo({
-                distanceText: `${result.distance.toFixed(1)} km`,
-                durationText: `${Math.ceil(result.duration)} min`,
-              });
-            }}
-            onError={err => console.error('Directions error:', err)}
-          />
-        )}
-      </MapView>
+          {pickupLocation && destinationCoords && (
+            <MapViewDirections
+              origin={pickupLocation}
+              destination={destinationCoords}
+              apikey={GOOGLE_MAPS_API_KEY}
+              strokeWidth={4}
+              strokeColor="#9C27B0"
+              onReady={result => {
+                setRouteInfo({
+                  distanceText: `${result.distance.toFixed(1)} km`,
+                  durationText: `${Math.ceil(result.duration)} min`,
+                });
+              }}
+              onError={err => console.error('Directions error:', err)}
+            />
+          )}
+        </MapView>
+      )}
+
       {/* {availableDrivers
         .filter(
           d => d.vehicleType?.toLowerCase() === selectedVehicle.toLowerCase(),
@@ -626,6 +615,7 @@ const HomeMapScreen: React.FC = () => {
           style={styles.locateButton}
           onPress={() => {
             setPickupCoords(currentLocation);
+            dispatch(setPickupLocation(currentLocation));
             mapRef.current?.animateToRegion({
               latitude: currentLocation.latitude,
               longitude: currentLocation.longitude,
@@ -709,6 +699,7 @@ const HomeMapScreen: React.FC = () => {
             });
             // Optionally update pickup marker and description
             setPickupCoords(currentLocation);
+            dispatch(setPickupLocation(currentLocation));
             reverseGeocode(
               currentLocation.latitude,
               currentLocation.longitude,

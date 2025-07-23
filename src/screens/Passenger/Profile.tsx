@@ -22,7 +22,7 @@ const navigation = useNavigation<ProfileScreenNavigationProp>();
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate('HomeMapScreen')}
           style={styles.backButton}>
           <Icon name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>

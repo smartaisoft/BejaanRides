@@ -14,19 +14,72 @@ export const SET_SELECTED_OFFER = 'SET_SELECTED_OFFER';
 export const SET_SEARCHING_DRIVER = 'SET_SEARCHING_DRIVER';
 export const SET_DRIVER_ARRIVED = 'SET_DRIVER_ARRIVED';
 export const SET_RIDE_STATUS = 'SET_RIDE_STATUS';
+export const SET_REGION = 'SET_REGION';
 
-export const setCurrentLocation = location => ({ type: SET_CURRENT_LOCATION, payload: location });
-export const setPickupLocation = location => ({ type: SET_PICKUP_LOCATION, payload: location });
-export const setDropoffLocation = location => ({ type: SET_DROPOFF_LOCATION, payload: location });
-export const setRouteInfo = route => ({ type: SET_ROUTE_INFO, payload: route });
-export const setRouteToPickup = route => ({ type: SET_ROUTE_TO_PICKUP, payload: route });
-export const setSelectedVehicle = vehicle => ({ type: SET_SELECTED_VEHICLE, payload: vehicle });
-export const setSelectedVehicleOption = option => ({ type: SET_SELECTED_VEHICLE_OPTION, payload: option });
-export const setFare = fare => ({ type: SET_FARE, payload: fare });
-export const setRideId = rideId => ({ type: SET_RIDE_ID, payload: rideId });
-export const setDriverInfo = info => ({ type: SET_DRIVER_INFO, payload: info });
-export const setDriverLiveCoords = coords => ({ type: SET_DRIVER_LIVE_COORDS, payload: coords });
-export const setSelectedOffer = offer => ({ type: SET_SELECTED_OFFER, payload: offer });
-export const setSearchingDriver = isSearching => ({ type: SET_SEARCHING_DRIVER, payload: isSearching });
-export const setDriverArrived = hasArrived => ({ type: SET_DRIVER_ARRIVED, payload: hasArrived });
-export const setRideStatus = status => ({ type: SET_RIDE_STATUS, payload: status });
+export const setCurrentLocation = location => ({
+  type: SET_CURRENT_LOCATION,
+  payload: location,
+});
+export const setPickupLocation = location => ({
+  type: SET_PICKUP_LOCATION,
+  payload: location,
+});
+export const setDropoffLocation = location => ({
+  type: SET_DROPOFF_LOCATION,
+  payload: location,
+});
+export const setRouteInfo = route => ({type: SET_ROUTE_INFO, payload: route});
+export const setRouteToPickup = route => ({
+  type: SET_ROUTE_TO_PICKUP,
+  payload: route,
+});
+export const setSelectedVehicle = vehicle => ({
+  type: SET_SELECTED_VEHICLE,
+  payload: vehicle,
+});
+export const setSelectedVehicleOption = option => ({
+  type: SET_SELECTED_VEHICLE_OPTION,
+  payload: option,
+});
+export const setFare = fare => ({type: SET_FARE, payload: fare});
+export const setRideId = rideId => ({type: SET_RIDE_ID, payload: rideId});
+export const setDriverInfo = info => ({type: SET_DRIVER_INFO, payload: info});
+export const setDriverLiveCoords = coords => ({
+  type: SET_DRIVER_LIVE_COORDS,
+  payload: coords,
+});
+export const setSelectedOffer = offer => ({
+  type: SET_SELECTED_OFFER,
+  payload: offer,
+});
+export const setSearchingDriver = isSearching => ({
+  type: SET_SEARCHING_DRIVER,
+  payload: isSearching,
+});
+export const setDriverArrived = hasArrived => ({
+  type: SET_DRIVER_ARRIVED,
+  payload: hasArrived,
+});
+export const setRideStatus = status => ({
+  type: SET_RIDE_STATUS,
+  payload: status,
+});
+export const setRegion = region => ({
+  type: SET_REGION,
+  payload: region,
+});
+export const fetchAndSetInitialRegion = () => async (dispatch) => {
+    try {
+      // Simulated GPS fetch or geolocation
+      const region = {
+        latitude: 37.78825,
+        longitude: -122.4324,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+  
+      dispatch(setRegion(region));
+    } catch (error) {
+      console.error('Error fetching region:', error);
+    }
+  };

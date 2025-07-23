@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
   Text,
@@ -27,6 +27,7 @@ import {AppDispatch, RootState} from '../../redux/store';
 import LoaderScreen from '../../components/LoaderScreen';
 import * as yup from 'yup';
 import Colors from '../../themes/colors';
+import {generateReferralCode} from '../../services/mlmUserService';
 
 type NameScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -42,7 +43,6 @@ const NameScreen: React.FC = () => {
   const isLoading = useSelector((state: RootState) => state.auth.isLoading);
   const [name, setNameInput] = useState('');
   const [email, setEmailInput] = useState('');
-  const [phoneInput, setPhoneInput] = useState(phoneFromRedux || '');
   const [cnic, setCnicInput] = useState('');
   const [errors, setErrors] = useState<{
     name?: string;
@@ -50,10 +50,31 @@ const NameScreen: React.FC = () => {
     phone?: string;
     cnic?: string;
   }>({});
+    const [referralInfo, setReferralInfo] = useState<{ referredBy: string; referrUid: string } | null>(null);
+
 
   const handleGoBack = () => {
     navigation.goBack();
   };
+  // ✅ Load referralInfo once when screen mounts
+  useEffect(() => {
+    const loadReferralInfo = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('referralInfo');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed?.referredBy && parsed?.referrUid) {
+            setReferralInfo(parsed);
+            console.log('📦 Referral info loaded:', parsed);
+          }
+        }
+      } catch (err) {
+        console.error('❌ Failed to load referralInfo:', err);
+      }
+    };
+
+    loadReferralInfo();
+  }, []);
 
   const handlePress = async () => {
     try {
@@ -71,13 +92,6 @@ const NameScreen: React.FC = () => {
           .trim()
           .email('Enter a valid email.')
           .required('Email is required.'),
-        phone: yup
-          .string()
-          .trim()
-          .matches(
-            /^\+92\d{10}$/,
-            'Enter a valid phone number starting with +92.',
-          ),
         cnic: yup
           .string()
           .trim()
@@ -88,7 +102,6 @@ const NameScreen: React.FC = () => {
         {
           name,
           email,
-          phone: phoneInput.trim(),
           cnic: cnic.trim(),
         },
         {abortEarly: false},
@@ -119,24 +132,48 @@ const NameScreen: React.FC = () => {
         dispatch(setAuthLoading(false));
         return;
       }
+      const referralCode = generateReferralCode(name, currentUser.uid);
+
 
       const userData = {
         uid: currentUser.uid,
         name: name.trim(),
-        phone: phoneInput.trim(), // Save in +92 format
+        phone: phoneFromRedux,
         email: email.trim(),
         cnic: cnic.trim(),
         role,
         createdAt: new Date().toISOString(),
+        referralCode,
+         referredBy: referralInfo?.referredBy || null,
+        referrerUid: referralInfo?.referrUid || null,
+        mlmNetwork: {
+          level1: [],
+          level2: [],
+          level3: [],
+          level4: [],
+          level5: [],
+          level6: [],
+          level7: [],
+        },
+        isSubscribed: false,
+        subscriptionExpiry: null,
+        isActive: true,
+        isApproved: false,
+        wallet: {
+          rideBalance: 0,
+          commissionIncome: 0,
+          withdrawalBalance: 0,
+          transactionHistory: [],
+        },
       };
 
       await createOrUpdateUser(userData);
-        // ✅ Show success toast/modal
-    if (Platform.OS === 'android') {
-      ToastAndroid.show('🎉 User created successfully!', ToastAndroid.SHORT);
-    } else {
-      Alert.alert('Success', '🎉 User created successfully!');
-    }
+      // ✅ Show success toast/modal
+      if (Platform.OS === 'android') {
+        ToastAndroid.show('🎉 User created successfully!', ToastAndroid.SHORT);
+      } else {
+        Alert.alert('Success', '🎉 User created successfully!');
+      }
       console.log('✅ User registered in Firestore');
 
       dispatch(setUserData(userData));
@@ -186,16 +223,11 @@ const NameScreen: React.FC = () => {
 
       {/* Phone */}
       <Text style={styles.label}>Enter your Phone</Text>
-      {/* <PhoneNumberInput
-        value={phoneInput}
-        onChange={setPhoneInput}
-        error={errors.phone}
-      /> */}
       <TextInput
         style={styles.input}
         placeholder="phone number"
         placeholderTextColor="#999"
-        value={phoneInput}
+        value={phoneFromRedux}
         onChangeText={setNameInput}
         editable={false}
       />

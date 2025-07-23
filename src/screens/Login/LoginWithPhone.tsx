@@ -43,97 +43,69 @@ const LoginWithPhone: React.FC = () => {
     navigation.goBack();
   };
 
-  // const handlePhonePress = async (values: {phone: string}) => {
-  //   dispatch(setAuthLoading(true));
-  //   const fullPhoneNumber = values.phone;
+  const handlePhonePress = async ({phone}: {phone: string}) => {
+    dispatch(setAuthLoading(true));
+    const fullPhoneNumber = phone;
 
-  //   try {
-  //     // 🔹 Check if the phone number exists in Firestore
-  //     const user = await getUserByPhone(fullPhoneNumber);
+    try {
+      const user = await getUserByPhone(fullPhoneNumber);
+      const isNewUser = !user;
 
-  //     if (user) {
-  //       console.log('✅ Phone number exists in Firestore.');
-  //     } else {
-  //       console.log('✅ Phone number NOT found in Firestore.');
-  //     }
+      console.log(
+        `📱 Phone number ${isNewUser ? 'NOT ' : ''}found in Firestore.`,
+      );
 
-  //     // 🔹 Send OTP
-  //     const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
+      const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
+      console.log('✅ OTP sent successfully.', confirmation);
 
-  //     // 🔹 Save phone to Redux
-  //     dispatch(setPhone(fullPhoneNumber));
+      dispatch(setPhone(fullPhoneNumber));
 
-  //     // 🔹 Navigate to OTP screen
-  //     navigation.navigate('Otp', {
-  //       method: 'SMS',
-  //       confirmation,
-  //       isNewUser: !user,
-  //     });
-  //   } catch (error) {
-  //     console.error('❌ Failed to send OTP:', error);
-  //   } finally {
-  //     dispatch(setAuthLoading(false));
-  //   }
-  // };
+      navigation.navigate('Otp', {
+        method: 'SMS',
+        confirmation,
+        isNewUser,
+      });
+    } catch (error: any) {
+      let message = 'Something went wrong while sending OTP.';
+      let title = 'OTP Error';
 
-const handlePhonePress = async ({ phone }: { phone: string }) => {
-  dispatch(setAuthLoading(true));
-  const fullPhoneNumber = phone;
+      switch (error.code) {
+        case 'auth/invalid-phone-number':
+          message =
+            'Invalid phone number format. Please use correct country code and format.';
+          break;
+        case 'auth/missing-phone-number':
+          message = 'Phone number is missing. Please enter it.';
+          break;
+        case 'auth/too-many-requests':
+          message =
+            'Too many attempts. Please wait a few minutes and try again.';
+          break;
+        case 'auth/network-request-failed':
+          message = 'Network error. Check your internet connection.';
+          break;
+        case 'auth/app-not-authorized':
+          message =
+            'App is not authorized for Firebase Phone Auth.\nPlease ensure the SHA-1 from Play Console is added in Firebase and google-services.json is updated.';
+          break;
+        case 'auth/quota-exceeded':
+          message =
+            'SMS quota for the project exceeded. Please try again later.';
+          break;
+        default:
+          message += `\n\nCode: ${error.code}`;
+          break;
+      }
 
-  try {
-    const user = await getUserByPhone(fullPhoneNumber);
-    const isNewUser = !user;
-
-    console.log(
-      `📱 Phone number ${isNewUser ? 'NOT ' : ''}found in Firestore.`,
-    );
-
-    const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
-    console.log('✅ OTP sent successfully.', confirmation);
-
-    dispatch(setPhone(fullPhoneNumber));
-
-    navigation.navigate('Otp', {
-      method: 'SMS',
-      confirmation,
-      isNewUser,
-    });
-  } catch (error: any) {
-    let message = 'Something went wrong while sending OTP.';
-    let title = 'OTP Error';
-
-    switch (error.code) {
-      case 'auth/invalid-phone-number':
-        message = 'Invalid phone number format. Please use correct country code and format.';
-        break;
-      case 'auth/missing-phone-number':
-        message = 'Phone number is missing. Please enter it.';
-        break;
-      case 'auth/too-many-requests':
-        message = 'Too many attempts. Please wait a few minutes and try again.';
-        break;
-      case 'auth/network-request-failed':
-        message = 'Network error. Check your internet connection.';
-        break;
-      case 'auth/app-not-authorized':
-        message = 'App is not authorized for Firebase Phone Auth.\nPlease ensure the SHA-1 from Play Console is added in Firebase and google-services.json is updated.';
-        break;
-      case 'auth/quota-exceeded':
-        message = 'SMS quota for the project exceeded. Please try again later.';
-        break;
-      default:
-        message += `\n\nCode: ${error.code}`;
-        break;
+      Alert.alert(title, message);
+      console.warn(
+        `❌ Firebase OTP error [${error.code}]:`,
+        error?.message || error,
+      );
+    } finally {
+      dispatch(setAuthLoading(false));
     }
-
-    Alert.alert(title, message);
-    console.warn(`❌ Firebase OTP error [${error.code}]:`, error?.message || error);
-  } finally {
-    dispatch(setAuthLoading(false));
-  }
-};
-
-
+  };
 
   return (
     <KeyboardAvoidingView

@@ -18,6 +18,7 @@ export const SET_REGION = 'SET_REGION';
 export const SET_SHOW_SUMMARY = 'SET_SHOW_SUMMARY';
 export const SET_SUMMARY = 'SET_SUMMARY';
 export const SET_SEARCH_MODAL = 'SET_SEARCH_MODAL';
+export const SET_DRIVER_INFO_MODAL = 'SET_DRIVER_INFO_MODAL';
 
 export const setCurrentLocation = (location: {
   latitude: number;
@@ -90,5 +91,9 @@ export const setSummary = (summary: any) => ({
 });
 export const setShowSearchModal = (summary: any) => ({
   type: SET_SEARCH_MODAL,
+  payload: summary,
+});
+export const setDriverInfoModal = (summary: any) => ({
+  type: SET_DRIVER_INFO_MODAL,
   payload: summary,
 });

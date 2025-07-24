@@ -47,6 +47,8 @@ import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../redux/store';
 import {
   setDriverInfo,
+  setDriverInfoModal,
+  setDriverLiveCoords,
   setDropoffLocation,
   setPickupLocation,
   setRegion,
@@ -70,16 +72,11 @@ const HomeMapScreen: React.FC = () => {
   const mapRef = useRef<MapView>(null);
   const navigation = useNavigation();
   const [showVehicleModal, setShowVehicleModal] = useState(false);
-  const [showDriverModal, setShowDriverModal] = useState(false);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
   const unsubscribeListener = useRef<(() => void) | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<string>('Car');
   const [isSearchingDriver, setIsSearchingDriver] = useState(false);
-  const [driverLiveCoords, setDriverLiveCoords] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
   const [hasDriverArrived, setHasDriverArrived] = useState(false);
   const [isTripSummaryLoading, setIsTripSummaryLoading] = useState(false);
   const [availableDrivers, setAvailableDrivers] = useState<any[]>([]);
@@ -100,8 +97,9 @@ const HomeMapScreen: React.FC = () => {
     showSummary,
     dropoffLocation,
     showSearchModal,
+    showDriverInfoModal,
+    driverLiveCoords,
   } = useSelector((state: RootState) => state.ride);
-  console.log('desc', summary?.destination, summary?.pickup, showSummary);
   const dispatch = useDispatch<AppDispatch>();
   const [currentLocation, setCurrentLocation] = useState<{
     latitude: number;
@@ -154,7 +152,11 @@ const HomeMapScreen: React.FC = () => {
           console.warn('No Firestore user found.');
         }
       }
-
+      if (!showSummary && !selectedOffer?.driverId) {
+        dispatch(setShowSearchModal(true));
+      } else {
+        dispatch(setShowSearchModal(false));
+      }
       getCurrentLocation();
     };
 
@@ -197,7 +199,6 @@ const HomeMapScreen: React.FC = () => {
           ...data[driverId],
         }));
         setIncomingOffers(offers);
-        // dispatch(setIncomingOffers(offers));
       } else {
         setIncomingOffers([]);
       }
@@ -380,7 +381,7 @@ const HomeMapScreen: React.FC = () => {
           );
           driverLocRef.on('value', snap => {
             const loc = snap.val();
-            if (loc) setDriverLiveCoords(loc);
+            if (loc) dispatch(setDriverLiveCoords(loc));
           });
         }
 
@@ -398,7 +399,7 @@ const HomeMapScreen: React.FC = () => {
       setIsSearchingDriver(false);
     }
   };
-
+  console.log('driver', driverInfo, selectedOffer?.eta);
   const fetchDriverInfo = async (driverId: string) => {
     try {
       const [profile, vehicle] = await Promise.all([
@@ -418,7 +419,7 @@ const HomeMapScreen: React.FC = () => {
           vehicleType: vehicle?.vehicleType ?? 'Car',
         };
         dispatch(setDriverInfo(mergedInfo));
-        setShowDriverModal(true);
+        dispatch(setDriverInfoModal(true));
       } else {
         console.warn('⚠️ No driver profile found.');
       }
@@ -431,7 +432,7 @@ const HomeMapScreen: React.FC = () => {
     const offer = incomingOffers.find(o => o.driverId === driverId);
     if (!offer) return;
     dispatch(setSelectedOffer(offer)); // Save for modal
-    setShowDriverModal(true);
+    dispatch(setDriverInfoModal(true));
 
     // 1. Mark ride as accepted
     await database().ref(`rideRequests/${currentRideId}`).update({
@@ -642,8 +643,8 @@ const HomeMapScreen: React.FC = () => {
       <BookingSuccessModal
         visible={showBookingSuccess}
         onDone={() => setShowBookingSuccess(false)}
+        time={selectedOffer?.eta}
       />
-
       <LocationSearchModal
         visible={showSearchModal}
         onClose={() => dispatch(setShowSearchModal(false))}
@@ -659,6 +660,7 @@ const HomeMapScreen: React.FC = () => {
           dispatch(setShowSummary(true));
         }}
       />
+
       <VehicleSelectionModal
         visible={showVehicleModal}
         onRequest={() => {
@@ -759,10 +761,18 @@ const HomeMapScreen: React.FC = () => {
           onClose={() => setHasDriverArrived(false)}
         />
       )}
-
+      {selectedOffer && !showDriverInfoModal && (
+        <TouchableOpacity
+          style={styles.info}
+          onPress={() => {
+            dispatch(setDriverInfoModal(true));
+          }}>
+          <Text style={{textAlign:'center', color: 'white'}}>Driver Info</Text>
+        </TouchableOpacity>
+      )}
       <DriverInfoModal
-        visible={showDriverModal}
-        onClose={() => setShowDriverModal(false)}
+        visible={showDriverInfoModal}
+        onClose={() => dispatch(setDriverInfoModal(false))}
         driver={
           driverInfo && {
             name: driverInfo.name,
@@ -850,6 +860,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  info:{
+    backgroundColor: '#25B324',
+    padding: 15, 
+    marginVertical: 10,
+    width: '80%',
+    alignSelf: 'center',
+    borderRadius: 10
+  }
 });
 
 export default HomeMapScreen;

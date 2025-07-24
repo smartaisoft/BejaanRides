@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  View,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  Image,
-} from 'react-native';
+import {View, StyleSheet, Text, TouchableOpacity, Image} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Colors from '../../themes/colors';
 
@@ -25,6 +19,7 @@ interface Props {
   duration?: string;
   fare?: number;
   etaToPickup?: string;
+  onOpen?: () => void
 }
 
 const DriverInfoPanel: React.FC<Props> = ({
@@ -35,11 +30,15 @@ const DriverInfoPanel: React.FC<Props> = ({
   distance,
   duration,
   fare,
+  onOpen
 }) => {
   if (!visible) return null;
 
   return (
     <View style={styles.panel}>
+      <TouchableOpacity style={[styles.closeButton]} onPress={onClose}>
+        <Icon name="chevron-down" size={40} color="black" />
+      </TouchableOpacity>
       <View style={styles.topSection}>
         <Image
           source={{
@@ -63,9 +62,7 @@ const DriverInfoPanel: React.FC<Props> = ({
             <Icon name="message" size={20} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.iconButton, { backgroundColor: Colors.primary }]}
-            onPress={onClose}
-          >
+            style={[styles.iconButton, {backgroundColor: Colors.primary}]}>
             <Icon name="phone" size={20} color="#fff" />
           </TouchableOpacity>
         </View>
@@ -74,15 +71,21 @@ const DriverInfoPanel: React.FC<Props> = ({
       <View style={styles.vehicleDetails}>
         <View style={styles.vehicleItem}>
           <Text style={styles.vehicleLabel}>Vehicle</Text>
-          <Text style={styles.vehicleValue}>{driver?.vehicleName ?? 'N/A'}</Text>
+          <Text style={styles.vehicleValue}>
+            {driver?.vehicleName ?? 'N/A'}
+          </Text>
         </View>
         <View style={styles.vehicleItem}>
           <Text style={styles.vehicleLabel}>Colour</Text>
-          <Text style={styles.vehicleValue}>{driver?.vehicleColor ?? 'N/A'}</Text>
+          <Text style={styles.vehicleValue}>
+            {driver?.vehicleColor ?? 'N/A'}
+          </Text>
         </View>
         <View style={styles.vehicleItem}>
           <Text style={styles.vehicleLabel}>Number</Text>
-          <Text style={styles.vehicleValue}>{driver?.vehicleNumber ?? 'N/A'}</Text>
+          <Text style={styles.vehicleValue}>
+            {driver?.vehicleNumber ?? 'N/A'}
+          </Text>
         </View>
       </View>
 
@@ -106,13 +109,13 @@ const DriverInfoPanel: React.FC<Props> = ({
         </View>
       </View>
 
-      <TouchableOpacity style={styles.arrivalButton}>
+      <Text style={styles.arrivalButton}>
         <Text style={styles.arrivalText}>
           {etaToPickup
             ? `Driver will arrive in approx ${etaToPickup}`
             : 'Driver is on the way'}
         </Text>
-      </TouchableOpacity>
+      </Text>
     </View>
   );
 };
@@ -163,6 +166,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 8,
     marginLeft: 8,
+  },
+  closeButton: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    alignSelf: 'center',
   },
   vehicleDetails: {
     flexDirection: 'row',

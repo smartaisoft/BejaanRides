@@ -18,7 +18,8 @@ import {
   SET_REGION,
   SET_SHOW_SUMMARY,
   SET_SUMMARY,
-  SET_SEARCH_MODAL
+  SET_SEARCH_MODAL,
+  SET_DRIVER_INFO_MODAL,
 } from '../actions/rideActions';
 
 const initialState = {
@@ -43,7 +44,8 @@ const initialState = {
     pickup: 'Fetching current location...',
     destination: '',
   },
-  showSearchModal: false
+  showSearchModal: false,
+  showDriverInfoModal: false,
 };
 
 const rideReducer = (
@@ -94,8 +96,10 @@ const rideReducer = (
           ...action.payload,
         },
       };
-      case SET_SEARCH_MODAL:
-        return {...state, showSearchModal: action.payload};
+    case SET_SEARCH_MODAL:
+      return {...state, showSearchModal: action.payload};
+    case SET_DRIVER_INFO_MODAL:
+      return {...state, showDriverInfoModal: action.payload};
     default:
       return state;
   }

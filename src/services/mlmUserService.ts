@@ -33,75 +33,8 @@ export interface MLMUserData extends UserData {
   wallet?: Wallet;
 }
 
-// export const createUserWithReferral = async (
-//   user: UserData,
-//   referrerUid?: string,
-// ) => {
-//   try {
-//     const referralCode = generateReferralCode(user.name, user.uid);
-//     const referralLink = `https://salamrides.page.link/ref?refCode=${referralCode}`;
 
-//     const mlmNetwork: MLMLevelNetwork = {
-//       level1: [],
-//       level2: [],
-//       level3: [],
-//       level4: [],
-//       level5: [],
-//       level6: [],
-//       level7: [],
-//     };
 
-//     if (referrerUid) {
-//       const refDoc = await firestore()
-//         .collection('users')
-//         .doc(referrerUid)
-//         .get();
-
-//       if (refDoc.exists()) {
-//         const refData = refDoc.data() as MLMUserData;
-
-//         mlmNetwork.level1.push(referrerUid);
-
-//         const parentNetwork = refData.mlmNetwork;
-//         if (parentNetwork) {
-//           if (parentNetwork.level1?.[0])
-//             mlmNetwork.level2.push(parentNetwork.level1[0]);
-//           if (parentNetwork.level2?.[0])
-//             mlmNetwork.level3.push(parentNetwork.level2[0]);
-//           if (parentNetwork.level3?.[0])
-//             mlmNetwork.level4.push(parentNetwork.level3[0]);
-//           if (parentNetwork.level4?.[0])
-//             mlmNetwork.level5.push(parentNetwork.level4[0]);
-//           if (parentNetwork.level5?.[0])
-//             mlmNetwork.level6.push(parentNetwork.level5[0]);
-//           if (parentNetwork.level6?.[0])
-//             mlmNetwork.level7.push(parentNetwork.level6[0]);
-//         }
-//       }
-//     }
-
-//     const fullUserData: MLMUserData = {
-//       ...user,
-//       referralLink,
-//       referralCode,
-//       referredBy: referrerUid || null,
-//       mlmNetwork,
-//       isSubscribed: false,
-//       isApproved: false,
-//       wallet: {
-//         rideBalance: 0,
-//         commissionIncome: 0,
-//         withdrawalBalance: 0,
-//         transactionHistory: [],
-//       },
-//     };
-
-//     await firestore().collection('users').doc(user.uid).set(fullUserData);
-//     console.log('✅ User with referral and MLM network created');
-//   } catch (error) {
-//     console.error('❌ Failed to create user with referral:', error);
-//   }
-// };
 export const createUserWithReferral = async (
   user: UserData,
   referrerUid?: string,

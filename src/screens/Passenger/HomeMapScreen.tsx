@@ -41,13 +41,23 @@ import Colors from '../../themes/colors';
 import DriverOfferCard from '../../components/PassengerCommonCard/DriverOfferCard';
 import SearchingDriverOverlay from '../../components/PassengerCommonCard/SearchingDriverOverlay';
 import BookingSuccessModal from '../../components/PassengerCommonCard/BookingSuccessModal';
-const defaultLat = 31.5497;
-const defaultLng = 74.3436;
 const GOOGLE_MAPS_API_KEY = 'AIzaSyCb2ys2AD6NTFhnEGXNsDrjSXde6d569vU';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../redux/store';
-import {setPickupLocation, setRegion} from '../../redux/actions/rideActions';
+import {
+  setDriverInfo,
+  setDriverInfoModal,
+  setDriverLiveCoords,
+  setDropoffLocation,
+  setPickupLocation,
+  setRegion,
+  setRideId,
+  setSelectedOffer,
+  setShowSearchModal,
+  setShowSummary,
+  setSummary,
+} from '../../redux/actions/rideActions';
 
 type IncomingOffer = {
   driverId: string;
@@ -61,62 +71,36 @@ type IncomingOffer = {
 const HomeMapScreen: React.FC = () => {
   const mapRef = useRef<MapView>(null);
   const navigation = useNavigation();
-  const [pickupDescription, setPickupDescription] = useState(
-    'Fetching current location...',
-  );
-  const [pickupCoords, setPickupCoords] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-  const [destinationDescription, setDestinationDescription] = useState<
-    string | null
-  >(null);
-  const [destinationCoords, setDestinationCoords] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-  const [showTripSummary, setShowTripSummary] = useState(false);
-  const [showLocationModal, setShowLocationModal] = useState(true);
   const [showVehicleModal, setShowVehicleModal] = useState(false);
-  const [showDriverModal, setShowDriverModal] = useState(false);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
-  const [currentRideId, setCurrentRideId] = useState<string | null>(null);
   const unsubscribeListener = useRef<(() => void) | null>(null);
-  const [driverInfo, setDriverInfo] = useState<any | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<string>('Car');
   const [isSearchingDriver, setIsSearchingDriver] = useState(false);
-  const [driverLiveCoords, setDriverLiveCoords] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
   const [hasDriverArrived, setHasDriverArrived] = useState(false);
   const [isTripSummaryLoading, setIsTripSummaryLoading] = useState(false);
   const [availableDrivers, setAvailableDrivers] = useState<any[]>([]);
   const [incomingOffers, setIncomingOffers] = useState<any[]>([]);
   const [selectedVehicleOption, setSelectedVehicleOption] =
     useState<VehicleOption | null>(null);
-  const [selectedOffer, setSelectedOffer] = useState<IncomingOffer | null>(
-    null,
-  );
   const [showBookingSuccess, setShowBookingSuccess] = useState(false);
-
   const [routeInfoToPickup, setRouteInfoToPickup] = useState<RouteInfo | null>(
     null,
   );
-  const region = useSelector((state: RootState) => state.ride.region);
-  const pickupLocation = useSelector(
-    (state: RootState) => state.ride.pickupLocation,
-  );
-  console.log('region', region);
-  console.log('pick', pickupLocation);
+  const {
+    region,
+    pickupLocation,
+    selectedOffer,
+    driverInfo,
+    currentRideId,
+    summary,
+    showSummary,
+    dropoffLocation,
+    showSearchModal,
+    showDriverInfoModal,
+    driverLiveCoords,
+  } = useSelector((state: RootState) => state.ride);
   const dispatch = useDispatch<AppDispatch>();
-  const [mapRegion, setMapRegion] = useState<Region>({
-    latitude: defaultLat,
-    longitude: defaultLng,
-    latitudeDelta: 0.01,
-    longitudeDelta: 0.01,
-  });
   const [currentLocation, setCurrentLocation] = useState<{
     latitude: number;
     longitude: number;
@@ -154,7 +138,7 @@ const HomeMapScreen: React.FC = () => {
             'Permission Denied',
             'Location permission is required to use this feature.',
           );
-          setPickupDescription('Unknown Location');
+          dispatch(setSummary({pickup: 'Unknown Location'}));
           return;
         }
       }
@@ -168,7 +152,11 @@ const HomeMapScreen: React.FC = () => {
           console.warn('No Firestore user found.');
         }
       }
-
+      if (!showSummary && !selectedOffer?.driverId) {
+        dispatch(setShowSearchModal(true));
+      } else {
+        dispatch(setShowSearchModal(false));
+      }
       getCurrentLocation();
     };
 
@@ -211,7 +199,6 @@ const HomeMapScreen: React.FC = () => {
           ...data[driverId],
         }));
         setIncomingOffers(offers);
-        // dispatch(setIncomingOffers(offers));
       } else {
         setIncomingOffers([]);
       }
@@ -284,7 +271,7 @@ const HomeMapScreen: React.FC = () => {
         );
 
         const address = await reverseGeocode(latitude, longitude);
-        setPickupDescription(address);
+        dispatch(setSummary({pickup: address}));
       },
       error => {
         console.warn('⚠️ High Accuracy failed, falling back:', error);
@@ -294,7 +281,6 @@ const HomeMapScreen: React.FC = () => {
           async (fallbackPosition: GeolocationResponse) => {
             const {latitude, longitude} = fallbackPosition.coords;
             setCurrentLocation({latitude, longitude}); // <--- NEW
-
             dispatch(setPickupLocation({latitude, longitude}));
             dispatch(
               setRegion({
@@ -306,11 +292,11 @@ const HomeMapScreen: React.FC = () => {
             );
             console.log('errrrrrrr', error);
             const address = await reverseGeocode(latitude, longitude);
-            setPickupDescription(address);
+            dispatch(setSummary({pickup: address}));
           },
           fallbackError => {
             console.error('❌ Both location methods failed:', fallbackError);
-            setPickupDescription('Unknown Location');
+            dispatch(setSummary({pickup: 'Unknown Location'}));
           },
           {
             enableHighAccuracy: false,
@@ -343,9 +329,9 @@ const HomeMapScreen: React.FC = () => {
   const handleRequestRide = async () => {
     if (
       !pickupLocation ||
-      !destinationCoords ||
+      !dropoffLocation ||
       !currentUser ||
-      !destinationDescription ||
+      !summary?.destination ||
       !selectedVehicleOption
     ) {
       Alert.alert('Error', 'Missing data to create ride request.');
@@ -365,12 +351,12 @@ const HomeMapScreen: React.FC = () => {
         pickup: {
           latitude: pickupLocation.latitude,
           longitude: pickupLocation.longitude,
-          address: pickupDescription,
+          address: summary?.pickup,
         },
         dropoff: {
-          latitude: destinationCoords.latitude,
-          longitude: destinationCoords.longitude,
-          address: destinationDescription,
+          latitude: dropoffLocation.latitude,
+          longitude: dropoffLocation.longitude,
+          address: summary?.destination,
         },
         vehicleType,
         fareEstimate,
@@ -383,7 +369,7 @@ const HomeMapScreen: React.FC = () => {
         return;
       }
 
-      setCurrentRideId(rideId);
+      dispatch(setRideId(rideId));
       unsubscribeListener.current = listenForRideUpdates(rideId, ride => {
         if (ride.status === 'accepted' && ride.driverId) {
           setRideStatus('accepted');
@@ -395,7 +381,7 @@ const HomeMapScreen: React.FC = () => {
           );
           driverLocRef.on('value', snap => {
             const loc = snap.val();
-            if (loc) setDriverLiveCoords(loc);
+            if (loc) dispatch(setDriverLiveCoords(loc));
           });
         }
 
@@ -413,7 +399,7 @@ const HomeMapScreen: React.FC = () => {
       setIsSearchingDriver(false);
     }
   };
-
+  console.log('driver', driverInfo, selectedOffer?.eta);
   const fetchDriverInfo = async (driverId: string) => {
     try {
       const [profile, vehicle] = await Promise.all([
@@ -432,9 +418,8 @@ const HomeMapScreen: React.FC = () => {
           vehicleNumber: vehicle?.plateNumber ?? 'N/A',
           vehicleType: vehicle?.vehicleType ?? 'Car',
         };
-
-        setDriverInfo(mergedInfo);
-        setShowDriverModal(true);
+        dispatch(setDriverInfo(mergedInfo));
+        dispatch(setDriverInfoModal(true));
       } else {
         console.warn('⚠️ No driver profile found.');
       }
@@ -446,9 +431,8 @@ const HomeMapScreen: React.FC = () => {
   const handleAcceptDriver = async (driverId: string) => {
     const offer = incomingOffers.find(o => o.driverId === driverId);
     if (!offer) return;
-
-    setSelectedOffer(offer); // Save for modal
-    setShowDriverModal(true);
+    dispatch(setSelectedOffer(offer)); // Save for modal
+    dispatch(setDriverInfoModal(true));
 
     // 1. Mark ride as accepted
     await database().ref(`rideRequests/${currentRideId}`).update({
@@ -479,7 +463,7 @@ const HomeMapScreen: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       setMapKey(prev => prev + 1);
-    }, [])
+    }, []),
   );
   return (
     <View style={styles.container}>
@@ -501,7 +485,7 @@ const HomeMapScreen: React.FC = () => {
           onRegionChangeComplete={async newRegion => {
             dispatch(setRegion(newRegion));
 
-            if (!destinationCoords) {
+            if (!dropoffLocation) {
               dispatch(
                 setPickupLocation({
                   latitude: newRegion.latitude,
@@ -512,7 +496,7 @@ const HomeMapScreen: React.FC = () => {
                 newRegion.latitude,
                 newRegion.longitude,
               );
-              setPickupDescription(address);
+              dispatch(setSummary({pickup: address}));
             }
           }}>
           {pickupLocation && (
@@ -574,10 +558,10 @@ const HomeMapScreen: React.FC = () => {
             />
           )}
 
-          {pickupLocation && destinationCoords && (
+          {pickupLocation && dropoffLocation && (
             <MapViewDirections
               origin={pickupLocation}
-              destination={destinationCoords}
+              destination={dropoffLocation}
               apikey={GOOGLE_MAPS_API_KEY}
               strokeWidth={4}
               strokeColor="#9C27B0"
@@ -610,11 +594,10 @@ const HomeMapScreen: React.FC = () => {
           />
         ))} */}
 
-      {currentLocation && !destinationCoords && (
+      {currentLocation && !dropoffLocation && (
         <TouchableOpacity
           style={styles.locateButton}
           onPress={() => {
-            setPickupCoords(currentLocation);
             dispatch(setPickupLocation(currentLocation));
             mapRef.current?.animateToRegion({
               latitude: currentLocation.latitude,
@@ -627,10 +610,10 @@ const HomeMapScreen: React.FC = () => {
         </TouchableOpacity>
       )}
 
-      {showTripSummary && destinationDescription && (
+      {showSummary && summary?.destination && (
         <TripSummaryCard
-          pickup={pickupDescription}
-          dropoff={destinationDescription}
+          pickup={summary?.pickup}
+          dropoff={summary?.destination}
           distance={routeInfo?.distanceText}
           duration={routeInfo?.durationText}
           fare={calculateFare(
@@ -640,17 +623,17 @@ const HomeMapScreen: React.FC = () => {
           )}
           loading={isTripSummaryLoading} // 👈 HERE
           onCancel={() => {
-            setDestinationDescription(null);
-            setDestinationCoords(null);
+            dispatch(setSummary({destination: null}));
+            dispatch(setDropoffLocation(null));
             setRouteInfo(null);
-            setShowTripSummary(false);
-            setShowLocationModal(true);
+            dispatch(setShowSummary(false));
+            dispatch(setShowSearchModal(true));
           }}
           onNext={() => {
             setIsTripSummaryLoading(true);
             // Simulate async or prepare for VehicleSelectionModal
             setTimeout(() => {
-              setShowTripSummary(false);
+              dispatch(setShowSummary(false));
               setShowVehicleModal(true);
               setIsTripSummaryLoading(false);
             }, 500); // adjust delay if needed
@@ -660,21 +643,24 @@ const HomeMapScreen: React.FC = () => {
       <BookingSuccessModal
         visible={showBookingSuccess}
         onDone={() => setShowBookingSuccess(false)}
+        time={selectedOffer?.eta}
       />
-
       <LocationSearchModal
-        visible={showLocationModal}
-        onClose={() => setShowLocationModal(false)}
+        visible={showSearchModal}
+        onClose={() => dispatch(setShowSearchModal(false))}
         onSelect={location => {
-          setDestinationDescription(location.description);
-          setDestinationCoords({
-            latitude: location.latitude,
-            longitude: location.longitude,
-          });
-          setShowLocationModal(false);
-          setShowTripSummary(true);
+          dispatch(setSummary({destination: location.description}));
+          dispatch(
+            setDropoffLocation({
+              latitude: location.latitude,
+              longitude: location.longitude,
+            }),
+          );
+          dispatch(setShowSearchModal(false));
+          dispatch(setShowSummary(true));
         }}
       />
+
       <VehicleSelectionModal
         visible={showVehicleModal}
         onRequest={() => {
@@ -683,11 +669,11 @@ const HomeMapScreen: React.FC = () => {
         }}
         onClose={() => {
           // Reset everything when cancelling vehicle selection
-          setDestinationCoords(null);
-          setDestinationDescription(null);
+          dispatch(setDropoffLocation(null));
+          dispatch(setSummary({destination: null}));
           setRouteInfo(null);
           setShowVehicleModal(false);
-          setShowLocationModal(true);
+          dispatch(setShowSearchModal(true));
 
           // Animate back to current location if available
           if (currentLocation) {
@@ -698,12 +684,11 @@ const HomeMapScreen: React.FC = () => {
               longitudeDelta: 0.01,
             });
             // Optionally update pickup marker and description
-            setPickupCoords(currentLocation);
             dispatch(setPickupLocation(currentLocation));
             reverseGeocode(
               currentLocation.latitude,
               currentLocation.longitude,
-            ).then(address => setPickupDescription(address));
+            ).then(address => dispatch(setSummary({pickup: address})));
           }
         }}
         onSelectVehicle={vehicle => {
@@ -745,16 +730,14 @@ const HomeMapScreen: React.FC = () => {
               unsubscribeListener.current();
               unsubscribeListener.current = null;
             }
-
-            setCurrentRideId(null);
-
+            dispatch(setRideId(null));
             // Reset locations and route
-            setDestinationCoords(null);
-            setDestinationDescription(null);
+            dispatch(setDropoffLocation(null));
+            dispatch(setSummary({destination: null}));
             setRouteInfo(null);
 
             // Show location search modal again
-            setShowLocationModal(true);
+            dispatch(setShowSearchModal(true));
 
             Alert.alert(
               'Ride Cancelled',
@@ -778,10 +761,18 @@ const HomeMapScreen: React.FC = () => {
           onClose={() => setHasDriverArrived(false)}
         />
       )}
-
+      {selectedOffer && !showDriverInfoModal && (
+        <TouchableOpacity
+          style={styles.info}
+          onPress={() => {
+            dispatch(setDriverInfoModal(true));
+          }}>
+          <Text style={{textAlign:'center', color: 'white'}}>Driver Info</Text>
+        </TouchableOpacity>
+      )}
       <DriverInfoModal
-        visible={showDriverModal}
-        onClose={() => setShowDriverModal(false)}
+        visible={showDriverInfoModal}
+        onClose={() => dispatch(setDriverInfoModal(false))}
         driver={
           driverInfo && {
             name: driverInfo.name,
@@ -869,6 +860,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  info:{
+    backgroundColor: '#25B324',
+    padding: 15, 
+    marginVertical: 10,
+    width: '80%',
+    alignSelf: 'center',
+    borderRadius: 10
+  }
 });
 
 export default HomeMapScreen;

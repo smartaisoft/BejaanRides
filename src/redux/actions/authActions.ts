@@ -50,6 +50,10 @@ export const setLoggedIn = (loggedIn: boolean): AuthActionTypes => ({
   type: SET_LOGGED_IN,
   payload: loggedIn,
 });
+export const logout = (): AuthActionTypes => ({
+  type: 'LOGOUT',
+});
+
 
 // export const setUserData = (user: MLMUserData): AuthActionTypes => ({
 //   type: SET_USER_DATA,

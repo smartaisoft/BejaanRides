@@ -5,11 +5,11 @@ import {useDispatch, useSelector} from 'react-redux';
 import {RootState, AppDispatch} from '../redux/store';
 import DriverStack from './DriverStack';
 import AuthStack from './AuthNavigator';
-import DrawerNavigator from './DrawerNavigator';
 import {ActivityIndicator, View} from 'react-native';
 import {setVehicleDetails} from '../redux/actions/vehicleActions';
 import {getVehicleInfo} from '../services/vehicleService';
 import Colors from '../themes/colors';
+import PassengerStack from './PassengerStack';
 
 const RootNavigator: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -62,8 +62,7 @@ const RootNavigator: React.FC = () => {
 
   // 🔹 Passenger
   if (role === 'passenger') {
-    return <DrawerNavigator />;
-    // return <HomeMapScreen />;
+    return <PassengerStack />;
   }
 
   // 🔹 Driver

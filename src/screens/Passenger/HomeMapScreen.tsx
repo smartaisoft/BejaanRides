@@ -76,6 +76,7 @@ const HomeMapScreen: React.FC = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
+  const [mapKey, setMapKey] = useState(0);
   const [showVehicleModal, setShowVehicleModal] = useState(false);
   const unsubscribeListener = useRef<(() => void) | null>(null);
   const [isSearchingDriver, setIsSearchingDriver] = useState(false);
@@ -502,7 +503,6 @@ const HomeMapScreen: React.FC = () => {
       prev.filter(offer => offer.driverId !== driverId),
     );
   };
-  const [mapKey, setMapKey] = useState(0);
 
   useFocusEffect(
     useCallback(() => {

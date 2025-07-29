@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState, useRef} from 'react';
 import {
   Animated,
@@ -173,7 +174,7 @@ const getIconForVehicle = (type: string) => {
 
 
   const getVehicleOptions = (): VehicleOption[] => {
-  if (!routeInfo) return [];
+  if (!routeInfo) {return [];}
 
   const { distanceText, durationText } = routeInfo;
 
@@ -181,7 +182,7 @@ const getIconForVehicle = (type: string) => {
 
   return vehicleTypes.map((type, index) => {
     const fare = calculateFare(distanceText, durationText, type);
-    const durationMin = parseInt(durationText.replace('min', '').trim()) || 1;
+    const durationMin = parseInt(durationText.replace('min', '').trim(), 10) || 1;
     const eta = `${Math.max(1, Math.floor(durationMin * getEtaFactor(type)))} min`;
 
     return {

@@ -50,7 +50,7 @@ const Profile = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.navigate('HomeMapScreen')}
+          onPress={() => navigation.goBack()}
           style={styles.backButton}>
           <Icon name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>

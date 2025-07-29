@@ -12,6 +12,7 @@ import {
   Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { calculateFare } from '../../utils/calculateFare';
 
 export interface VehicleOption {
   id: string;
@@ -96,57 +97,103 @@ const VehicleSelectionSheet: React.FC<Props> = ({
     };
   };
 
+  // const getVehicleOptions = (): VehicleOption[] => {
+  //   if (!routeInfo) return [];
+
+  //   const distanceKm =
+  //     parseFloat(routeInfo.distanceText.replace('km', '').trim()) || 0;
+  //   const durationMin =
+  //     parseInt(routeInfo.durationText.replace('min', '').trim()) || 0;
+
+  //   return [
+  //     {
+  //       id: '1',
+  //       type: 'Bike',
+  //       price: `RS:${Math.round(50 + distanceKm * 20 + durationMin * 2)}`,
+  //       eta: `${Math.max(1, Math.floor(durationMin * 0.8))} min`,
+  //       distance: `${distanceKm.toFixed(1)} km`,
+  //       icon: 'motorbike',
+  //     },
+  //     {
+  //       id: '2',
+  //       type: 'Car',
+  //       price: `RS:${Math.round(100 + distanceKm * 40 + durationMin * 5)}`,
+  //       eta: `${Math.max(2, Math.floor(durationMin * 1))} min`,
+  //       distance: `${distanceKm.toFixed(1)} km`,
+  //       icon: 'car',
+  //     },
+  //     {
+  //       id: '3',
+  //       type: 'Limousine',
+  //       price: `RS:${Math.round(200 + distanceKm * 70 + durationMin * 8)}`,
+  //       eta: `${Math.max(4, Math.floor(durationMin * 1.2))} min`,
+  //       distance: `${distanceKm.toFixed(1)} km`,
+  //       icon: 'car-limousine',
+  //     },
+  //     {
+  //       id: '4',
+  //       type: 'Luxury',
+  //       price: `RS:${Math.round(250 + distanceKm * 90 + durationMin * 10)}`,
+  //       eta: `${Math.max(3, Math.floor(durationMin * 1.1))} min`,
+  //       distance: `${distanceKm.toFixed(1)} km`,
+  //       icon: 'car-convertible',
+  //     },
+  //     {
+  //       id: '5',
+  //       type: 'ElectricCar',
+  //       price: `RS:${Math.round(150 + distanceKm * 60 + durationMin * 6)}`,
+  //       eta: `${Math.max(2, Math.floor(durationMin * 0.9))} min`,
+  //       distance: `${distanceKm.toFixed(1)} km`,
+  //       icon: 'car-electric',
+  //     },
+  //   ];
+  // };
+
+const getEtaFactor = (type: string) => {
+  switch (type) {
+    case 'Bike': return 0.8;
+    case 'Car': return 1;
+    case 'Limousine': return 1.2;
+    case 'Luxury': return 1.1;
+    case 'ElectricCar': return 0.9;
+    default: return 1;
+  }
+};
+
+const getIconForVehicle = (type: string) => {
+  switch (type) {
+    case 'Bike': return 'motorbike';
+    case 'Car': return 'car';
+    case 'Limousine': return 'car-limousine';
+    case 'Luxury': return 'car-convertible';
+    case 'ElectricCar': return 'car-electric';
+    default: return 'car';
+  }
+};
+
+
   const getVehicleOptions = (): VehicleOption[] => {
-    if (!routeInfo) return [];
+  if (!routeInfo) return [];
 
-    const distanceKm =
-      parseFloat(routeInfo.distanceText.replace('km', '').trim()) || 0;
-    const durationMin =
-      parseInt(routeInfo.durationText.replace('min', '').trim()) || 0;
+  const { distanceText, durationText } = routeInfo;
 
-    return [
-      {
-        id: '1',
-        type: 'Bike',
-        price: `RS:${Math.round(50 + distanceKm * 20 + durationMin * 2)}`,
-        eta: `${Math.max(1, Math.floor(durationMin * 0.8))} min`,
-        distance: `${distanceKm.toFixed(1)} km`,
-        icon: 'motorbike',
-      },
-      {
-        id: '2',
-        type: 'Car',
-        price: `RS:${Math.round(100 + distanceKm * 40 + durationMin * 5)}`,
-        eta: `${Math.max(2, Math.floor(durationMin * 1))} min`,
-        distance: `${distanceKm.toFixed(1)} km`,
-        icon: 'car',
-      },
-      {
-        id: '3',
-        type: 'Limousine',
-        price: `RS:${Math.round(200 + distanceKm * 70 + durationMin * 8)}`,
-        eta: `${Math.max(4, Math.floor(durationMin * 1.2))} min`,
-        distance: `${distanceKm.toFixed(1)} km`,
-        icon: 'car-limousine',
-      },
-      {
-        id: '4',
-        type: 'Luxury',
-        price: `RS:${Math.round(250 + distanceKm * 90 + durationMin * 10)}`,
-        eta: `${Math.max(3, Math.floor(durationMin * 1.1))} min`,
-        distance: `${distanceKm.toFixed(1)} km`,
-        icon: 'car-convertible',
-      },
-      {
-        id: '5',
-        type: 'ElectricCar',
-        price: `RS:${Math.round(150 + distanceKm * 60 + durationMin * 6)}`,
-        eta: `${Math.max(2, Math.floor(durationMin * 0.9))} min`,
-        distance: `${distanceKm.toFixed(1)} km`,
-        icon: 'car-electric',
-      },
-    ];
-  };
+  const vehicleTypes = ['Bike', 'Car', 'Limousine', 'Luxury', 'ElectricCar'];
+
+  return vehicleTypes.map((type, index) => {
+    const fare = calculateFare(distanceText, durationText, type);
+    const durationMin = parseInt(durationText.replace('min', '').trim()) || 1;
+    const eta = `${Math.max(1, Math.floor(durationMin * getEtaFactor(type)))} min`;
+
+    return {
+      id: (index + 1).toString(),
+      type,
+      price: `RS:${fare}`,
+      eta,
+      distance: distanceText,
+      icon: getIconForVehicle(type),
+    };
+  });
+};
 
   return (
     <Animated.View

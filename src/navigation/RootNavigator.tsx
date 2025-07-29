@@ -9,7 +9,6 @@ import DrawerNavigator from './DrawerNavigator';
 import {ActivityIndicator, View} from 'react-native';
 import {setVehicleDetails} from '../redux/actions/vehicleActions';
 import {getVehicleInfo} from '../services/vehicleService';
-import HomeMapScreen from '../screens/Passenger/HomeMapScreen';
 import Colors from '../themes/colors';
 
 const RootNavigator: React.FC = () => {

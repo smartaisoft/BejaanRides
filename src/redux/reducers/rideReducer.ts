@@ -20,6 +20,7 @@ import {
   SET_SUMMARY,
   SET_SEARCH_MODAL,
   SET_DRIVER_INFO_MODAL,
+  SET_ADDITIONAL_STOPS,
 } from '../actions/rideActions';
 
 const initialState = {
@@ -46,6 +47,7 @@ const initialState = {
   },
   showSearchModal: false,
   showDriverInfoModal: false,
+  additionalStops: [],
 };
 
 const rideReducer = (
@@ -64,6 +66,12 @@ const rideReducer = (
       return {...state, routeInfo: action.payload};
     case SET_ROUTE_TO_PICKUP:
       return {...state, routeInfoToPickup: action.payload};
+    case SET_ADDITIONAL_STOPS:
+      return {
+        ...state,
+        additionalStops: action.payload,
+      };
+
     case SET_SELECTED_VEHICLE:
       return {...state, selectedVehicle: action.payload};
     case SET_SELECTED_VEHICLE_OPTION:
@@ -100,6 +108,33 @@ const rideReducer = (
       return {...state, showSearchModal: action.payload};
     case SET_DRIVER_INFO_MODAL:
       return {...state, showDriverInfoModal: action.payload};
+    case 'RESET_RIDE_STATE':
+      return {
+        ...state,
+        dropoffLocation: null,
+        additionalStops: [],
+        routeInfo: null,
+        routeInfoToPickup: null,
+        selectedVehicle: null,
+        selectedVehicleOption: null,
+        fare: 0,
+        currentRideId: null,
+        driverInfo: null,
+        driverLiveCoords: null,
+        selectedOffer: null,
+        isSearchingDriver: false,
+        hasDriverArrived: false,
+        status: 'idle',
+        region: null,
+        showSummary: false,
+        summary: {
+          pickup: null,
+          destination: null,
+        },
+        showSearchModal: true,
+        showDriverInfoModal: false,
+      };
+
     default:
       return state;
   }

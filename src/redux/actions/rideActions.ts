@@ -1,3 +1,5 @@
+import {Region} from 'react-native-maps';
+
 // redux/actions/rideActions.js
 export const SET_CURRENT_LOCATION = 'SET_CURRENT_LOCATION';
 export const SET_PICKUP_LOCATION = 'SET_PICKUP_LOCATION';
@@ -19,6 +21,9 @@ export const SET_SHOW_SUMMARY = 'SET_SHOW_SUMMARY';
 export const SET_SUMMARY = 'SET_SUMMARY';
 export const SET_SEARCH_MODAL = 'SET_SEARCH_MODAL';
 export const SET_DRIVER_INFO_MODAL = 'SET_DRIVER_INFO_MODAL';
+export const SET_ADDITIONAL_STOPS = 'SET_ADDITIONAL_STOPS';
+export const RESET_RIDE_STATE = 'RESET_RIDE_STATE';
+
 
 export const setCurrentLocation = (location: {
   latitude: number;
@@ -34,50 +39,68 @@ export const setPickupLocation = (location: {
   type: SET_PICKUP_LOCATION,
   payload: location,
 });
-export const setDropoffLocation = (location: {
-  latitude: number;
-  longitude: number;
-}) => ({
+export const setDropoffLocation = (
+  location: { latitude: number; longitude: number } | null,
+) => ({
   type: SET_DROPOFF_LOCATION,
   payload: location,
 });
-export const setRouteInfo = route => ({type: SET_ROUTE_INFO, payload: route});
-export const setRouteToPickup = route => ({
+
+export const setRouteInfo = (route: any) => ({
+  type: SET_ROUTE_INFO,
+  payload: route,
+});
+export const setAdditionalStops = (stops: any) => ({
+  type: SET_ADDITIONAL_STOPS,
+  payload: stops,
+});
+
+export const setRouteToPickup = (route: any) => ({
   type: SET_ROUTE_TO_PICKUP,
   payload: route,
 });
-export const setSelectedVehicle = vehicle => ({
+export const setSelectedVehicle = (vehicle: any) => ({
   type: SET_SELECTED_VEHICLE,
   payload: vehicle,
 });
-export const setSelectedVehicleOption = option => ({
+export const setSelectedVehicleOption = (option: any) => ({
   type: SET_SELECTED_VEHICLE_OPTION,
   payload: option,
 });
-export const setFare = fare => ({type: SET_FARE, payload: fare});
-export const setRideId = rideId => ({type: SET_RIDE_ID, payload: rideId});
-export const setDriverInfo = info => ({type: SET_DRIVER_INFO, payload: info});
-export const setDriverLiveCoords = coords => ({
+export const setFare = (fare: any) => ({type: SET_FARE, payload: fare});
+export const setRideId = (rideId: string | null) => ({
+  type: SET_RIDE_ID,
+  payload: rideId,
+});
+export const setDriverInfo = (info: {
+  name: string;
+  phone: string;
+  vehicleName: string;
+  vehicleColor: string;
+  vehicleNumber: string;
+  vehicleType: string;
+}) => ({type: SET_DRIVER_INFO, payload: info});
+export const setDriverLiveCoords = (coords: any) => ({
   type: SET_DRIVER_LIVE_COORDS,
   payload: coords,
 });
-export const setSelectedOffer = offer => ({
+export const setSelectedOffer = (offer: any) => ({
   type: SET_SELECTED_OFFER,
   payload: offer,
 });
-export const setSearchingDriver = isSearching => ({
+export const setSearchingDriver = (isSearching: any) => ({
   type: SET_SEARCHING_DRIVER,
   payload: isSearching,
 });
-export const setDriverArrived = hasArrived => ({
+export const setDriverArrived = (hasArrived: any) => ({
   type: SET_DRIVER_ARRIVED,
   payload: hasArrived,
 });
-export const setRideStatus = status => ({
+export const setRideStatus = (status: any) => ({
   type: SET_RIDE_STATUS,
   payload: status,
 });
-export const setRegion = region => ({
+export const setRegion = (region: Region) => ({
   type: SET_REGION,
   payload: region,
 });
@@ -97,3 +120,7 @@ export const setDriverInfoModal = (summary: any) => ({
   type: SET_DRIVER_INFO_MODAL,
   payload: summary,
 });
+export const resetRideState = () => ({
+  type: 'RESET_RIDE_STATE',
+});
+

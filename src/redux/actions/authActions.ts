@@ -55,11 +55,6 @@ export const logout = (): AuthActionTypes => ({
 });
 
 
-// export const setUserData = (user: MLMUserData): AuthActionTypes => ({
-//   type: SET_USER_DATA,
-//   payload: user,
-// });
-
 export const setUserData = (user: Partial<MLMUserData>): AuthActionTypes => ({
   type: SET_USER_DATA,
   payload: user,

@@ -1,4 +1,4 @@
-// src/services/ReferralListener.tsx
+/* eslint-disable curly */
 
 import {useEffect} from 'react';
 import dynamicLinks from '@react-native-firebase/dynamic-links';

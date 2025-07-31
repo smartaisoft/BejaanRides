@@ -1,8 +1,6 @@
 // services/driverPresenceService.ts
 import database from '@react-native-firebase/database';
 import auth from '@react-native-firebase/auth';
-import { VehicleInfo } from './vehicleService';
-import { getVehicleInfo } from './vehicleService';
 
 export interface DriverPresence {
   driverId: string;
@@ -14,28 +12,26 @@ export interface DriverPresence {
 }
 
 export const updateDriverPresence = async (
-  coords: { latitude: number; longitude: number },
+  coords: {latitude: number; longitude: number},
   name: string,
   vehicleType: string,
 ) => {
   const uid = auth().currentUser?.uid;
-  if (!uid) return;
+  if (!uid) {return;}
 
-  await database()
-    .ref(`driversOnline/${uid}`)
-    .set({
-      driverId: uid,
-      name,
-      vehicleType,
-      latitude: coords.latitude,
-      longitude: coords.longitude,
-      updatedAt: Date.now(),
-    });
+  await database().ref(`driversOnline/${uid}`).set({
+    driverId: uid,
+    name,
+    vehicleType,
+    latitude: coords.latitude,
+    longitude: coords.longitude,
+    updatedAt: Date.now(),
+  });
 };
 
 export const removeDriverPresence = async () => {
   const uid = auth().currentUser?.uid;
-  if (!uid) return;
+  if (!uid) {return;}
   await database().ref(`driversOnline/${uid}`).remove();
 };
 

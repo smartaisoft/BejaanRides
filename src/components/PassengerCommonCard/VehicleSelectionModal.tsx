@@ -13,7 +13,7 @@ import {
   Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { calculateFare } from '../../utils/calculateFare';
+import {calculateFare} from '../../utils/calculateFare';
 
 export interface VehicleOption {
   id: string;
@@ -150,51 +150,67 @@ const VehicleSelectionSheet: React.FC<Props> = ({
   //   ];
   // };
 
-const getEtaFactor = (type: string) => {
-  switch (type) {
-    case 'Bike': return 0.8;
-    case 'Car': return 1;
-    case 'Limousine': return 1.2;
-    case 'Luxury': return 1.1;
-    case 'ElectricCar': return 0.9;
-    default: return 1;
-  }
-};
+  const getEtaFactor = (type: string) => {
+    switch (type) {
+      case 'Bike':
+        return 0.8;
+      case 'Car':
+        return 1;
+      case 'Limousine':
+        return 1.2;
+      case 'Luxury':
+        return 1.1;
+      case 'ElectricCar':
+        return 0.9;
+      default:
+        return 1;
+    }
+  };
 
-const getIconForVehicle = (type: string) => {
-  switch (type) {
-    case 'Bike': return 'motorbike';
-    case 'Car': return 'car';
-    case 'Limousine': return 'car-limousine';
-    case 'Luxury': return 'car-convertible';
-    case 'ElectricCar': return 'car-electric';
-    default: return 'car';
-  }
-};
-
+  const getIconForVehicle = (type: string) => {
+    switch (type) {
+      case 'Bike':
+        return 'motorbike';
+      case 'Go (A/C)':
+        return 'car';
+      case 'Prime':
+        return 'car-limousine';
+      case 'Mini':
+        return 'car-convertible';
+      default:
+        return 'car';
+    }
+  };
 
   const getVehicleOptions = (): VehicleOption[] => {
-  if (!routeInfo) {return [];}
+    if (!routeInfo) {
+      return [];
+    }
+    3287067448
 
-  const { distanceText, durationText } = routeInfo;
+    const {distanceText, durationText} = routeInfo;
 
-  const vehicleTypes = ['Bike', 'Car', 'Limousine', 'Luxury', 'ElectricCar'];
+    const vehicleTypes = ['Bike', 'Go (A/C)', 'Prime', 'Mini'];
 
-  return vehicleTypes.map((type, index) => {
-    const fare = calculateFare(distanceText, durationText, type);
-    const durationMin = parseInt(durationText.replace('min', '').trim(), 10) || 1;
-    const eta = `${Math.max(1, Math.floor(durationMin * getEtaFactor(type)))} min`;
+    return vehicleTypes.map((type, index) => {
+      const fare = calculateFare(distanceText, durationText, type);
+      const durationMin =
+        parseInt(durationText.replace('min', '').trim(), 10) || 1;
+      const eta = `${Math.max(
+        1,
+        Math.floor(durationMin * getEtaFactor(type)),
+      )} min`;
 
-    return {
-      id: (index + 1).toString(),
-      type,
-      price: `RS:${fare}`,
-      eta,
-      distance: distanceText,
-      icon: getIconForVehicle(type),
-    };
-  });
-};
+      return {
+        id: (index + 1).toString(),
+        type,
+        price: `RS:${fare}`,
+        eta,
+        distance: distanceText,
+        icon: getIconForVehicle(type),
+      };
+    });
+  };
 
   return (
     <Animated.View
@@ -348,7 +364,7 @@ const getIconForVehicle = (type: string) => {
           style={styles.requestButton}
           onPress={onRequest}
           disabled={!selectedVehicle}>
-          <Text style={styles.requestText}>Find Offers</Text>
+          <Text style={styles.requestText}>Send Request</Text>
         </TouchableOpacity>
       </View>
     </Animated.View>
@@ -476,7 +492,7 @@ const styles = StyleSheet.create({
     width: '80%',
     alignItems: 'center',
     marginVertical: 12,
-    alignSelf:'center'
+    alignSelf: 'center',
   },
   requestText: {
     color: '#fff',

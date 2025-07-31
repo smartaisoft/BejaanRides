@@ -39,6 +39,10 @@ const PhoneNumberInput: React.FC<Props> = ({
         autoFocus={false}
         containerStyle={styles.phoneContainer}
         textContainerStyle={styles.textInput}
+        placeholder="Enter phone number"
+        textInputProps={{
+          placeholderTextColor: '#888', // ✅ This is the correct way
+        }}
       />
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
@@ -58,7 +62,6 @@ const styles = StyleSheet.create({
   },
   textInput: {
     borderRadius: 12,
-
     paddingVertical: 0,
     backgroundColor: '#e5e5e5',
   },

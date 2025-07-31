@@ -361,6 +361,7 @@ const HomeMapScreen: React.FC = () => {
   };
 
   const handleRequestRide = async () => {
+    // ✅ Validate all required fields
     if (
       !pickupLocation ||
       !dropoffLocation ||
@@ -368,27 +369,31 @@ const HomeMapScreen: React.FC = () => {
       !summary?.destination ||
       !selectedVehicleOption
     ) {
-      console.log(
-        'missing data',
+      console.warn('Missing required data:', {
         pickupLocation,
         dropoffLocation,
         currentUser,
-        summary?.destination,
+        summaryDestination: summary?.destination,
         selectedVehicleOption,
+      });
+      Alert.alert(
+        'Error',
+        'Some required data is missing to create the ride request.',
       );
-      Alert.alert('Error', 'Missing data to create ride request.');
       return;
     }
 
     try {
       setIsSearchingDriver(true);
+      dispatch(setShowSearchModal(false));
+
       const fareEstimate = parseInt(
         selectedVehicleOption.price.replace('RS:', ''),
-        10, // ✅ Explicitly specify base-10
+        10,
       );
-
       const vehicleType = selectedVehicleOption.type.toLowerCase();
-      const rideId = await createRideRequest({
+
+      const ridePayload = {
         passengerId: currentUser.uid,
         passengerName: currentUser.name ?? 'Passenger',
         passengerPhone: currentUser.phone ?? 'N/A',
@@ -406,45 +411,54 @@ const HomeMapScreen: React.FC = () => {
         fareEstimate,
         distanceText: routeInfo?.distanceText ?? 'N/A',
         durationText: routeInfo?.durationText ?? 'N/A',
-      });
+        ...(additionalStops?.length > 0 && {additionalStops}), // 🔄 Append additional stops if present
+      };
+
+      const rideId = await createRideRequest(ridePayload);
+
       if (!rideId) {
-        console.error('❌ Failed to create ride: rideId was null.');
+        console.error('❌ Ride ID is null. Ride creation failed.');
         setIsSearchingDriver(false);
         return;
       }
 
       dispatch(setRideId(rideId));
+
+      // 🔄 Listen to ride updates
       unsubscribeListener.current = listenForRideUpdates(rideId, ride => {
-        if (ride.status === 'accepted' && ride.driverId) {
-          setRideStatus('accepted');
-          setIsSearchingDriver(false);
-          fetchDriverInfo(ride.driverId);
+        switch (ride.status) {
+          case 'accepted':
+            if (ride.driverId) {
+              setRideStatus('accepted');
+              setIsSearchingDriver(false);
+              fetchDriverInfo(ride.driverId);
 
-          const driverLocRef = database().ref(
-            `rideRequests/${rideId}/driverLocation`,
-          );
-          driverLocRef.on('value', snap => {
-            const loc = snap.val();
-            if (loc) {
-              dispatch(setDriverLiveCoords(loc));
+              const driverLocRef = database().ref(
+                `rideRequests/${rideId}/driverLocation`,
+              );
+              driverLocRef.on('value', snap => {
+                const loc = snap.val();
+                if (loc) dispatch(setDriverLiveCoords(loc));
+              });
             }
-          });
-        }
-
-        if (ride.status === 'arrived') {
-          setRideStatus('arrived');
-          setHasDriverArrived(true);
-        }
-
-        if (ride.status === 'started') {
-          setRideStatus('started');
+            break;
+          case 'arrived':
+            setRideStatus('arrived');
+            setHasDriverArrived(true);
+            break;
+          case 'started':
+            setRideStatus('started');
+            break;
+          default:
+            break;
         }
       });
     } catch (error) {
-      console.error('Error creating ride:', error);
+      console.error('❌ Error creating ride:', error);
       setIsSearchingDriver(false);
     }
   };
+
   const fetchDriverInfo = async (driverId: string) => {
     try {
       const [profile, vehicle] = await Promise.all([

@@ -1,3 +1,5 @@
+/* eslint-disable curly */
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
@@ -6,8 +8,12 @@ import {
   TouchableOpacity,
   TextInput,
   ToastAndroid,
-  Platform,
   Alert,
+  KeyboardAvoidingView,
+  ScrollView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -28,35 +34,57 @@ import LoaderScreen from '../../components/LoaderScreen';
 import * as yup from 'yup';
 import Colors from '../../themes/colors';
 import {generateReferralCode} from '../../services/mlmUserService';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import {Dimensions} from 'react-native';
 
+const {width} = Dimensions.get('window');
+const iconSize = Math.min(30, width * 0.08);
 type NameScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
   'Name'
 >;
 
+interface ReferralInfo {
+  referredBy?: string;
+  referrUid?: string;
+}
+
+interface UserData {
+  name?: string;
+  email?: string;
+  cnic?: string;
+  referredBy?: string;
+  referralCode?: string;
+}
+
 const NameScreen: React.FC = () => {
   const navigation = useNavigation<NameScreenNavigationProp>();
   const dispatch = useDispatch<AppDispatch>();
   const phoneFromRedux = useSelector((state: RootState) => state.auth.phone);
-
+  const userData = useSelector(
+    (state: RootState) => state.auth.user,
+  ) as UserData;
   const role = useSelector((state: RootState) => state.auth.role);
   const isLoading = useSelector((state: RootState) => state.auth.isLoading);
+
   const [name, setNameInput] = useState('');
   const [email, setEmailInput] = useState('');
   const [cnic, setCnicInput] = useState('');
-  const [errors, setErrors] = useState<{
-    name?: string;
-    email?: string;
-    phone?: string;
-    cnic?: string;
-  }>({});
-    const [referralInfo, setReferralInfo] = useState<{ referredBy: string; referrUid: string } | null>(null);
+  const [referredBy, setReferredBy] = useState('');
+  const [referralCode, setReferralCode] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [referralInfo, setReferralInfo] = useState<ReferralInfo | null>(null);
 
+  useEffect(() => {
+    if (userData) {
+      setNameInput(userData.name || '');
+      setEmailInput(userData.email || '');
+      setCnicInput(userData.cnic || '');
+      setReferredBy(userData.referredBy || '');
+      setReferralCode(userData.referralCode || '');
+    }
+  }, [userData]);
 
-  const handleGoBack = () => {
-    navigation.goBack();
-  };
-  // ✅ Load referralInfo once when screen mounts
   useEffect(() => {
     const loadReferralInfo = async () => {
       try {
@@ -65,57 +93,32 @@ const NameScreen: React.FC = () => {
           const parsed = JSON.parse(stored);
           if (parsed?.referredBy && parsed?.referrUid) {
             setReferralInfo(parsed);
-            console.log('📦 Referral info loaded:', parsed);
           }
         }
       } catch (err) {
-        console.error('❌ Failed to load referralInfo:', err);
+        console.error('Failed to load referralInfo:', err);
       }
     };
-
     loadReferralInfo();
   }, []);
 
   const handlePress = async () => {
     try {
       setErrors({});
-
-      // ✅ Validation schema for +9234... format
       const schema = yup.object().shape({
-        name: yup
-          .string()
-          .trim()
-          .min(2, 'Name must be at least 2 characters.')
-          .required('Name is required.'),
-        email: yup
-          .string()
-          .trim()
-          .email('Enter a valid email.')
-          .required('Email is required.'),
+        name: yup.string().trim().min(2).required(),
+        email: yup.string().trim().email().required(),
         cnic: yup
           .string()
           .trim()
           .matches(/^\d{13}$/, 'CNIC must be 13 digits.'),
       });
+      await schema.validate({name, email, cnic}, {abortEarly: false});
 
-      await schema.validate(
-        {
-          name,
-          email,
-          cnic: cnic.trim(),
-        },
-        {abortEarly: false},
-      );
-
-      if (!role) {
-        console.warn('❌ Missing user role');
-        return;
-      }
-
+      if (!role) return;
       dispatch(setAuthLoading(true));
       dispatch(setNameAction(name));
 
-      // ✅ Save to AsyncStorage
       await AsyncStorage.multiSet([
         ['@name', name],
         ['@role', role],
@@ -126,16 +129,13 @@ const NameScreen: React.FC = () => {
       dispatch(setRole(role));
 
       const currentUser = auth().currentUser;
-
       if (!currentUser) {
-        console.warn('❌ Firebase Auth user is null');
         dispatch(setAuthLoading(false));
         return;
       }
-      const referralCode = generateReferralCode(name, currentUser.uid);
 
-
-      const userData = {
+      const newReferralCode = generateReferralCode(name, currentUser.uid);
+      const user = {
         uid: currentUser.uid,
         name: name.trim(),
         phone: phoneFromRedux,
@@ -143,8 +143,8 @@ const NameScreen: React.FC = () => {
         cnic: cnic.trim(),
         role,
         createdAt: new Date().toISOString(),
-        referralCode,
-         referredBy: referralInfo?.referredBy || null,
+        referralCode: newReferralCode,
+        referredBy: referralInfo?.referredBy || referredBy || null,
         referrerUid: referralInfo?.referrUid || null,
         mlmNetwork: {
           level1: [],
@@ -167,105 +167,123 @@ const NameScreen: React.FC = () => {
         },
       };
 
-      await createOrUpdateUser(userData);
-      // ✅ Show success toast/modal
-      if (Platform.OS === 'android') {
-        ToastAndroid.show('🎉 User created successfully!', ToastAndroid.SHORT);
-      } else {
-        Alert.alert('Success', '🎉 User created successfully!');
-      }
-      console.log('✅ User registered in Firestore');
+      await createOrUpdateUser(user);
+      Platform.OS === 'android'
+        ? ToastAndroid.show('User created successfully!', ToastAndroid.SHORT)
+        : Alert.alert('Success', 'User created successfully!');
 
-      dispatch(setUserData(userData));
-
+      dispatch(setUserData(user));
       dispatch(setAuthLoading(false));
-
-      // Optionally navigate further
-      // navigation.navigate('SomeScreen');
     } catch (error: any) {
       if (error.name === 'ValidationError') {
-        const newErrors: any = {};
-        error.inner.forEach((err: any) => {
-          if (err.path) {
-            newErrors[err.path] = err.message;
-          }
-        });
+        const newErrors: Record<string, string> = {};
+        error.inner.forEach(
+          (err: any) => err.path && (newErrors[err.path] = err.message),
+        );
         setErrors(newErrors);
       } else {
-        console.error('❌ Error saving profile:', error);
         dispatch(setAuthLoading(false));
+        console.error('Error saving profile:', error);
       }
     }
   };
 
-  if (isLoading) {
-    return <LoaderScreen />;
-  }
+  if (isLoading) return <LoaderScreen />;
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity onPress={handleGoBack} style={styles.goBackButton}>
-        <Text style={styles.goBackText}>{'←'}</Text>
-      </TouchableOpacity>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{flex: 1}}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled">
+          <View style={styles.container}>
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={styles.goBackButton}>
+              <Icon name="arrow-back" size={iconSize} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.header}>Personal Information</Text>
 
-      <Text style={styles.header}>Personal Information</Text>
+            {[
+              {
+                label: 'Enter your Name',
+                value: name,
+                onChange: setNameInput,
+                placeholder: 'Name',
+                error: errors.name,
+              },
+              {
+                label: 'Enter your Phone',
+                value: phoneFromRedux,
+                onChange: setNameInput,
+                placeholder: 'Phone number',
+                editable: false,
+              },
+              {
+                label: 'Enter your Email',
+                value: email,
+                onChange: setEmailInput,
+                placeholder: 'Email',
+                error: errors.email,
+              },
+              {
+                label: 'Enter your CNIC',
+                value: cnic,
+                onChange: setCnicInput,
+                placeholder: 'CNIC number',
+                keyboardType: 'numeric' as const,
+                maxLength: 13,
+                error: errors.cnic,
+              },
+              {
+                label: 'Referral By (optional)',
+                value: referredBy,
+                onChange: setReferredBy,
+                placeholder: 'Enter Name',
+              },
+              {
+                label: 'Referral Code (optional)',
+                value: referralCode,
+                onChange: setReferralCode,
+                placeholder: 'Referral code',
+              },
+            ].map((item, index) => (
+              <View key={index}>
+                <Text style={styles.label}>{item.label}</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={item.placeholder}
+                  placeholderTextColor="#999"
+                  value={item.value}
+                  onChangeText={item.onChange}
+                  editable={item.editable !== false}
+                  keyboardType={item.keyboardType}
+                  maxLength={item.maxLength}
+                />
+                {item.error && (
+                  <Text style={styles.errorText}>{item.error}</Text>
+                )}
+              </View>
+            ))}
 
-      {/* Name */}
-      <Text style={styles.label}>Enter your Name</Text>
-      <TextInput
-        style={styles.input}
-        placeholderTextColor="#999"
-        placeholder="Name"
-        value={name}
-        onChangeText={setNameInput}
-      />
-      {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
-
-      {/* Phone */}
-      <Text style={styles.label}>Enter your Phone</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="phone number"
-        placeholderTextColor="#999"
-        value={phoneFromRedux}
-        onChangeText={setNameInput}
-        editable={false}
-      />
-
-      {/* Email */}
-      <Text style={styles.label}>Enter your Email</Text>
-      <TextInput
-        style={styles.input}
-        placeholderTextColor="#999"
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmailInput}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
-
-      {/* CNIC */}
-      <Text style={styles.label}>Enter your CNIC</Text>
-      <TextInput
-        style={styles.input}
-        placeholderTextColor="#999"
-        placeholder="CNIC number"
-        value={cnic}
-        onChangeText={setCnicInput}
-        keyboardType="numeric"
-        maxLength={13}
-      />
-      {errors.cnic && <Text style={styles.errorText}>{errors.cnic}</Text>}
-
-      <TouchableOpacity style={styles.nextButton} onPress={handlePress}>
-        <Text style={styles.nextButtonText}>Next</Text>
-      </TouchableOpacity>
-    </View>
+            <TouchableOpacity style={styles.nextButton} onPress={handlePress}>
+              <Text style={styles.nextButtonText}>Next</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: 50,
+    backgroundColor: '#FFFFFF',
+  },
   container: {
     flex: 1,
     paddingTop: 60,
@@ -276,10 +294,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 40,
     left: 20,
-  },
-  goBackText: {
-    fontSize: 22,
-    color: '#000',
   },
   header: {
     fontSize: 18,

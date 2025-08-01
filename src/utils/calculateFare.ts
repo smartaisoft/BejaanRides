@@ -12,14 +12,14 @@ export const calculateFare = (
     case 'Bike':
       vehicleMultiplier = 0.7;
       break;
-    case 'Car':
-      vehicleMultiplier = 1;
+    case 'Go (A/C)':
+      vehicleMultiplier = 1.2; // updated for market fare
       break;
-    case 'Luxury':
-      vehicleMultiplier = 1.8;
+    case 'Prime':
+      vehicleMultiplier = 1.8; // higher class fare
       break;
-    case 'ElectricCar':
-      vehicleMultiplier = 1.3;
+    case 'Mini':
+      vehicleMultiplier = 1.4; // compact fare
       break;
     case 'Limousine':
       vehicleMultiplier = 2.2;

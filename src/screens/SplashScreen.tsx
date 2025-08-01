@@ -10,7 +10,7 @@ import auth from '@react-native-firebase/auth';
 import {AuthStackParamList} from '../navigation/AuthNavigator';
 import {setLoggedIn, setRole, setUserData} from '../redux/actions/authActions';
 import type {AppDispatch} from '../redux/store';
-import { getUserByUid } from '../services/realTimeUserService';
+import {getUserByUid} from '../services/realTimeUserService';
 
 type SplashNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -24,29 +24,38 @@ const SplashScreenComponent: React.FC = () => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const [isLoggedIn, role] = await AsyncStorage.multiGet([
+        const [isLoggedIn, role, phoneVerified] = await AsyncStorage.multiGet([
           '@isLoggedIn',
           '@role',
+          '@isPhoneVerified',
         ]);
 
         const loggedIn = isLoggedIn[1] === 'true';
         const userRole = role[1] as 'driver' | 'passenger' | null;
+        // ✅ Check and log phone verification flag
 
         console.log('🪵 isLoggedIn:', loggedIn);
         console.log('🪵 role:', userRole);
+        console.log('🚀 isPhoneVerified:', phoneVerified);
 
         if (loggedIn && userRole) {
           dispatch(setRole(userRole));
           dispatch(setLoggedIn(true));
           const currentUser = auth().currentUser;
           console.log('checking current user:', currentUser);
-           if (currentUser?.uid) {
+          if (currentUser?.uid) {
             const fullUserData = await getUserByUid(currentUser.uid);
             if (fullUserData) {
               dispatch(setUserData(fullUserData));
-              console.log('✅ User data fetched and saved to Redux',fullUserData);
+              console.log(
+                '✅ User data fetched and saved to Redux',
+                fullUserData,
+              );
             } else {
-              console.warn('⚠️ No Firestore user found for UID:', currentUser.uid);
+              console.warn(
+                '⚠️ No Firestore user found for UID:',
+                currentUser.uid,
+              );
             }
           }
         } else {

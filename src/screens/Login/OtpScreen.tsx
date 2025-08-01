@@ -67,9 +67,11 @@ const OTPScreen = () => {
       if (!credential?.user) {
         throw new Error('User not found');
       }
+      // ✅ Save isPhoneVerified flag in local storage
+      await AsyncStorage.setItem('@isPhoneVerified', 'true');
+      console.log('✅ Phone verification flag saved: true');
 
       if (isNewUser) {
-        await AsyncStorage.setItem('@isPhoneVerified', 'true');
         navigation.navigate('Role');
       } else {
         const userData = await getUserByUid(credential.user.uid);

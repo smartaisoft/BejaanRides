@@ -55,34 +55,66 @@ const RootNavigator: React.FC = () => {
   }, [isLoggedIn, role, dispatch]);
 
   // Decide which stack to show
-  const renderStack = useMemo(() => {
-    if (!isLoggedIn) {
-      return <AuthStack />;
-    }
-    // if (!isLoggedIn && isPhoneVerified) {
-    //   return <AuthStack initialRouteName="Role" />;
-    // }
+//   const renderStack = useMemo(() => {
+//     if (!isLoggedIn) {
+//   return (
+//     <AuthStack initialRouteName={isPhoneVerified ? 'Role' : 'Splash'} />
+//   );
+// }
 
-    if (role === 'passenger') {
-      return <PassengerStack />;
-    }
 
-    if (role === 'driver') {
-      if (loading || hasVehicleInfo === null) {
-        return <LoadingScreen />;
-      }
+//     if (role === 'passenger') {
+//       return <PassengerStack />;
+//     }
 
-      return (
-        <DriverStack
-          initialRouteName={
-            hasVehicleInfo ? 'DriverMapScreen' : 'ChooseVehicleScreen'
-          }
-        />
-      );
-    }
+//     if (role === 'driver') {
+//       if (loading || hasVehicleInfo === null) {
+//         return <LoadingScreen />;
+//       }
 
+//       return (
+//         <DriverStack
+//           initialRouteName={
+//             hasVehicleInfo ? 'DriverMapScreen' : 'ChooseVehicleScreen'
+//           }
+//         />
+//       );
+//     }
+
+//     return <LoadingScreen />;
+//   }, [isLoggedIn, role, loading, hasVehicleInfo,isPhoneVerified]);
+const renderStack = useMemo(() => {
+  // 🔐 Block UI until phone verification flag is fetched
+  if (isPhoneVerified === null) {
     return <LoadingScreen />;
-  }, [isLoggedIn, role, loading, hasVehicleInfo]);
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <AuthStack initialRouteName={isPhoneVerified ? 'Role' : 'Splash'} />
+    );
+  }
+
+  if (role === 'passenger') {
+    return <PassengerStack />;
+  }
+
+  if (role === 'driver') {
+    if (loading || hasVehicleInfo === null) {
+      return <LoadingScreen />;
+    }
+
+    return (
+      <DriverStack
+        initialRouteName={
+          hasVehicleInfo ? 'DriverMapScreen' : 'ChooseVehicleScreen'
+        }
+      />
+    );
+  }
+
+  return <LoadingScreen />;
+}, [isLoggedIn, role, loading, hasVehicleInfo, isPhoneVerified]);
 
   return renderStack;
 };

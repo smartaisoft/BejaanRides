@@ -27,13 +27,14 @@ import type {DriverStackParamList} from '../../navigation/DriverStack';
 import {Formik} from 'formik';
 import * as yup from 'yup';
 import LoaderScreen from '../../components/LoaderScreen';
-import { setAuthLoading } from '../../redux/actions/authActions';
+import {setAuthLoading} from '../../redux/actions/authActions';
 import Colors from '../../themes/colors';
 
 interface ImageMap {
   certificateFront: string | null;
   certificateBack: string | null;
   vehiclePhoto: string | null;
+  driverPhoto: string | null; // ✅ Add this
 }
 
 const validationSchema = yup.object().shape({
@@ -51,6 +52,7 @@ const validationSchema = yup.object().shape({
       .nullable()
       .required('Certificate back is required'),
     vehiclePhoto: yup.string().nullable().required('Vehicle photo is required'),
+    driverPhoto: yup.string().nullable().required('Driver photo is required'),
   }),
 });
 
@@ -90,16 +92,18 @@ const VehicleInfoScreen: React.FC = () => {
         Alert.alert('Error', 'Please select a vehicle type.');
         return;
       }
-            dispatch(setAuthLoading(true));
-
+      dispatch(setAuthLoading(true));
 
       const userId = auth().currentUser?.uid;
-      if (!userId) throw new Error('User not logged in');
+      if (!userId) {
+        throw new Error('User not logged in');
+      }
 
       const payload = {
         vehicleType,
         ...values,
         createdAt: new Date().toISOString(),
+        driverPhoto: values.images.driverPhoto, // ✅ include explicitly if storing separately
       };
 
       // Save to Redux
@@ -111,7 +115,7 @@ const VehicleInfoScreen: React.FC = () => {
 
       dispatch(resetVehicleInfo());
 
-      Alert.alert('Success', 'Vehicle information saved!');
+      Alert.alert('Success', 'Vehicle & driverinformation saved!');
 
       navigation.reset({
         index: 0,
@@ -120,7 +124,7 @@ const VehicleInfoScreen: React.FC = () => {
     } catch (error) {
       console.error('❌ Error saving vehicle info:', error);
       Alert.alert('Error', 'Could not save vehicle info.');
-    }finally {
+    } finally {
       dispatch(setAuthLoading(false));
     }
   };
@@ -133,11 +137,7 @@ const VehicleInfoScreen: React.FC = () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.content}>
-        <TouchableOpacity style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-
-        <Text style={styles.heading}>Vehicle information</Text>
+        <Text style={styles.heading}>Driver & Vehicle Information</Text>
 
         <Formik
           initialValues={{
@@ -149,6 +149,7 @@ const VehicleInfoScreen: React.FC = () => {
               certificateFront: null,
               certificateBack: null,
               vehiclePhoto: null,
+              driverPhoto: null, // ✅ Add this
             },
           }}
           validationSchema={validationSchema}
@@ -162,7 +163,43 @@ const VehicleInfoScreen: React.FC = () => {
             touched,
           }) => (
             <>
-              {/* Images */}
+              <View style={[styles.imageRow, styles.centeredRow]}>
+                <View style={styles.imageBox}>
+                  <TouchableOpacity
+                    onPress={() =>
+                      handlePickImage('driverPhoto', setFieldValue)
+                    }>
+                    {values.images.driverPhoto ? (
+                      <Image
+                        source={{uri: values.images.driverPhoto!}}
+                        style={styles.image}
+                      />
+                    ) : (
+                      <View style={styles.placeholder}>
+                        <Icon name="person" size={30} color="#888" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                  {values.images.driverPhoto && (
+                    <TouchableOpacity
+                      style={styles.removeIcon}
+                      onPress={() =>
+                        handleRemoveImage('driverPhoto', setFieldValue)
+                      }>
+                      <Icon name="close" size={16} color="#fff" />
+                    </TouchableOpacity>
+                  )}
+                  <Text style={styles.imageLabel}>Your personal photo</Text>
+                  {errors.images?.driverPhoto &&
+                    touched.images?.driverPhoto && (
+                      <Text style={styles.errorText}>
+                        {errors.images.driverPhoto}
+                      </Text>
+                    )}
+                </View>
+              </View>
+
+              {/* 🟨 Second row: Certificate + Vehicle Photos */}
               <View style={styles.imageRow}>
                 {[
                   {key: 'certificateFront', label: 'Vehicle certificate'},
@@ -275,12 +312,15 @@ const VehicleInfoScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: '#fff'},
   content: {padding: 20},
-  backButton: {marginTop: 20, marginBottom: 20},
   heading: {
     fontSize: 20,
+    marginTop: 40,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 20,
+  },
+  centeredRow: {
+    justifyContent: 'center',
   },
   imageRow: {
     flexDirection: 'row',
@@ -335,7 +375,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   nextButton: {
-backgroundColor: Colors.primary,
+    backgroundColor: Colors.primary,
     padding: 14,
     borderRadius: 10,
     alignItems: 'center',

@@ -31,12 +31,14 @@ export type AuthStackParamList = {
 };
 
 const Stack = createStackNavigator<AuthStackParamList>();
+interface AuthStackProps {
+  initialRouteName?: keyof AuthStackParamList;
+}
 
-const AuthStack = () => {
+
+const AuthStack: React.FC<AuthStackProps> = ({ initialRouteName = 'Splash' }) => {
   return (
-    <Stack.Navigator
-      initialRouteName="Splash"
-      screenOptions={{headerShown: false}}>
+    <Stack.Navigator initialRouteName={initialRouteName} screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Splash" component={SplashScreen} />
       <Stack.Screen name="PhoneLogin" component={LoginWithPhone} />
       <Stack.Screen name="Otp" component={OTPScreen} />
@@ -48,7 +50,7 @@ const AuthStack = () => {
       <Stack.Screen
         name="WebViewScreen"
         component={WebViewScreen}
-        options={({route}) => ({title: route.params?.title || 'Web Page'})}
+        options={({ route }) => ({ title: route.params?.title || 'Web Page' })}
       />
     </Stack.Navigator>
   );

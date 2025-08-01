@@ -1,4 +1,4 @@
-import { DriverStatus, OnlineDriverInfo, RideData } from '../types/driverTypes';
+import {DriverStatus, OnlineDriverInfo, RideData} from '../types/driverTypes';
 
 // Action Types
 export const SET_DRIVER_STATUS = 'SET_DRIVER_STATUS';
@@ -41,15 +41,22 @@ export type DriverActionTypes =
   | ClearRideRequestsAction;
 
 // Action Creators
-export const setDriverStatus = (status: DriverStatus): SetDriverStatusAction => ({
-  type: SET_DRIVER_STATUS,
-  payload: status,
-});
-
-export const setCurrentRide = (ride: RideData): SetCurrentRideAction => ({
-  type: SET_CURRENT_RIDE,
-  payload: ride,
-});
+export const setDriverStatus = (
+  status: DriverStatus,
+): SetDriverStatusAction => {
+  console.log('Setting driver status to:', status); // ✅ Debug log
+  return {
+    type: SET_DRIVER_STATUS,
+    payload: status,
+  };
+};
+export const setCurrentRide = (ride: RideData): SetCurrentRideAction => {
+  console.log('Setting current ride:', ride); // ✅ Debug log
+  return {
+    type: SET_CURRENT_RIDE,
+    payload: ride,
+  };
+};
 
 export const clearCurrentRide = (): ClearCurrentRideAction => ({
   type: CLEAR_CURRENT_RIDE,
@@ -68,4 +75,3 @@ export const setOnlineDrivers = (drivers: OnlineDriverInfo[]) => ({
   type: 'SET_ONLINE_DRIVERS',
   payload: drivers,
 });
-

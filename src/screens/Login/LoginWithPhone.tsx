@@ -24,7 +24,11 @@ import {getUserByPhone} from '../../services/realTimeUserService';
 import PhoneNumberInput from '../../components/PhoneNumberInput';
 import Button from '../../components/Button';
 import Colors from '../../themes/colors';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import {Dimensions} from 'react-native';
 
+const {width} = Dimensions.get('window');
+const iconSize = Math.min(30, width * 0.08); // responsive size
 type LoginWithPhoneNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
   'PhoneLogin'
@@ -114,8 +118,8 @@ const LoginWithPhone: React.FC = () => {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.innerContainer}>
           {/* Back Button */}
-          <TouchableOpacity onPress={handleGoBack}>
-            <Text style={styles.goBackText}>{'<'}</Text>
+          <TouchableOpacity onPress={handleGoBack} style={styles.goBackButton}>
+            <Icon name="arrow-back" size={iconSize} color="#333" />
           </TouchableOpacity>
 
           {/* Title */}
@@ -166,9 +170,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
     paddingHorizontal: 20,
   },
+  goBackButton: {
+    padding: 5,
+    position: 'absolute',
+    top: 40,
+    zIndex: 10,
+    backgroundColor: '#fff',
+    borderRadius: 30,
+    elevation: 3,
+  },
+
   innerContainer: {
     flex: 1,
-    paddingTop: 50,
+    paddingTop: 100,
   },
   goBackText: {
     color: '#333',

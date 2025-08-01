@@ -1,42 +1,49 @@
-/* eslint-disable react-native/no-inline-styles */
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
+import {ActivityIndicator, View, StyleSheet} from 'react-native';
+
 import {RootState, AppDispatch} from '../redux/store';
-import DriverStack from './DriverStack';
-import AuthStack from './AuthNavigator';
-import DrawerNavigator from './DrawerNavigator';
-import {ActivityIndicator, View} from 'react-native';
 import {setVehicleDetails} from '../redux/actions/vehicleActions';
+
+import AuthStack from './AuthNavigator';
+import DriverStack from './DriverStack';
+import PassengerStack from './PassengerStack';
+
 import {getVehicleInfo} from '../services/vehicleService';
-import HomeMapScreen from '../screens/Passenger/HomeMapScreen';
 import Colors from '../themes/colors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const RootNavigator: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const {isLoggedIn, role} = useSelector((state: RootState) => state.auth);
+  const [isPhoneVerified, setIsPhoneVerified] = useState<boolean | null>(null);
 
-  const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
-  const role = useSelector((state: RootState) => state.auth.role);
-
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
   const [hasVehicleInfo, setHasVehicleInfo] = useState<boolean | null>(null);
-
   useEffect(() => {
-    const checkVehicleInfo = async () => {
+    const checkPhoneVerification = async () => {
+      const verified = await AsyncStorage.getItem('@isPhoneVerified');
+      setIsPhoneVerified(verified === 'true');
+    };
+    checkPhoneVerification();
+  }, []);
+
+  // Fetch vehicle info for drivers
+  useEffect(() => {
+    const fetchVehicleInfo = async () => {
       if (isLoggedIn && role === 'driver') {
         setLoading(true);
         try {
-          const vehicleData = await getVehicleInfo();
-          if (vehicleData) {
-            console.log('✅ Vehicle info found, saving to Redux');
-            dispatch(setVehicleDetails(vehicleData));
+          const data = await getVehicleInfo();
+          if (data) {
+            dispatch(setVehicleDetails(data));
             setHasVehicleInfo(true);
           } else {
-            console.log('ℹ️ No vehicle info found');
             setHasVehicleInfo(false);
           }
         } catch (error) {
-          console.error('❌ Error fetching vehicle info:', error);
+          console.error('❌ Failed to fetch vehicle info:', error);
           setHasVehicleInfo(false);
         } finally {
           setLoading(false);
@@ -44,53 +51,92 @@ const RootNavigator: React.FC = () => {
       }
     };
 
-    checkVehicleInfo();
+    fetchVehicleInfo();
   }, [isLoggedIn, role, dispatch]);
 
-  // 🔹 While loading vehicle info
-  if (loading) {
-    return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
-    );
+  // Decide which stack to show
+//   const renderStack = useMemo(() => {
+//     if (!isLoggedIn) {
+//   return (
+//     <AuthStack initialRouteName={isPhoneVerified ? 'Role' : 'Splash'} />
+//   );
+// }
+
+
+//     if (role === 'passenger') {
+//       return <PassengerStack />;
+//     }
+
+//     if (role === 'driver') {
+//       if (loading || hasVehicleInfo === null) {
+//         return <LoadingScreen />;
+//       }
+
+//       return (
+//         <DriverStack
+//           initialRouteName={
+//             hasVehicleInfo ? 'DriverMapScreen' : 'ChooseVehicleScreen'
+//           }
+//         />
+//       );
+//     }
+
+//     return <LoadingScreen />;
+//   }, [isLoggedIn, role, loading, hasVehicleInfo,isPhoneVerified]);
+const renderStack = useMemo(() => {
+  // 🔐 Block UI until phone verification flag is fetched
+  if (isPhoneVerified === null) {
+    return <LoadingScreen />;
   }
 
-  // 🔹 Not logged in
   if (!isLoggedIn) {
-    return <AuthStack />;
-  }
-
-  // 🔹 Passenger
-  if (role === 'passenger') {
-    return <DrawerNavigator />;
-    // return <HomeMapScreen />;
-  }
-
-  // 🔹 Driver
-  if (role === 'driver') {
-    if (hasVehicleInfo === true) {
-      return <DriverStack initialRouteName="DriverMapScreen" />;
-    }
-    if (hasVehicleInfo === false) {
-      return <DriverStack initialRouteName="ChooseVehicleScreen" />;
-    }
-    // Still deciding (e.g., loading not yet started)
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
+      <AuthStack initialRouteName={isPhoneVerified ? 'Role' : 'Splash'} />
     );
   }
 
-  // 🔹 Fallback
-  return null;
+  if (role === 'passenger') {
+    return <PassengerStack />;
+  }
+
+  if (role === 'driver') {
+    if (loading || hasVehicleInfo === null) {
+      return <LoadingScreen />;
+    }
+
+    return (
+      <DriverStack
+        initialRouteName={
+          hasVehicleInfo ? 'DriverMapScreen' : 'ChooseVehicleScreen'
+        }
+      />
+    );
+  }
+
+  return <LoadingScreen />;
+}, [isLoggedIn, role, loading, hasVehicleInfo, isPhoneVerified]);
+
+  return renderStack;
 };
+
+const LoadingScreen = () => (
+  <View style={styles.centered}>
+    <ActivityIndicator size="large" color={Colors.primary} />
+  </View>
+);
 
 const AppNavigator: React.FC = () => (
   <NavigationContainer>
     <RootNavigator />
   </NavigationContainer>
 );
+
+const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
 
 export default AppNavigator;

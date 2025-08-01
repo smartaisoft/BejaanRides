@@ -1,8 +1,8 @@
-import React from 'react';
-import {StyleSheet, Text, View} from 'react-native';
+import React, {useCallback} from 'react';
+import {StyleSheet, Text, View, BackHandler} from 'react-native';
 import Button from '../../components/Button';
 import Ride from '../../../assets/SVG/Ride';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {AuthStackParamList} from '../../navigation/AuthNavigator';
 import {useDispatch, useSelector} from 'react-redux';
@@ -40,6 +40,21 @@ const RoleScreen = () => {
       navigation.navigate('Name');
     }, 1000);
   };
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        BackHandler.exitApp(); // ⛔ Exit app instead of navigating back
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onBackPress,
+      );
+
+      return () => subscription.remove(); // ✅ Correct cleanup
+    }, []),
+  );
 
   if (isLoading) {
     return <LoaderScreen />;

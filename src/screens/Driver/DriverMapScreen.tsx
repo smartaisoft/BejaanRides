@@ -62,6 +62,7 @@ const DriverMapScreen: React.FC = () => {
 
   // Fetch driver profile
   useEffect(() => {
+    console.log('Driver id:', myDriverId);
     const fetchDriverName = async () => {
       try {
         const uid = auth().currentUser?.uid;
@@ -139,14 +140,16 @@ const DriverMapScreen: React.FC = () => {
               riderPhone: ride.passengerPhone ?? 'N/A',
               pickupLocation: ride.pickup,
               dropoffLocation: ride.dropoff,
+              additionalStops: ride.additionalStops || [], // ✅ Add this line
               distanceText: ride.distanceText ?? 'N/A',
               durationText: ride.durationText ?? 'N/A',
-              fare: ride.fareEstimate, // this maps to your DB field
-              status: ride.status, // ✅ Include ride status here
-
+              fare: ride.fareEstimate,
+              status: ride.status,
+              vehicleType: ride.vehicleType,
             }));
             dispatch(setRideRequests(formatted));
           },
+          // vehicleInfo.vehicleType, // ✅ Pass filter
         );
       } else {
         unsubscribeRef.current?.();
@@ -171,19 +174,18 @@ const DriverMapScreen: React.FC = () => {
     }
   };
   useEffect(() => {
-  if (!currentRide?.id) return;
+    if (!currentRide?.id) return;
 
-  const ref = database().ref(`rideRequests/${currentRide.id}/status`);
-  const listener = ref.on('value', snapshot => {
-    const status = snapshot.val();
-    if (status) {
-      dispatch(setCurrentRide({...currentRide, status}));
-    }
-  });
+    const ref = database().ref(`rideRequests/${currentRide.id}/status`);
+    const listener = ref.on('value', snapshot => {
+      const status = snapshot.val();
+      if (status) {
+        dispatch(setCurrentRide({...currentRide, status}));
+      }
+    });
 
-  return () => ref.off('value', listener);
-}, [currentRide?.id]);
-
+    return () => ref.off('value', listener);
+  }, [currentRide?.id]);
 
   const renderMapMarkersAndDirections = useCallback(() => {
     if (!currentRide || !driverCoords) return null;

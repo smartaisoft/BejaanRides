@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   cancelText: {
-    color: '#9C27B0',
+    color: Colors.primary,
     fontWeight: '600',
   },
 });

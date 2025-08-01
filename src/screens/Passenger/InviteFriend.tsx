@@ -45,7 +45,7 @@ const handleInvite = async () => {
       social: {
         title: 'Join Salam Rides!',
         descriptionText:
-          'Use my referral code to get rewards on your first ride.',
+          'Use my referral code to get rewards on your referred every ride.',
         imageUrl:
           'https://drive.google.com/uc?export=view&id=13-nLDQ1ViPqLqzjzQUoWAcCZxjrV-DVr',
       },
@@ -57,7 +57,7 @@ const handleInvite = async () => {
 🔗 Sign up using my referral link:
 ${dynamicLink}
 
-Join now and earn rewards on your rides!
+Join now and earn rewards on your referred rides!
     `.trim();
 
     await Share.share({ message });

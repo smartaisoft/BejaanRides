@@ -2,23 +2,23 @@
 
 import database from '@react-native-firebase/database';
 
-interface Location {
-  latitude: number;
-  longitude: number;
-  address: string;
-}
+// interface Location {
+//   latitude: number;
+//   longitude: number;
+//   address: string;
+// }
 
-interface RideRequestData {
-  passengerId: string;
-  passengerName: string;
-  passengerPhone: string;
-  pickup: Location;
-  dropoff: Location;
-  vehicleType: string;
-  fareEstimate: number;
-  distanceText: string;
-  durationText: string;
-}
+// interface RideRequestData {
+//   passengerId: string;
+//   passengerName: string;
+//   passengerPhone: string;
+//   pickup: Location;
+//   dropoff: Location;
+//   vehicleType: string;
+//   fareEstimate: number;
+//   distanceText: string;
+//   durationText: string;
+// }
 
 // export const createRideRequest = async (data: RideRequestData) => {
 //   const requestRef = database().ref('rideRequests').push();

@@ -14,12 +14,6 @@ import {useSelector, useDispatch} from 'react-redux';
 import auth from '@react-native-firebase/auth';
 import {AppDispatch, RootState} from '../../redux/store';
 import {DriverStatus} from '../../redux/types/driverTypes';
-import {
-  clearRideRequests,
-  setCurrentRide,
-  setDriverStatus,
-  setRideRequests,
-} from '../../redux/actions/driverActions';
 import PaymentCard from '../../components/BottomCard/PaymentCard';
 import OfflinePanel from '../../components/BottomCard/OfflinePanel';
 import PassengerRideRequestCard from '../../components/PassengerRideRequestCard';
@@ -27,6 +21,16 @@ import MapViewDirections from 'react-native-maps-directions';
 import CompleteTripCard from '../../components/BottomCard/CompleteTripCard';
 import TripInfoCard from '../../components/BottomCard/TripInfoCard';
 import StartTripCard from '../../components/BottomCard/AcceptedRideCard';
+import Colors from '../../themes/colors';
+import Locate from '../../../assets/SVG/Locate';
+
+import {
+  clearRideRequests,
+  setCurrentRide,
+  setDriverStatus,
+  setRideRequests,
+} from '../../redux/actions/driverActions';
+
 import {
   acceptRideRequest,
   listenForPendingRideRequests,
@@ -35,15 +39,12 @@ import {
 import Geolocation from '@react-native-community/geolocation';
 import database from '@react-native-firebase/database';
 import {getDriverByUid} from '../../services/realTimeUserService';
-import Colors from '../../themes/colors';
-import Locate from '../../../assets/SVG/Locate';
 import {
   removeDriverPresence,
   updateDriverPresence,
 } from '../../services/driverPresenceService';
 import {getVehicleInfo} from '../../services/vehicleService';
-
-const GOOGLE_MAPS_API_KEY = 'AIzaSyCb2ys2AD6NTFhnEGXNsDrjSXde6d569vU';
+import { GOOGLE_MAPS_API_KEY } from '../../utils/googleMap';
 
 const DriverMapScreen: React.FC = () => {
   const {status, currentRide, rideRequests} = useSelector(
@@ -78,20 +79,20 @@ const DriverMapScreen: React.FC = () => {
       }
     };
     fetchDriverName();
-  }, []);
+  }, [myDriverId]);
 
-  useEffect(() => {
-    return () => {
-      (async () => {
-        try {
-          await removeDriverPresence();
-          console.log('✅ Driver presence removed successfully');
-        } catch (err) {
-          console.warn('Failed to remove driver presence:', err);
-        }
-      })();
-    };
-  }, []);
+  // useEffect(() => {
+  //   return () => {
+  //     (async () => {
+  //       try {
+  //         await removeDriverPresence();
+  //         console.log('✅ Driver presence removed successfully');
+  //       } catch (err) {
+  //         console.warn('Failed to remove driver presence:', err);
+  //       }
+  //     })();
+  //   };
+  // }, []);
 
   // Watch driver location
   useEffect(() => {
@@ -162,7 +163,7 @@ const DriverMapScreen: React.FC = () => {
     return () => {
       unsubscribeRef.current?.();
     };
-  }, [status, dispatch, driverCoords, driverName]);
+  }, [status, dispatch, driverCoords, driverName, myDriverId]);
 
   const getVehicleMarkerIcon = (vehicleType: string) => {
     switch (vehicleType) {
@@ -185,7 +186,7 @@ const DriverMapScreen: React.FC = () => {
     });
 
     return () => ref.off('value', listener);
-  }, [currentRide?.id]);
+  }, [currentRide, currentRide?.id, dispatch]);
 
   const renderMapMarkersAndDirections = useCallback(() => {
     if (!currentRide || !driverCoords) return null;

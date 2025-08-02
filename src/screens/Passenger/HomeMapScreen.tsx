@@ -33,7 +33,6 @@ import Colors from '../../themes/colors';
 import DriverOfferCard from '../../components/PassengerCommonCard/DriverOfferCard';
 import SearchingDriverOverlay from '../../components/PassengerCommonCard/SearchingDriverOverlay';
 import BookingSuccessModal from '../../components/PassengerCommonCard/BookingSuccessModal';
-const GOOGLE_MAPS_API_KEY = 'AIzaSyCb2ys2AD6NTFhnEGXNsDrjSXde6d569vU';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../redux/store';
@@ -61,6 +60,7 @@ import {
 import {calculateFare} from '../../utils/calculateFare';
 import Geolocation from '@react-native-community/geolocation';
 import VehicleSelectionModal from '../../components/PassengerCommonCard/VehicleSelectionModal';
+import { GOOGLE_MAPS_API_KEY } from '../../utils/googleMap';
 
 // type IncomingOffer = {
 //   driverId: string;

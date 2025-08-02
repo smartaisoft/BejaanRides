@@ -11,6 +11,7 @@ export enum DriverStatus {
 }
 
 export interface RideData {
+  vehicleType(id: string, myDriverId: string, driverName: string, arg3: string, arg4: string, customFare: number, vehicleType: any): unknown;
   id: string;
   pickupLocation: LatLng;
   dropoffLocation: LatLng;

@@ -59,6 +59,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
     padding: 16,
+    // marginBottom:30
   },
   header: {
     alignSelf: 'center',

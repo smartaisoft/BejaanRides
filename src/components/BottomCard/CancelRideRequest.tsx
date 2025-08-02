@@ -15,14 +15,14 @@ interface CustomModalProps {
   candidate?: string;
 }
 
-const ViewedRequests = forwardRef<BottomSheetModal, CustomModalProps>(
+const CancelRideRequest = forwardRef<BottomSheetModal, CustomModalProps>(
   ({title, children, onClose, onConfirm, candidate}, ref) => {
     const snapPoints = useMemo(() => ['25', '50%', '70%'], []);
     const renderBackdrop = useCallback(
       props => (
         <BottomSheetBackdrop
           {...props}
-          pressBehavior="close"
+          pressBehavior="none"
           appearsOnIndex={0}
           disappearsOnIndex={-1}
         />
@@ -34,7 +34,8 @@ const ViewedRequests = forwardRef<BottomSheetModal, CustomModalProps>(
         ref={ref}
         index={1}
         snapPoints={snapPoints}
-        backdropComponent={renderBackdrop}>
+        backdropComponent={renderBackdrop}
+        enablePanDownToClose={false}>
         <BottomSheetView style={styles.contentContainer}>
           <View
             style={{
@@ -43,7 +44,9 @@ const ViewedRequests = forwardRef<BottomSheetModal, CustomModalProps>(
               justifyContent: 'center',
               gap: 10,
             }}>
-            <Text style={styles.header}>Are you sure you want to cancel the request?</Text>
+            <Text style={styles.header}>
+              Are you sure you want to cancel the request?
+            </Text>
           </View>
           <View style={styles.buttons}>
             {onConfirm && (
@@ -107,8 +110,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 20,
     fontSize: 20,
-    fontWeight:'bold',
-    textAlign: 'center'
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   avatar: {
     width: 40,
@@ -122,4 +125,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ViewedRequests;
+export default CancelRideRequest;

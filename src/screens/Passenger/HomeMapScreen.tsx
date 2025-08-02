@@ -520,16 +520,26 @@ const HomeMapScreen: React.FC = () => {
   );
   const cancelRequest = () => {
     cancelRequestBottomSheetRef.current?.dismiss();
-    reasonBottomSheetRef.current?.present()
+    reasonBottomSheetRef?.current?.present();
+    if (unsubscribeListener.current) {
+      unsubscribeListener.current();
+      unsubscribeListener.current = null;
+    }
+    dispatch(setRideId(null));
+    // Reset locations and route
+    dispatch(setDropoffLocation(null));
+    dispatch(setSummary({destination: null}));
+    setRouteInfo(null);
   };
   const closeViewRequests = () => {
     bottomSheetRef.current?.dismiss();
   };
   const keepGoing = () => {
+    handleRequestRide();
     cancelRequestBottomSheetRef.current?.dismiss();
   };
   const submitRequest = (reason: any) => {
-    reasonBottomSheetRef.current?.dismiss();
+    reasonBottomSheetRef?.current?.dismiss();
     dispatch(setShowSearchModal(true));
     console.log('Cancel reason:', reason);
   };
@@ -840,22 +850,8 @@ const HomeMapScreen: React.FC = () => {
         {isSearchingDriver && incomingOffers.length <= 0 && (
           <SearchingDriverOverlay
             onCancel={() => {
-              cancelRequestBottomSheetRef.current?.present()
+              cancelRequestBottomSheetRef.current?.present();
               setIsSearchingDriver(false);
-
-              // Stop any ride updates
-              if (unsubscribeListener.current) {
-                unsubscribeListener.current();
-                unsubscribeListener.current = null;
-              }
-              dispatch(setRideId(null));
-              // Reset locations and route
-              dispatch(setDropoffLocation(null));
-              dispatch(setSummary({destination: null}));
-              setRouteInfo(null);
-
-              // Show location search modal again
-
             }}
           />
         )}

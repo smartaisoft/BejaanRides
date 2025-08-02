@@ -17,12 +17,12 @@ interface CustomModalProps {
 
 const ViewedRequests = forwardRef<BottomSheetModal, CustomModalProps>(
   ({title, children, onClose, onConfirm, candidate}, ref) => {
-    const snapPoints = useMemo(() => ['25', '50%', '70%'], []);
+    const snapPoints = useMemo(() => ['35', '50%', '70%'], []);
     const renderBackdrop = useCallback(
       props => (
         <BottomSheetBackdrop
           {...props}
-          pressBehavior="close"
+          pressBehavior="none"
           appearsOnIndex={0}
           disappearsOnIndex={-1}
         />
@@ -34,7 +34,9 @@ const ViewedRequests = forwardRef<BottomSheetModal, CustomModalProps>(
         ref={ref}
         index={1}
         snapPoints={snapPoints}
-        backdropComponent={renderBackdrop}>
+        backdropComponent={renderBackdrop}
+        enablePanDownToClose={false}
+        >
         <BottomSheetView style={styles.contentContainer}>
           <View
             style={{

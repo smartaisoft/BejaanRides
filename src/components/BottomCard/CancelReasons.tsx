@@ -43,7 +43,7 @@ const CancelReasons = forwardRef<BottomSheetModal, CustomModalProps>(
       props => (
         <BottomSheetBackdrop
           {...props}
-          pressBehavior="close"
+          pressBehavior="none"
           appearsOnIndex={0}
           disappearsOnIndex={-1}
         />
@@ -55,7 +55,8 @@ const CancelReasons = forwardRef<BottomSheetModal, CustomModalProps>(
         ref={ref}
         index={1}
         snapPoints={snapPoints}
-        backdropComponent={renderBackdrop}>
+        backdropComponent={renderBackdrop}
+        enablePanDownToClose={false}>
         <BottomSheetView style={styles.contentContainer}>
           <View style={{width: '100%'}}>
             <View style={styles.header}>

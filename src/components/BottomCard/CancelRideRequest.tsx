@@ -57,7 +57,7 @@ const ViewedRequests = forwardRef<BottomSheetModal, CustomModalProps>(
             )}
             {onClose && (
               <Button
-                title="Close request"
+                title="Yes, cancel request"
                 onPress={onClose}
                 style={styles.cancelBtn}
                 textColor="#FF0000"

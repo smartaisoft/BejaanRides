@@ -520,7 +520,6 @@ const HomeMapScreen: React.FC = () => {
   );
   const cancelRequest = () => {
     cancelRequestBottomSheetRef.current?.dismiss();
-    reasonBottomSheetRef.current?.present()
   };
   const closeViewRequests = () => {
     bottomSheetRef.current?.dismiss();
@@ -530,7 +529,6 @@ const HomeMapScreen: React.FC = () => {
   };
   const submitRequest = (reason: any) => {
     reasonBottomSheetRef.current?.dismiss();
-    dispatch(setShowSearchModal(true));
     console.log('Cancel reason:', reason);
   };
 
@@ -840,7 +838,6 @@ const HomeMapScreen: React.FC = () => {
         {isSearchingDriver && incomingOffers.length <= 0 && (
           <SearchingDriverOverlay
             onCancel={() => {
-              cancelRequestBottomSheetRef.current?.present()
               setIsSearchingDriver(false);
 
               // Stop any ride updates
@@ -855,7 +852,12 @@ const HomeMapScreen: React.FC = () => {
               setRouteInfo(null);
 
               // Show location search modal again
+              dispatch(setShowSearchModal(true));
 
+              Alert.alert(
+                'Ride Cancelled',
+                'You have cancelled the ride request.',
+              );
             }}
           />
         )}

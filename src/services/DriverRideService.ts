@@ -6,16 +6,17 @@ const cleanupTimers: Record<string, NodeJS.Timeout> = {};
 export const listenForPendingRideRequests = (
   driverId: string,
   onUpdate: (rides: any[]) => void,
-  driverVehicleType?: string // optional filter
+  driverVehicleType?: string, // optional filter
 ) => {
+  console.log('listenForPendingRideRequests', driverId, driverVehicleType);
   const ref = database()
     .ref('rideRequests')
     .orderByChild('status')
     .equalTo('pending');
-
+  console.log('ref', ref);
   const listener = ref.on('value', snapshot => {
     const data = snapshot.val();
-
+    console.log('data', data);
     if (data) {
       const rides = Object.keys(data)
         .map(key => ({
@@ -23,10 +24,12 @@ export const listenForPendingRideRequests = (
           ...data[key],
         }))
         // ✅ Filter out rides rejected by this driver
-        .filter(ride => !(ride.rejectedDrivers && ride.rejectedDrivers[driverId]))
+        .filter(ride => !(ride.rejectedDrivers && ride.rejectedDrivers[driverId]),)
         // ✅ (Optional) Filter by vehicle type
-        .filter(ride => !driverVehicleType || ride.vehicleType === driverVehicleType);
-
+        .filter(
+          ride => !driverVehicleType || ride.vehicleType === driverVehicleType,
+        );
+      console.log('data', rides);
       // 🔍 Debug: log each incoming ride (especially additionalStops)
       rides.forEach(ride => {
         console.log('🚕 New pending ride:', {

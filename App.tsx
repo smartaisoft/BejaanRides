@@ -7,6 +7,8 @@ import auth from '@react-native-firebase/auth';
 import FirebaseService from './src/services/NotificationService';
 import ReferralListener from './src/services/ReferralListener';
 import {PersistGate} from 'redux-persist/integration/react';
+import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
 const App = () => {
   console.log('✅ Firebase initialized?', firebase.apps.length > 0);
@@ -30,10 +32,14 @@ const App = () => {
 
   return (
     <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
-        <ReferralListener />
-        <AppNavigator />
-      </PersistGate>
+      <GestureHandlerRootView style={{flex: 1}}>
+        <BottomSheetModalProvider>
+          <PersistGate loading={null} persistor={persistor}>
+            <ReferralListener />
+            <AppNavigator />
+          </PersistGate>
+        </BottomSheetModalProvider>
+      </GestureHandlerRootView>
     </Provider>
   );
 };

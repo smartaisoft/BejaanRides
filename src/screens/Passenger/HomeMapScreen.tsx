@@ -38,7 +38,6 @@ import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../redux/store';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-
 import {
   setAdditionalStops,
   setDriverInfo,
@@ -61,21 +60,17 @@ import {
 import {calculateFare} from '../../utils/calculateFare';
 import Geolocation from '@react-native-community/geolocation';
 import VehicleSelectionModal from '../../components/PassengerCommonCard/VehicleSelectionModal';
-
-// type IncomingOffer = {
-//   driverId: string;
-//   driverName: string;
-//   fare: number;
-//   eta: string;
-//   distance: string;
-//   vehicleType: string;
-// };
-
+import ViewedRequests from '../../components/BottomCard/viewedRequests';
+import CancelRideRequest from '../../components/BottomCard/CancelRideRequest';
+import CancelReasons from '../../components/BottomCard/CancelReasons';
+import {BottomSheetModal} from '@gorhom/bottom-sheet';
 const HomeMapScreen: React.FC = () => {
   const mapRef = useRef<MapView>(null);
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const cancelRequestBottomSheetRef = useRef<BottomSheetModal>(null);
+  const reasonBottomSheetRef = useRef<BottomSheetModal>(null);
   const [mapKey, setMapKey] = useState(0);
   const [showVehicleModal, setShowVehicleModal] = useState(false);
   const unsubscribeListener = useRef<(() => void) | null>(null);
@@ -523,6 +518,20 @@ const HomeMapScreen: React.FC = () => {
       setMapKey(prev => prev + 1);
     }, []),
   );
+  const cancelRequest = () => {
+    cancelRequestBottomSheetRef.current?.dismiss();
+  };
+  const closeViewRequests = () => {
+    bottomSheetRef.current?.dismiss();
+  };
+  const keepGoing = () => {
+    cancelRequestBottomSheetRef.current?.dismiss();
+  };
+  const submitRequest = (reason: any) => {
+    reasonBottomSheetRef.current?.dismiss();
+    console.log('Cancel reason:', reason);
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -897,6 +906,17 @@ const HomeMapScreen: React.FC = () => {
           duration={selectedOffer?.eta}
           fare={selectedOffer?.fare}
         />
+        <ViewedRequests
+          ref={bottomSheetRef}
+          onConfirm={closeViewRequests}
+          title={3}></ViewedRequests>
+        <CancelRideRequest
+          ref={cancelRequestBottomSheetRef}
+          onConfirm={keepGoing}
+          onClose={cancelRequest}></CancelRideRequest>
+        <CancelReasons
+          ref={reasonBottomSheetRef}
+          onConfirm={submitRequest}></CancelReasons>
       </View>
     </SafeAreaView>
   );

@@ -118,8 +118,8 @@ const DriverMapScreen: React.FC = () => {
     const setup = async () => {
       if (status === DriverStatus.ONLINE) {
         const vehicleInfo = await getVehicleInfo();
-
         if (driverCoords && vehicleInfo) {
+          console.log('status', status, vehicleInfo, driverCoords, myDriverId)
           try {
             await updateDriverPresence(
               driverCoords,
@@ -147,6 +147,7 @@ const DriverMapScreen: React.FC = () => {
               status: ride.status,
               vehicleType: ride.vehicleType,
             }));
+            console.log('rides', rides, formatted)
             dispatch(setRideRequests(formatted));
           },
           // vehicleInfo.vehicleType, // ✅ Pass filter

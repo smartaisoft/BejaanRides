@@ -6,8 +6,8 @@ import Colors from '../../themes/colors';
 interface Props {
   riderName: string;
   riderPhone: string;
-  eta: string;       // e.g., "4 min"
-  distance: string;  // e.g., "1.5 km"
+  eta: string; // e.g., "4 min"
+  distance: string; // e.g., "1.5 km"
   onChat: () => void;
   onCall: () => void;
   onCancel: () => void;

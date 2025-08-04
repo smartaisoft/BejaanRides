@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-shadow */
 import React, {useEffect, useRef, useState, useCallback} from 'react';
 import {
   View,
@@ -13,7 +14,7 @@ import MapView, {Marker} from 'react-native-maps';
 import {useSelector, useDispatch} from 'react-redux';
 import auth from '@react-native-firebase/auth';
 import {AppDispatch, RootState} from '../../redux/store';
-import {DriverStatus} from '../../redux/types/driverTypes';
+import {DriverStatus, RideData} from '../../redux/types/driverTypes';
 import {
   clearRideRequests,
   setCurrentRide,
@@ -29,7 +30,8 @@ import TripInfoCard from '../../components/BottomCard/TripInfoCard';
 import StartTripCard from '../../components/BottomCard/AcceptedRideCard';
 import {
   acceptRideRequest,
-  listenForPendingRideRequests,
+  getETAFromDriverToPickup,
+  // listenForPendingRideRequests,
   startTrip,
 } from '../../services/DriverRideService';
 import Geolocation from '@react-native-community/geolocation';
@@ -41,7 +43,8 @@ import {
   removeDriverPresence,
   updateDriverPresence,
 } from '../../services/driverPresenceService';
-import {getVehicleInfo} from '../../services/vehicleService';
+import {getVehicleInfo, VehicleInfo} from '../../services/vehicleService';
+import {listenForPendingRideRequests} from '../../services/Driver/DriverServices';
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyCb2ys2AD6NTFhnEGXNsDrjSXde6d569vU';
 
@@ -49,6 +52,8 @@ const DriverMapScreen: React.FC = () => {
   const {status, currentRide, rideRequests} = useSelector(
     (state: RootState) => state.driver,
   );
+  console.log('current ride ✅✅✅✅✅✅✅✅✅✅✅:', currentRide);
+  console.log('ride request ✅✅✅✅✅✅✅✅✅✅✅:', rideRequests);
 
   const [driverCoords, setDriverCoords] = useState<{
     latitude: number;
@@ -59,6 +64,7 @@ const DriverMapScreen: React.FC = () => {
   const unsubscribeRef = useRef<() => void | null>(null);
   const dispatch = useDispatch<AppDispatch>();
   const myDriverId = auth().currentUser?.uid ?? 'unknown_driver';
+  const [vehicleType, setVehicleType] = useState<string | null>(null);
 
   // Fetch driver profile
   useEffect(() => {
@@ -78,92 +84,113 @@ const DriverMapScreen: React.FC = () => {
       }
     };
     fetchDriverName();
-  }, []);
+  }, [myDriverId]);
 
   useEffect(() => {
-    return () => {
-      (async () => {
-        try {
-          await removeDriverPresence();
-          console.log('✅ Driver presence removed successfully');
-        } catch (err) {
-          console.warn('Failed to remove driver presence:', err);
+    const fetchVehicleType = async () => {
+      try {
+        console.log('fetching vehicle information');
+        const info: VehicleInfo | null = await getVehicleInfo();
+        if (info?.vehicleType) {
+          setVehicleType(info.vehicleType.toLowerCase());
+        } else {
+          console.warn('🚫 Vehicle type not found');
         }
-      })();
+      } catch (error) {
+        console.error('❌ Error fetching vehicle info:', error);
+      }
     };
+
+    fetchVehicleType();
   }, []);
 
-  // Watch driver location
+  // Step 2: Listen for ride requests matching vehicleType
   useEffect(() => {
+    if (status !== DriverStatus.ONLINE) {
+      console.log('🛑 Driver is offline. Unsubscribing from ride requests.');
+      unsubscribeRef.current?.();
+      dispatch(clearRideRequests());
+      return;
+    }
+
+    if (!vehicleType) {
+      console.warn('🚫 Vehicle type is missing, cannot subscribe to requests');
+      return;
+    }
+
+    console.log('📡 Subscribing to pending ride requests...');
+    const unsubscribe = listenForPendingRideRequests(
+      myDriverId,
+      vehicleType,
+      pendingRides => {
+        console.log('🚕 New pending rides received:', pendingRides);
+        dispatch(setRideRequests(pendingRides));
+      },
+    );
+
+    unsubscribeRef.current = unsubscribe;
+
+    return () => {
+      console.log('🧹 Cleaning up ride request listener');
+      unsubscribe();
+    };
+  }, [dispatch, myDriverId, status, vehicleType]);
+
+  // real time tracking of driver
+  useEffect(() => {
+    console.log('🛰️ Geolocation watcher initializing...');
+
     const watchId = Geolocation.watchPosition(
       pos => {
+        if (!pos || !pos.coords) {
+          console.warn('⚠️ No coordinates received from Geolocation');
+          return;
+        }
+
         const coords = {
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
         };
+
+        console.log('📍 Driver coordinates received:', coords);
         setDriverCoords(coords);
-        if (currentRide) {
+
+        if (currentRide && currentRide.id) {
+          console.log(
+            `🚗 Updating Firebase with driver location for ride ID: ${currentRide.id}`,
+          );
           database()
             .ref(`rideRequests/${currentRide.id}/driverLocation`)
-            .set(coords);
+            .set(coords)
+            .then(() => {
+              console.log('✅ Driver location updated in Firebase.');
+            })
+            .catch(error => {
+              console.error(
+                '❌ Failed to update driver location in Firebase:',
+                error,
+              );
+            });
+        } else {
+          console.warn(
+            '⚠️ No active ride found – skipping driver location update.',
+          );
         }
       },
-      err => console.error('Driver location error:', err),
-      {enableHighAccuracy: false, distanceFilter: 5},
+      err => {
+        console.error('❌ Geolocation watchPosition error:', err);
+      },
+      {
+        enableHighAccuracy: false,
+        distanceFilter: 5,
+      },
     );
-    return () => Geolocation.clearWatch(watchId);
-  }, [currentRide]);
-
-  useEffect(() => {
-    const setup = async () => {
-      if (status === DriverStatus.ONLINE) {
-        const vehicleInfo = await getVehicleInfo();
-        if (driverCoords && vehicleInfo) {
-          console.log('status', status, vehicleInfo, driverCoords, myDriverId)
-          try {
-            await updateDriverPresence(
-              driverCoords,
-              driverName,
-              vehicleInfo.vehicleType,
-            );
-          } catch (error) {
-            console.error('❌ Failed to update driver presence:', error);
-          }
-        }
-
-        unsubscribeRef.current = listenForPendingRideRequests(
-          myDriverId,
-          rides => {
-            const formatted = rides.map(ride => ({
-              id: ride.id,
-              riderName: ride.passengerName ?? 'Unknown Passenger',
-              riderPhone: ride.passengerPhone ?? 'N/A',
-              pickupLocation: ride.pickup,
-              dropoffLocation: ride.dropoff,
-              additionalStops: ride.additionalStops || [], // ✅ Add this line
-              distanceText: ride.distanceText ?? 'N/A',
-              durationText: ride.durationText ?? 'N/A',
-              fare: ride.fareEstimate,
-              status: ride.status,
-              vehicleType: ride.vehicleType,
-            }));
-            console.log('rides', rides, formatted)
-            dispatch(setRideRequests(formatted));
-          },
-          // vehicleInfo.vehicleType, // ✅ Pass filter
-        );
-      } else {
-        unsubscribeRef.current?.();
-        dispatch(clearRideRequests());
-      }
-    };
-
-    setup();
 
     return () => {
-      unsubscribeRef.current?.();
+      console.log('🧹 Clearing Geolocation watcher:', watchId);
+      Geolocation.clearWatch(watchId);
     };
-  }, [status, dispatch, driverCoords, driverName]);
+  }, [currentRide]);
 
   const getVehicleMarkerIcon = (vehicleType: string) => {
     switch (vehicleType) {
@@ -174,8 +201,11 @@ const DriverMapScreen: React.FC = () => {
         return require('../../../assets/images/vehicles/carRoute.png');
     }
   };
+
   useEffect(() => {
-    if (!currentRide?.id) return;
+    if (!currentRide?.id) {
+      return;
+    }
 
     const ref = database().ref(`rideRequests/${currentRide.id}/status`);
     const listener = ref.on('value', snapshot => {
@@ -186,10 +216,12 @@ const DriverMapScreen: React.FC = () => {
     });
 
     return () => ref.off('value', listener);
-  }, [currentRide?.id]);
+  }, [currentRide, currentRide?.id, dispatch]);
 
   const renderMapMarkersAndDirections = useCallback(() => {
-    if (!currentRide || !driverCoords) return null;
+    if (!currentRide || !driverCoords) {
+      return null;
+    }
     const vehicleIcon = getVehicleMarkerIcon(currentRide.vehicleType);
     const isOnTheWay = status === DriverStatus.ON_THE_WAY;
     const isTripStarted = status === DriverStatus.TRIP_STARTED;
@@ -234,6 +266,44 @@ const DriverMapScreen: React.FC = () => {
         },
         500,
       );
+    }
+  };
+
+  const handleAcceptRide = async (ride: RideData, customFare: number) => {
+    if (!driverCoords) {
+      Alert.alert(
+        'Location Required',
+        'Unable to send offer without location.',
+      );
+      return;
+    }
+
+    try {
+      // Step 1: Calculate ETA and Distance to pickup
+      const {durationText, distanceText} = await getETAFromDriverToPickup(
+        driverCoords,
+        ride.pickupLocation,
+      );
+
+      // Step 2: Send offer to Firebase
+      await acceptRideRequest(
+        ride.id,
+        myDriverId,
+        driverName,
+        durationText,
+        distanceText,
+        customFare,
+        ride.vehicleType,
+        driverCoords,
+      );
+
+      // Step 3: Update Redux state
+      dispatch(setCurrentRide({...ride, fare: customFare}));
+      dispatch(clearRideRequests());
+      dispatch(setDriverStatus(DriverStatus.ON_THE_WAY));
+    } catch (error) {
+      console.error('❌ Error sending offer:', error);
+      Alert.alert('Error', 'Failed to send offer to passenger.');
     }
   };
 
@@ -294,20 +364,8 @@ const DriverMapScreen: React.FC = () => {
               renderItem={({item}) => (
                 <PassengerRideRequestCard
                   ride={item}
-                  passengerFare={item.fare}
-                  onAccept={customFare => {
-                    acceptRideRequest(
-                      item.id,
-                      myDriverId,
-                      driverName,
-                      item.durationText ?? '5 min',
-                      item.distanceText ?? '1.2 km',
-                      customFare,
-                    );
-                    dispatch(setCurrentRide(item));
-                    dispatch(clearRideRequests());
-                    dispatch(setDriverStatus(DriverStatus.ON_THE_WAY));
-                  }}
+                  passengerFare={item.fareEstimate ?? item.fare ?? 0}
+                  onAccept={customFare => handleAcceptRide(item, customFare)}
                   onReject={() => {
                     database()
                       .ref(

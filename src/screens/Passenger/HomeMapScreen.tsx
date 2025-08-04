@@ -408,6 +408,10 @@ const HomeMapScreen: React.FC = () => {
         durationText: routeInfo?.durationText ?? 'N/A',
         ...(additionalStops?.length > 0 && {additionalStops}), // 🔄 Append additional stops if present
       };
+      console.log(
+        '🎯 Ride request created with vehicleType:',
+        ridePayload.vehicleType,
+      );
 
       const rideId = await createRideRequest(ridePayload);
 
@@ -484,7 +488,9 @@ const HomeMapScreen: React.FC = () => {
 
   const handleAcceptDriver = async (driverId: string) => {
     const offer = incomingOffers.find(o => o.driverId === driverId);
-    if (!offer) return;
+    if (!offer) {
+      return;
+    }
     dispatch(setSelectedOffer(offer)); // Save for modal
     dispatch(setDriverInfoModal(true));
 
@@ -520,7 +526,7 @@ const HomeMapScreen: React.FC = () => {
   );
   const cancelRequest = () => {
     cancelRequestBottomSheetRef.current?.dismiss();
-    reasonBottomSheetRef.current?.present()
+    reasonBottomSheetRef.current?.present();
   };
   const closeViewRequests = () => {
     bottomSheetRef.current?.dismiss();
@@ -840,7 +846,7 @@ const HomeMapScreen: React.FC = () => {
         {isSearchingDriver && incomingOffers.length <= 0 && (
           <SearchingDriverOverlay
             onCancel={() => {
-              cancelRequestBottomSheetRef.current?.present()
+              cancelRequestBottomSheetRef.current?.present();
               setIsSearchingDriver(false);
 
               // Stop any ride updates
@@ -855,7 +861,6 @@ const HomeMapScreen: React.FC = () => {
               setRouteInfo(null);
 
               // Show location search modal again
-
             }}
           />
         )}
@@ -907,14 +912,14 @@ const HomeMapScreen: React.FC = () => {
         <ViewedRequests
           ref={bottomSheetRef}
           onConfirm={closeViewRequests}
-          title={3}></ViewedRequests>
+          title={3}
+        />
         <CancelRideRequest
           ref={cancelRequestBottomSheetRef}
           onConfirm={keepGoing}
-          onClose={cancelRequest}></CancelRideRequest>
-        <CancelReasons
-          ref={reasonBottomSheetRef}
-          onConfirm={submitRequest}></CancelReasons>
+          onClose={cancelRequest}
+        />
+        <CancelReasons ref={reasonBottomSheetRef} onConfirm={submitRequest} />
       </View>
     </SafeAreaView>
   );

@@ -51,7 +51,7 @@ export const setDriverStatus = (
   };
 };
 export const setCurrentRide = (ride: RideData): SetCurrentRideAction => {
-  console.log('Setting current ride:', ride); // ✅ Debug log
+  console.log('Setting current ride ✅ after accepting and editing the fare from deriver side:', ride); // ✅ Debug log
   return {
     type: SET_CURRENT_RIDE,
     payload: ride,

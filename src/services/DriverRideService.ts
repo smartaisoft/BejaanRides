@@ -1,14 +1,54 @@
-// src/services/DriverRideService.ts
-
 import database from '@react-native-firebase/database';
 const cleanupTimers: Record<string, NodeJS.Timeout> = {};
+
+import axios from 'axios';
+
+export const getETAFromDriverToPickup = async (
+  driverCoords: {latitude: number; longitude: number},
+  pickupCoords: {latitude: number; longitude: number},
+): Promise<{durationText: string; distanceText: string}> => {
+  const GOOGLE_MAPS_API_KEY = 'AIzaSyCb2ys2AD6NTFhnEGXNsDrjSXde6d569vU'; // replace this
+  const origin = `${driverCoords.latitude},${driverCoords.longitude}`;
+  const destination = `${pickupCoords.latitude},${pickupCoords.longitude}`;
+
+  const response = await axios.get(
+    `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${GOOGLE_MAPS_API_KEY}`,
+  );
+
+  const route = response.data.routes?.[0]?.legs?.[0];
+  return {
+    durationText: route?.duration?.text ?? 'Unknown',
+    distanceText: route?.distance?.text ?? 'Unknown',
+  };
+};
+
+export const acceptRideRequest = async (
+  rideId: string,
+  driverId: string,
+  driverName: string,
+  eta: string,
+  distance: string,
+  fare: number,
+  vehicleType: string,
+  driverCoords: {latitude: number; longitude: number},
+) => {
+  await database().ref(`rideRequests/${rideId}/offers/${driverId}`).set({
+    driverName,
+    eta,
+    distance,
+    fare,
+    vehicleType,
+    timestamp: Date.now(),
+    status: 'pending',
+    driverLocation: driverCoords, // ✅ Add this!
+  });
+};
 
 export const listenForPendingRideRequests = (
   driverId: string,
   onUpdate: (rides: any[]) => void,
-  driverVehicleType?: string, // optional filter
+  driverVehicleType?: string,
 ) => {
-  console.log('listenForPendingRideRequests', driverId, driverVehicleType);
   const ref = database()
     .ref('rideRequests')
     .orderByChild('status')
@@ -16,21 +56,18 @@ export const listenForPendingRideRequests = (
   console.log('ref', ref);
   const listener = ref.on('value', snapshot => {
     const data = snapshot.val();
-    console.log('data', data);
     if (data) {
       const rides = Object.keys(data)
         .map(key => ({
           id: key,
           ...data[key],
         }))
-        // ✅ Filter out rides rejected by this driver
-        .filter(ride => !(ride.rejectedDrivers && ride.rejectedDrivers[driverId]),)
-        // ✅ (Optional) Filter by vehicle type
+        .filter(
+          ride => !(ride.rejectedDrivers && ride.rejectedDrivers[driverId]),
+        )
         .filter(
           ride => !driverVehicleType || ride.vehicleType === driverVehicleType,
         );
-      console.log('data', rides);
-      // 🔍 Debug: log each incoming ride (especially additionalStops)
       rides.forEach(ride => {
         console.log('🚕 New pending ride:', {
           id: ride.id,
@@ -82,35 +119,6 @@ export const listenForPendingRideRequests = (
     ref.off('value', listener);
     Object.values(cleanupTimers).forEach(clearTimeout);
   };
-};
-
-// src/services/DriverRideService.ts
-// export const acceptRideRequest = async (rideId: string, driverId: string) => {
-//   await database().ref(`rideRequests/${rideId}`).update({
-//     status: 'accepted',
-//     driverId,
-//     acceptedAt: Date.now(),
-//   });
-// };
-
-export const acceptRideRequest = async (
-  rideId: string,
-  driverId: string,
-  driverName: string,
-  eta: string,
-  distance: string,
-  fare: number,
-  vehicleType: string,
-) => {
-  await database().ref(`rideRequests/${rideId}/offers/${driverId}`).set({
-    driverName,
-    eta,
-    distance,
-    fare,
-    vehicleType,
-    timestamp: Date.now(),
-    status: 'pending',
-  });
 };
 
 export const startTrip = async (rideId: string) => {

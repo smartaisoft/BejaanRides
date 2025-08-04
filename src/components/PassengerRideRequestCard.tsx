@@ -24,7 +24,9 @@ const PassengerRideRequestCard: React.FC<Props> = ({
   onAccept,
   onReject,
 }) => {
-  const [customFare, setCustomFare] = useState(String(passengerFare));
+  const [customFare, setCustomFare] = useState(
+    String(passengerFare ?? ride.fareEstimate ?? ''),
+  );
 
   return (
     <View style={styles.container}>
@@ -34,19 +36,34 @@ const PassengerRideRequestCard: React.FC<Props> = ({
           style={styles.avatar}
         />
         <View style={{flex: 1, marginHorizontal: 10}}>
-          <Text style={styles.name}>{ride.riderName}</Text>
+          <Text style={styles.name}>
+            {ride.passengerName ?? ride.riderName ?? 'Unknown Passenger'}
+          </Text>
           <View style={styles.ratingRow}>
             <Icon name="star" size={16} color="#FFC107" />
-            <Text style={styles.rating}>4.9</Text>
+            <Text style={styles.rating}>5.0</Text>
           </View>
-          <Text style={{color: '#000', fontSize: 14}}>Set Your Fare:</Text>
-          <TextInput
-            style={styles.input}
-            keyboardType="numeric"
-            value={customFare}
-            onChangeText={setCustomFare}
-            placeholder="PKR"
-          />
+
+          <Text style={styles.fareLabel}>Set Your Fare</Text>
+          <View style={styles.inputWrapper}>
+            <Icon
+              name="attach-money"
+              size={20}
+              color={Colors.primary}
+              style={{marginRight: 4}}
+            />
+            <TextInput
+              style={styles.fareInput}
+              keyboardType="numeric"
+              value={customFare}
+              onChangeText={setCustomFare}
+              placeholder={`e.g. ${ride.fareEstimate}`}
+              placeholderTextColor="#aaa"
+            />
+          </View>
+          <Text style={styles.helperText}>
+            You can offer a different fare if needed
+          </Text>
         </View>
         <View style={styles.timeDistance}>
           <Text style={styles.timeText}>{ride.durationText ?? 'ETA N/A'}</Text>
@@ -103,6 +120,36 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 14,
   },
+  fareLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#000',
+    marginTop: 8,
+  },
+
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.2,
+    borderColor: Colors.primary,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    // paddingVertical: 0,
+    marginTop: 6,
+  },
+
+  fareInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#000',
+  },
+
+  helperText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
+
   buttonsRow: {
     flexDirection: 'row',
     marginTop: 12,

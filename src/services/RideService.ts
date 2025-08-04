@@ -1,40 +1,10 @@
-// src/services/RideService.ts
-
 import database from '@react-native-firebase/database';
-
-interface Location {
-  latitude: number;
-  longitude: number;
-  address: string;
-}
-
-interface RideRequestData {
-  passengerId: string;
-  passengerName: string;
-  passengerPhone: string;
-  pickup: Location;
-  dropoff: Location;
-  vehicleType: string;
-  fareEstimate: number;
-  distanceText: string;
-  durationText: string;
-}
-
-// export const createRideRequest = async (data: RideRequestData) => {
-//   const requestRef = database().ref('rideRequests').push();
-//   await requestRef.set({
-//     ...data,
-//     status: 'pending',
-//     createdAt: Date.now(),
-//   });
-//   return requestRef.key;
-// };
 
 export const createRideRequest = async (
   rideDetails: any,
 ): Promise<string | null> => {
   try {
-    const newRef = database().ref('rideRequests').push(); // This generates a new unique rideId
+    const newRef = database().ref('rideRequests').push();
     const rideId = newRef.key;
 
     if (!rideId) {
@@ -43,7 +13,7 @@ export const createRideRequest = async (
 
     await newRef.set({
       ...rideDetails,
-      status: 'pending', // ✅ This is crucial
+      status: 'pending',
       createdAt: Date.now(),
     });
 
@@ -64,14 +34,12 @@ export const listenForRideStatus = (
     callback(status);
   });
 
-  return () => ref.off(); // unsubscribe function
+  return () => ref.off();
 };
 
 export const cancelRideRequest = async (rideId: string) => {
   await database().ref(`rideRequests/${rideId}`).update({status: 'cancelled'});
 };
-
-// src/services/RideService.ts
 
 export const listenForRideUpdates = (
   rideId: string,

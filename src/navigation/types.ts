@@ -20,4 +20,5 @@ export type RootStackParamList = {
   MyWallet: undefined;
   Subscriptions: undefined;
   SubscriptionPlansScreen: undefined;
+  DriverProfile:undefined;
 };

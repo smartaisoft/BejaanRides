@@ -9,6 +9,7 @@ import {setVehicleDetails} from '../redux/actions/vehicleActions';
 import AuthStack from './AuthNavigator';
 import DriverStack from './DriverStack';
 import PassengerStack from './PassengerStack';
+import DriverBottomTabs from './BottomTabs'; // 👈 import the bottom tabs
 
 import {getVehicleInfo} from '../services/vehicleService';
 import Colors from '../themes/colors';
@@ -53,68 +54,37 @@ const RootNavigator: React.FC = () => {
 
     fetchVehicleInfo();
   }, [isLoggedIn, role, dispatch]);
-
-  // Decide which stack to show
-//   const renderStack = useMemo(() => {
-//     if (!isLoggedIn) {
-//   return (
-//     <AuthStack initialRouteName={isPhoneVerified ? 'Role' : 'Splash'} />
-//   );
-// }
-
-
-//     if (role === 'passenger') {
-//       return <PassengerStack />;
-//     }
-
-//     if (role === 'driver') {
-//       if (loading || hasVehicleInfo === null) {
-//         return <LoadingScreen />;
-//       }
-
-//       return (
-//         <DriverStack
-//           initialRouteName={
-//             hasVehicleInfo ? 'DriverMapScreen' : 'ChooseVehicleScreen'
-//           }
-//         />
-//       );
-//     }
-
-//     return <LoadingScreen />;
-//   }, [isLoggedIn, role, loading, hasVehicleInfo,isPhoneVerified]);
-const renderStack = useMemo(() => {
-  // 🔐 Block UI until phone verification flag is fetched
-  if (isPhoneVerified === null) {
-    return <LoadingScreen />;
-  }
-
-  if (!isLoggedIn) {
-    return (
-      <AuthStack initialRouteName={isPhoneVerified ? 'Role' : 'Splash'} />
-    );
-  }
-
-  if (role === 'passenger') {
-    return <PassengerStack />;
-  }
-
-  if (role === 'driver') {
-    if (loading || hasVehicleInfo === null) {
+  const renderStack = useMemo(() => {
+    // 🔐 Block UI until phone verification flag is fetched
+    if (isPhoneVerified === null) {
       return <LoadingScreen />;
     }
 
-    return (
-      <DriverStack
-        initialRouteName={
-          hasVehicleInfo ? 'DriverMapScreen' : 'ChooseVehicleScreen'
-        }
-      />
-    );
-  }
+    if (!isLoggedIn) {
+      return (
+        <AuthStack initialRouteName={isPhoneVerified ? 'Role' : 'Splash'} />
+      );
+    }
 
-  return <LoadingScreen />;
-}, [isLoggedIn, role, loading, hasVehicleInfo, isPhoneVerified]);
+    if (role === 'passenger') {
+      return <PassengerStack />;
+    }
+
+    if (role === 'driver') {
+      if (loading || hasVehicleInfo === null) {
+        return <LoadingScreen />;
+      }
+
+      return hasVehicleInfo ? (
+  <DriverBottomTabs /> // ✅ show bottom tabs when vehicle info exists
+) : (
+  <DriverStack initialRouteName="ChooseVehicleScreen" />
+);
+
+    }
+
+    return <LoadingScreen />;
+  }, [isLoggedIn, role, loading, hasVehicleInfo, isPhoneVerified]);
 
   return renderStack;
 };

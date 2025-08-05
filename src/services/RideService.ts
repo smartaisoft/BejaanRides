@@ -6,6 +6,8 @@ export const createRideRequest = async (
   try {
     const newRef = database().ref('rideRequests').push();
     const rideId = newRef.key;
+    const testRef = database().ref('rideRequests/testWritePermission');
+    testRef.set({test: true}); // should succeed if rules are correct
 
     if (!rideId) {
       throw new Error('Failed to generate ride ID');

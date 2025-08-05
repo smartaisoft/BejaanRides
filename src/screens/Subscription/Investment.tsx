@@ -15,15 +15,25 @@ import {Picker} from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {RouteProp, useRoute} from '@react-navigation/native';
 import {RootStackParamList} from '../../navigation/types';
+import firestore from '@react-native-firebase/firestore';
+import {AppDispatch, RootState} from '../../redux/store';
+import {useSelector, useDispatch} from 'react-redux';
+import {setUserSubscriptions} from '../../redux/actions/subscriptionActions';
 
 type InvestmentRouteProp = RouteProp<RootStackParamList, 'Investment'>;
 
 const Investment = ({navigation}: any) => {
+  const dispatch = useDispatch<AppDispatch>();
+
   const route = useRoute<InvestmentRouteProp>();
   const {planTitle, planPrice} = route.params;
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Meezan');
   const [paySlip, setPaySlip] = useState<any>(null);
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const existingSubs = useSelector(
+    (state: RootState) => state.subscriptions.userSubscriptions,
+  );
 
   useEffect(() => {
     setAmount(planPrice.replace(/[^0-9]/g, ''));
@@ -39,51 +49,68 @@ const Investment = ({navigation}: any) => {
     }
   };
 
-const renderBankDetails = () => {
-  const commonHeader = (
-    <View style={styles.noticeBox}>
-      <Text style={styles.noticeText}>
-        📢 Please send the subscription amount to the following account:
-      </Text>
-    </View>
-  );
+  const renderBankDetails = () => {
+    const commonHeader = (
+      <View style={styles.noticeBox}>
+        <Text style={styles.noticeText}>
+          📢 Please send the subscription amount to the following account:
+        </Text>
+      </View>
+    );
 
-  switch (paymentMethod) {
-    case 'Meezan':
-      return (
-        <View style={styles.accountInfo}>
-          {commonHeader}
-          <Text style={styles.accountText}>🏦 Bank: Meezan Bank</Text>
-          <Text style={styles.accountText}>👤 Account Title: Salam Rides</Text>
-          <Text style={styles.accountText}>💳 Account Number: 0840112094554</Text>
-          <Text style={styles.accountText}>🔢 IBAN: PK10MEZN0002840112094554</Text>
-        </View>
-      );
-    case 'Bank Alfalah':
-      return (
-        <View style={styles.accountInfo}>
-          {commonHeader}
-          <Text style={styles.accountText}>🏦 Bank: Bank Alfalah</Text>
-          <Text style={styles.accountText}>👤 Account Title: Salam Rides</Text>
-          <Text style={styles.accountText}>💳 Account Number: 02661010115172</Text>
-          <Text style={styles.accountText}>🔢 IBAN: PK90ALFH02661010115172</Text>
-        </View>
-      );
-    case 'JazzCash':
-      return (
-        <View style={styles.accountInfo}>
-          {commonHeader}
-          <Text style={styles.accountText}>📲 JazzCash Number: 03008244014</Text>
-          <Text style={styles.accountText}>👤 Account Title: Asmatullah Tunio</Text>
-        </View>
-      );
-    default:
-      return null;
-  }
-};
+    switch (paymentMethod) {
+      case 'Meezan':
+        return (
+          <View style={styles.accountInfo}>
+            {commonHeader}
+            <Text style={styles.accountText}>🏦 Bank: Meezan Bank</Text>
+            <Text style={styles.accountText}>
+              👤 Account Title: Salam Rides
+            </Text>
+            <Text style={styles.accountText}>
+              💳 Account Number: 0840112094554
+            </Text>
+            <Text style={styles.accountText}>
+              🔢 IBAN: PK10MEZN0002840112094554
+            </Text>
+          </View>
+        );
+      case 'Bank Alfalah':
+        return (
+          <View style={styles.accountInfo}>
+            {commonHeader}
+            <Text style={styles.accountText}>🏦 Bank: Bank Alfalah</Text>
+            <Text style={styles.accountText}>
+              👤 Account Title: Salam Rides
+            </Text>
+            <Text style={styles.accountText}>
+              💳 Account Number: 02661010115172
+            </Text>
+            <Text style={styles.accountText}>
+              🔢 IBAN: PK90ALFH02661010115172
+            </Text>
+          </View>
+        );
+      case 'JazzCash':
+        return (
+          <View style={styles.accountInfo}>
+            {commonHeader}
+            <Text style={styles.accountText}>
+              📲 JazzCash Number: 03008244014
+            </Text>
+            <Text style={styles.accountText}>
+              👤 Account Title: Asmatullah Tunio
+            </Text>
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
 
-  const validateAndProceed = () => {
-    const amountValue = parseInt(amount);
+  const validateAndProceed = async () => {
+    const amountValue = parseInt(amount, 10);
+
     if (
       !amount ||
       isNaN(amountValue) ||
@@ -96,10 +123,12 @@ const renderBankDetails = () => {
       );
       return;
     }
+
     if (!paymentMethod) {
       Alert.alert('Missing Payment Method', 'Please select a payment method.');
       return;
     }
+
     if (!paySlip) {
       Alert.alert(
         'Missing Pay Slip',
@@ -108,19 +137,60 @@ const renderBankDetails = () => {
       return;
     }
 
+    if (!currentUser?.uid) {
+      Alert.alert('Error', 'User not authenticated.');
+      return;
+    }
+
     const payload = {
+      userId: currentUser.uid,
       planTitle,
-      selectedAmount: amount,
+      selectedAmount: amountValue,
       paymentMethod,
       screenshot: paySlip,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
     };
 
-    console.log('Submitted Payload:', payload);
+    try {
+      const subDocRef = firestore()
+        .collection('subscriptions')
+        .doc(currentUser.uid);
 
-    ToastAndroid.show(
-      `✅ Subscription Successful for ${planTitle}. Balance will be added after admin approval. MLM commission will appear in your tree.`,
-      ToastAndroid.LONG,
-    );
+      await subDocRef.set(
+        {
+          userId: currentUser.uid,
+          subscriptions: firestore.FieldValue.arrayUnion(payload),
+        },
+        {merge: true},
+      );
+
+      // ✅ Update Redux store
+      const fullPayload = {...payload, id: currentUser.uid};
+      dispatch(setUserSubscriptions([...existingSubs, fullPayload]));
+
+      // ✅ Update wallet with pending deposit
+      await firestore()
+        .collection('users')
+        .doc(currentUser.uid)
+        .update({
+          'wallet.totalDeposit': firestore.FieldValue.increment(amountValue),
+          'wallet.transactionHistory': firestore.FieldValue.arrayUnion({
+            type: 'InvestmentPending',
+            amount: amountValue,
+            date: new Date().toISOString(),
+            description: 'Pending Subscription Payment',
+          }),
+        });
+
+      ToastAndroid.show(
+        '✅ Subscription Submitted for Approval',
+        ToastAndroid.LONG,
+      );
+    } catch (error) {
+      console.error('❌ Subscription failed:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    }
   };
 
   return (
@@ -281,15 +351,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   noticeBox: {
-  backgroundColor: '#FFD700',
-  padding: 10,
-  borderRadius: 6,
-  marginBottom: 10,
-},
-noticeText: {
-  color: '#000',
-  fontWeight: '600',
-  textAlign: 'center',
-},
-
+    backgroundColor: '#FFD700',
+    padding: 10,
+    borderRadius: 6,
+    marginBottom: 10,
+  },
+  noticeText: {
+    color: '#000',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
 });

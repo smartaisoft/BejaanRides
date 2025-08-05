@@ -9,6 +9,7 @@ import {
   Linking,
   Alert,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import MapView, {Marker} from 'react-native-maps';
 import {useSelector, useDispatch} from 'react-redux';
@@ -45,10 +46,20 @@ import {
 } from '../../services/driverPresenceService';
 import {getVehicleInfo, VehicleInfo} from '../../services/vehicleService';
 import {listenForPendingRideRequests} from '../../services/Driver/DriverServices';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {DriverStackParamList} from '../../navigation/DriverStack';
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyCb2ys2AD6NTFhnEGXNsDrjSXde6d569vU';
+type DriverMapScreenNavigationProp = NativeStackNavigationProp<
+  DriverStackParamList,
+  'DriverMapScreen'
+>;
 
 const DriverMapScreen: React.FC = () => {
+  const navigation = useNavigation<DriverMapScreenNavigationProp>();
+
   const {status, currentRide, rideRequests} = useSelector(
     (state: RootState) => state.driver,
   );
@@ -65,8 +76,7 @@ const DriverMapScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const myDriverId = auth().currentUser?.uid ?? 'unknown_driver';
   const [vehicleType, setVehicleType] = useState<string | null>(null);
-
-  // Fetch driver profile
+  const [mapKey, setMapKey] = useState(0);
   useEffect(() => {
     console.log('Driver id:', myDriverId);
     const fetchDriverName = async () => {
@@ -282,7 +292,7 @@ const DriverMapScreen: React.FC = () => {
       // Step 1: Calculate ETA and Distance to pickup
       const {durationText, distanceText} = await getETAFromDriverToPickup(
         driverCoords,
-        ride.pickupLocation,
+        ride.pickup,
       );
 
       // Step 2: Send offer to Firebase
@@ -306,11 +316,41 @@ const DriverMapScreen: React.FC = () => {
       Alert.alert('Error', 'Failed to send offer to passenger.');
     }
   };
+  useFocusEffect(
+    useCallback(() => {
+      setMapKey(prev => prev + 1);
+    }, []),
+  );
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        {/* Go Back button appears only when driver is NOT offline */}
+
+        {status !== DriverStatus.OFFLINE && (
+          <TouchableOpacity
+            onPress={() => dispatch(setDriverStatus(DriverStatus.OFFLINE))}
+            style={styles.backButton}>
+            <Icon name="arrow-back" size={26} color={Colors.tabBarBackground} />
+          </TouchableOpacity>
+        )}
+
+        <View style={styles.spacer} />
+
+        <View style={styles.profileInfo}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('DriverProfile')}>
+            <Image
+              source={require('../../../assets/images/Avatar.png')}
+              style={styles.avatar}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <MapView
         ref={mapRef}
+        key={mapKey}
         style={styles.map}
         region={
           driverCoords
@@ -335,13 +375,13 @@ const DriverMapScreen: React.FC = () => {
         )}
         {renderMapMarkersAndDirections()}
       </MapView>
-      {driverCoords && (
+      {/* {driverCoords && (
         <TouchableOpacity
           style={styles.locateButtonContainer}
           onPress={handleLocatePress}>
           <Locate width={50} height={50} />
         </TouchableOpacity>
-      )}
+      )} */}
       {status === DriverStatus.OFFLINE && (
         <OfflinePanel
           onGoOnline={() => dispatch(setDriverStatus(DriverStatus.ONLINE))}
@@ -450,6 +490,39 @@ const DriverMapScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {flex: 1},
+  header: {
+    position: 'absolute',
+    top: 10,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between', // 🔁 this is key
+    paddingHorizontal: 16,
+  },
+
+  backButton: {
+    padding: 6,
+  },
+
+  spacer: {
+    flex: 1, // pushes avatar to far right
+  },
+
+  profileInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#fff',
+  },
+
   map: {flex: 1},
   rideRequestsContainer: {
     position: 'absolute',
@@ -478,7 +551,7 @@ const styles = StyleSheet.create({
   },
   locateButtonContainer: {
     position: 'absolute',
-    top: 50,
+    bottom: 250,
     right: 20,
     borderRadius: 24,
     padding: 6,

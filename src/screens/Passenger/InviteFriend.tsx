@@ -22,51 +22,98 @@ const InviteFriend = () => {
   const inviteCode = user?.referralCode ?? 'N/A';
   const uid = user?.uid;
 
-const handleInvite = async () => {
-  try {
-    if (!inviteCode || inviteCode === 'N/A') {
-      Alert.alert('Error', 'Referral code is missing.');
-      return;
-    }
+  // const handleInvite = async () => {
+  //   try {
+  //     if (!inviteCode || inviteCode === 'N/A') {
+  //       Alert.alert('Error', 'Referral code is missing.');
+  //       return;
+  //     }
 
-    console.log('userid invite friend', uid);
+  //     console.log('userid invite friend', uid);
 
-    const deepLink = `https://salamrides.com/invite?refCode=${inviteCode}&uid=${uid}`;
+  //     const deepLink = `https://salamrides.com/invite?refCode=${inviteCode}&uid=${uid}`;
 
-    const dynamicLink = await dynamicLinks().buildLink({
-      link: deepLink,
-      domainUriPrefix: 'https://salamrides.page.link',
-      android: {
-        packageName: 'com.salamrides',
-      },
-      ios: {
-        bundleId: 'com.salamrides.ios',
-      },
-      social: {
-        title: 'Join Salam Rides!',
-        descriptionText:
-          'Use my referral code to get rewards on your referred every ride.',
-        imageUrl:
-          'https://drive.google.com/uc?export=view&id=13-nLDQ1ViPqLqzjzQUoWAcCZxjrV-DVr',
-      },
-    });
+  //     const dynamicLink = await dynamicLinks().buildLink({
+  //       link: deepLink,
+  //       domainUriPrefix: 'https://salamrides.page.link',
+  //       android: {
+  //         packageName: 'com.salamrides',
+  //       },
+  //       ios: {
+  //         bundleId: 'com.salamrides.ios',
+  //       },
+  //       social: {
+  //         title: 'Join Salam Rides!',
+  //         descriptionText:
+  //           'Use my referral code to get rewards on your referred every ride.',
+  //         imageUrl:
+  //           'https://drive.google.com/uc?export=view&id=13-nLDQ1ViPqLqzjzQUoWAcCZxjrV-DVr',
+  //       },
+  //     });
 
-    const message = `
-🚗 My Salam Rides Referral Code: ${inviteCode}
+  //     const message = `
+  // 🚗 My Salam Rides Referral Code: ${inviteCode}
 
-🔗 Sign up using my referral link:
-${dynamicLink}
+  // 🔗 Sign up using my referral link:
+  // ${dynamicLink}
 
-Join now and earn rewards on your referred rides!
+  // Join now and earn rewards on your referred rides!
+  //     `.trim();
+
+  //     await Share.share({ message });
+  //   } catch (error) {
+  //     console.error('❌ Error sharing referral code:', error);
+  //     Alert.alert('Error', 'Could not share invite. Please try again.');
+  //   }
+  // };
+
+  const handleInvite = async () => {
+    try {
+      if (!inviteCode || inviteCode === 'N/A') {
+        Alert.alert('Error', 'Referral code is missing.');
+        return;
+      }
+
+      console.log('userid invite friend', uid);
+
+      const deepLink = `https://salamrides.com/invite?refCode=${inviteCode}&uid=${uid}`;
+
+      const shortLink = await dynamicLinks().buildShortLink(
+        {
+          link: deepLink,
+          domainUriPrefix: 'https://salamrides.page.link',
+          android: {
+            packageName: 'com.salamrides',
+          },
+          ios: {
+            bundleId: 'com.salamrides.ios',
+          },
+          social: {
+            title: 'Join Salam Rides!',
+            descriptionText:
+              'Use my referral code to get rewards on your referred every ride.',
+            imageUrl:
+              'https://drive.google.com/uc?export=view&id=13-nLDQ1ViPqLqzjzQUoWAcCZxjrV-DVr',
+          },
+        },
+        dynamicLinks.ShortLinkType.UNGUESSABLE, // <- makes the link short & secure
+      );
+
+      const message = `
+      🚗 My Salam Rides Referral Code: ${inviteCode}
+
+      🔗 Sign up using my referral link:
+      ${shortLink}
+
+      Join now and earn rewards on your referred rides!
     `.trim();
 
-    await Share.share({ message });
-  } catch (error) {
-    console.error('❌ Error sharing referral code:', error);
-    Alert.alert('Error', 'Could not share invite. Please try again.');
-  }
-};
-
+      await Share.share({message});
+    } catch (error) {
+      console.error('❌ Error sharing referral code:', error);
+      Alert.alert('Error', 'Could not share invite. Please try again.');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>

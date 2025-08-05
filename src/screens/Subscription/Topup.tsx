@@ -73,37 +73,49 @@ const Topup = ({navigation}: any) => {
     }
   };
 
-  const validateAndProceed = () => {
-    const amountValue = parseInt(amount);
-    if (
-      !amount ||
-      isNaN(amountValue) ||
-      amountValue < 1000 ||
-      amountValue > 10000000000
-    ) {
-      Alert.alert(
-        'Invalid Amount',
-        'Please enter an amount between 1,000 and 10,000,000,000 PKR.',
-      );
-      return;
-    }
-    if (!paymentMethod) {
-      Alert.alert('Missing Payment Method', 'Please select a payment method.');
-      return;
-    }
-    if (!paySlip) {
-      Alert.alert(
-        'Missing Pay Slip',
-        'Please upload a screenshot of your pay slip.',
-      );
-      return;
-    }
-
+ const validateAndProceed = () => {
+  const amountValue = parseInt(amount);
+  if (
+    !amount ||
+    isNaN(amountValue) ||
+    amountValue < 1000 ||
+    amountValue > 10000000000
+  ) {
     Alert.alert(
-      'Payment Submitted',
-      'Your payment request has been submitted successfully.',
+      'Invalid Amount',
+      'Please enter an amount between 1,000 and 10,000,000,000 PKR.',
     );
+    return;
+  }
+  if (!paymentMethod) {
+    Alert.alert('Missing Payment Method', 'Please select a payment method.');
+    return;
+  }
+  if (!paySlip) {
+    Alert.alert(
+      'Missing Pay Slip',
+      'Please upload a screenshot of your pay slip.',
+    );
+    return;
+  }
+
+  // ✅ STEP: Collect and log the data
+  const payload = {
+    amount: amountValue,
+    method: paymentMethod,
+    slipFileName: paySlip.fileName || 'unknown',
+    slipUri: paySlip.uri,
+    slipType: paySlip.type,
   };
+
+  console.log('📤 Submitted Top-up Data:', payload);
+
+  Alert.alert(
+    'Payment Submitted',
+    'Your payment request has been submitted successfully.',
+  );
+};
+
 
   return (
     <ScrollView

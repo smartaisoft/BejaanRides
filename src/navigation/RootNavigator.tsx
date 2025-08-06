@@ -75,12 +75,18 @@ const RootNavigator: React.FC = () => {
         return <LoadingScreen />;
       }
 
-      return hasVehicleInfo ? (
-  <DriverBottomTabs /> // ✅ show bottom tabs when vehicle info exists
-) : (
-  <DriverStack initialRouteName="ChooseVehicleScreen" />
-);
-
+      // return hasVehicleInfo ? (
+      //   <DriverBottomTabs /> // ✅ show bottom tabs when vehicle info exists
+      // ) : (
+      //   <DriverStack initialRouteName="ChooseVehicleScreen" />
+      // );
+      return (
+        <DriverStack
+          initialRouteName={
+            hasVehicleInfo ? 'DriverMapScreen' : 'ChooseVehicleScreen'
+          }
+        />
+      );
     }
 
     return <LoadingScreen />;

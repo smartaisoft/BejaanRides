@@ -20,5 +20,6 @@ export type RootStackParamList = {
   MyWallet: undefined;
   Subscriptions: undefined;
   SubscriptionPlansScreen: undefined;
-  DriverProfile:undefined;
+  DriverProfile: undefined;
+  BottomTabs: undefined;
 };

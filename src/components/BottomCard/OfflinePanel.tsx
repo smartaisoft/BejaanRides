@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Colors from '../../themes/colors';
 import {RootState} from '../../redux/store';
 import {useSelector} from 'react-redux';
+import useTopupListener from '../../services/useTopupListener';
 
 interface Props {
   onGoOnline: () => void;
@@ -12,18 +13,33 @@ interface Props {
 
 const OfflinePanel: React.FC<Props> = ({onGoOnline, driverName}) => {
   const vehicleInfo = useSelector((state: RootState) => state.vehicle);
-  console.log('vehicle info inoffline panel :', vehicleInfo);
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const topupHistory = useSelector(
+    (state: RootState) => state.topup.topupHistory,
+  );
+
+  useTopupListener(currentUser?.uid);
+  // Calculate Ride Balance (sum of approved topups)
+  const rideBalance = topupHistory
+    ?.filter(t => t.status === 'approved')
+    .reduce((sum, t) => sum + (t.depositAmount || t.amount || 0), 0);
+
+  // Calculate Deposit Amount (sum of pending topups)
+  const depositAmount = topupHistory
+    ?.filter(t => t.status === 'pending')
+    .reduce((sum, t) => sum + (t.depositAmount || t.amount || 0), 0);
   const driverPhoto =
     vehicleInfo?.vehicleDetails?.driverPhoto ??
     vehicleInfo?.vehicleDetails?.images?.driverPhoto ??
-    null;  return (
+    null;
+  return (
     <View style={styles.container}>
       <View style={styles.header} />
 
       <Text style={styles.offlineText}>You're Offline</Text>
       <Text style={styles.helperText}>
         Tap the
-        <Text style={{fontWeight: 'bold', color: Colors.primary}}>GO</Text>{' '}
+        <Text style={{fontWeight: 'bold', color: Colors.primary}}> GO </Text>
         button below to come online and start receiving ride requests.
       </Text>
 
@@ -37,9 +53,9 @@ const OfflinePanel: React.FC<Props> = ({onGoOnline, driverName}) => {
           />
         )} */}
         <Image
-            source={require('../../../assets/images/DriverAvatar.png')}
-            style={styles.avatar}
-          />
+          source={require('../../../assets/images/DriverAvatar.png')}
+          style={styles.avatar}
+        />
 
         <View style={styles.profileInfo}>
           <Text style={styles.name}>{driverName ?? 'Driver'}</Text>
@@ -57,7 +73,7 @@ const OfflinePanel: React.FC<Props> = ({onGoOnline, driverName}) => {
         <View style={styles.balanceBox}>
           <Icon name="wallet" size={24} color={Colors.primary} />
           <View style={{marginLeft: 8, alignItems: 'center'}}>
-            <Text style={styles.balanceAmount}>PKR 850</Text>
+            <Text style={styles.balanceAmount}>PKR {rideBalance}</Text>
             <Text style={styles.balanceLabel}>Ride Balance</Text>
           </View>
         </View>
@@ -67,7 +83,7 @@ const OfflinePanel: React.FC<Props> = ({onGoOnline, driverName}) => {
           <Icon name="bank" size={24} color={Colors.primary} />
           {/* Changed icon */}
           <View style={{marginLeft: 8, alignItems: 'center'}}>
-            <Text style={styles.balanceAmount}>PKR 1200</Text>
+            <Text style={styles.balanceAmount}>PKR {depositAmount}</Text>
             <Text style={styles.balanceLabel}>Total Deposit</Text>
           </View>
         </View>

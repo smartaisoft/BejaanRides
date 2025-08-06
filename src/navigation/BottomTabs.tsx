@@ -15,7 +15,6 @@ import Profile from '../screens/Passenger/Profile';
 // Shared Screens
 import Subscriptions from '../screens/Subscription/Subscriptions';
 import Colors from '../themes/colors';
-import DriverHomeScreen from '../screens/Driver/DriverHomeScreen';
 
 const Tab = createBottomTabNavigator();
 

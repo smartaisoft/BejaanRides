@@ -27,6 +27,7 @@ import {
   verifyOtp,
 } from '../../redux/actions/authActions';
 import {setUserSubscriptions} from '../../redux/actions/subscriptionActions';
+import useTopupListener from '../../services/useTopupListener';
 
 const DriverProfile = () => {
   const navigation =
@@ -37,6 +38,22 @@ const DriverProfile = () => {
   const userSubscriptions = useSelector(
     (state: RootState) => state.subscriptions.userSubscriptions,
   );
+
+  const topupHistory = useSelector(
+    (state: RootState) => state.topup.topupHistory,
+  );
+  useTopupListener(user?.uid);
+
+  // Calculate Ride Balance (sum of approved topups)
+  const rideBalance = topupHistory
+    ?.filter(t => t.status === 'approved')
+    .reduce((sum, t) => sum + (t.depositAmount || t.amount || 0), 0);
+
+  // Calculate Deposit Amount (sum of pending topups)
+  const depositAmount = topupHistory
+    ?.filter(t => t.status === 'pending')
+    .reduce((sum, t) => sum + (t.depositAmount || t.amount || 0), 0);
+
   const [loadingSubs, setLoadingSubs] = useState(false);
 
   useEffect(() => {
@@ -81,29 +98,37 @@ const DriverProfile = () => {
   const walletItems = [
     {
       label: 'Ride Balance',
-      value: user?.wallet?.rideBalance,
+      value: `Rs ${rideBalance ?? 0}`, // ✅ From topupHistory
       icon: 'work-outline',
     },
     {
       label: 'Total Deposit',
-      value: user?.wallet?.totalDeposit,
+      value: `Rs ${depositAmount ?? 0}`, // ✅ From topupHistory
       icon: 'description',
     },
-  
     {
       label: 'Total Commission',
-      value: user?.wallet?.totalCommission,
+      value: `Rs ${user?.wallet?.totalCommission ?? 0}`,
       icon: 'credit-card',
     },
-    {label: 'Total Withdraw', value: user?.wallet?.totalWithdraw, icon: 'paid'},
+    {
+      label: 'Net Balance',
+      value: `Rs ${user?.wallet?.totalWithdraw ?? 0}`,
+      icon: 'paid',
+    },
     {
       label: 'Referral Bonus',
-      value: user?.wallet?.referralBonus,
+      value: `Rs ${user?.wallet?.referralBonus ?? 0}`,
       icon: 'card-giftcard',
     },
     {
-      label: 'Total Referral',
-      value: user?.wallet?.totalReferral,
+      label: 'Total No. Referral',
+      value: user?.totalReferrals ?? 0, // no Rs here
+      icon: 'group',
+    },
+    {
+      label: 'Referred By',
+      value: user?.referredBy ?? 'N/A', // no Rs here
       icon: 'group',
     },
   ];
@@ -130,13 +155,12 @@ const DriverProfile = () => {
       <ScrollView
         style={{marginTop: 16}}
         contentContainerStyle={{paddingBottom: 20}}>
-
         <View style={styles.walletGrid}>
           {walletItems.map((item, index) => (
             <View key={index} style={styles.statCard}>
               <View style={styles.statHeader}>
                 <Icon name={item.icon} size={24} color="#6A1B9A" />
-                <Text style={styles.statValue}>Rs {item.value ?? 0}</Text>
+                <Text style={styles.statValue}>{item.value}</Text>
               </View>
               <Text style={styles.statLabel}>{item.label}</Text>
             </View>

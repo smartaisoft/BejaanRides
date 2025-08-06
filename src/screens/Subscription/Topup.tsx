@@ -8,15 +8,24 @@ import {
   ScrollView,
   Image,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {Picker} from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/Ionicons';
+import {useSelector, useDispatch} from 'react-redux';
+import {AppDispatch, RootState} from '../../redux/store';
+import {submitTopup} from '../../services/topupService';
+import {addTopupRequest} from '../../redux/actions/topupActions';
 
 const Topup = ({navigation}: any) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const [loading, setLoading] = useState(false);
+
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Meezan');
   const [paySlip, setPaySlip] = useState<any>(null);
+  const currentUser = useSelector((state: RootState) => state.auth.user);
 
   const pickImage = async () => {
     const result = await launchImageLibrary({
@@ -73,49 +82,72 @@ const Topup = ({navigation}: any) => {
     }
   };
 
- const validateAndProceed = () => {
-  const amountValue = parseInt(amount);
-  if (
-    !amount ||
-    isNaN(amountValue) ||
-    amountValue < 1000 ||
-    amountValue > 10000000000
-  ) {
-    Alert.alert(
-      'Invalid Amount',
-      'Please enter an amount between 1,000 and 10,000,000,000 PKR.',
-    );
-    return;
-  }
-  if (!paymentMethod) {
-    Alert.alert('Missing Payment Method', 'Please select a payment method.');
-    return;
-  }
-  if (!paySlip) {
-    Alert.alert(
-      'Missing Pay Slip',
-      'Please upload a screenshot of your pay slip.',
-    );
-    return;
-  }
+  const validateAndProceed = async () => {
+    const amountValue = parseInt(amount);
+    if (
+      !amount ||
+      isNaN(amountValue) ||
+      amountValue < 1000 ||
+      amountValue > 10000000000
+    ) {
+      Alert.alert(
+        'Invalid Amount',
+        'Please enter an amount between 1,000 and 10,000,000,000 PKR.',
+      );
+      return;
+    }
+    if (!paymentMethod) {
+      Alert.alert('Missing Payment Method', 'Please select a payment method.');
+      return;
+    }
+    if (!paySlip) {
+      Alert.alert(
+        'Missing Pay Slip',
+        'Please upload a screenshot of your pay slip.',
+      );
+      return;
+    }
 
-  // ✅ STEP: Collect and log the data
-  const payload = {
-    amount: amountValue,
-    method: paymentMethod,
-    slipFileName: paySlip.fileName || 'unknown',
-    slipUri: paySlip.uri,
-    slipType: paySlip.type,
+    // ✅ STEP: Collect and log the data
+    const payload = {
+      depositAmount: amountValue,
+      method: paymentMethod,
+      slipFileName: paySlip.fileName || 'unknown',
+      slipUri: paySlip.uri,
+      slipType: paySlip.type,
+      userId: currentUser?.uid || 'unknown',
+      rideBalance: 0,
+    };
+    try {
+      setLoading(true); // 🔁 START loader
+
+      await submitTopup(payload);
+      dispatch(
+        addTopupRequest({
+          ...payload,
+          slipUrl: paySlip.uri, // not the final URL but for UI preview
+          createdAt: new Date().toISOString(),
+        }),
+      );
+
+      Alert.alert(
+        '✅ Submitted',
+        'Your top-up request was sent successfully. Please wait for admin approval before your balance is updated.',
+      );
+
+      setAmount('');
+      setPaySlip(null);
+      setPaymentMethod('Meezan');
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert('❌ Error', 'Something went wrong while submitting.');
+      console.error(error);
+    } finally {
+      setLoading(false); // ✅ STOP loader
+    }
+
+    console.log('📤 Submitted Top-up Data:', payload);
   };
-
-  console.log('📤 Submitted Top-up Data:', payload);
-
-  Alert.alert(
-    'Payment Submitted',
-    'Your payment request has been submitted successfully.',
-  );
-};
-
 
   return (
     <ScrollView
@@ -174,8 +206,16 @@ const Topup = ({navigation}: any) => {
         <Text style={styles.reviewItem}>Pay Amount: {amount || '---'}</Text>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={validateAndProceed}>
-        <Text style={styles.buttonText}>✅ PROCEED TO PAYMENT</Text>
+      <TouchableOpacity
+        style={[styles.button, loading && {opacity: 0.6}]}
+        onPress={validateAndProceed}
+        disabled={loading} // ✅ Disable when loading
+      >
+        {loading ? (
+          <ActivityIndicator color="#FFF" />
+        ) : (
+          <Text style={styles.buttonText}>✅ PROCEED TO PAYMENT</Text>
+        )}
       </TouchableOpacity>
     </ScrollView>
   );

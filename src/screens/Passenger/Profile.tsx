@@ -23,6 +23,7 @@ import {
   setUserData,
   verifyOtp,
 } from '../../redux/actions/authActions';
+import useTopupListener from '../../services/useTopupListener';
 
 type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -30,6 +31,20 @@ const Profile = () => {
   const navigation = useNavigation<RootNavigationProp>();
   const user = useSelector((state: RootState) => state.auth.user);
   const dispatch = useDispatch<AppDispatch>();
+    const topupHistory = useSelector(
+    (state: RootState) => state.topup.topupHistory,
+  );
+  useTopupListener(user?.uid);
+
+  // Calculate Ride Balance (sum of approved topups)
+  const rideBalance = topupHistory
+    ?.filter(t => t.status === 'approved')
+    .reduce((sum, t) => sum + (t.depositAmount || t.amount || 0), 0);
+
+  // Calculate Deposit Amount (sum of pending topups)
+  const depositAmount = topupHistory
+    ?.filter(t => t.status === 'pending')
+    .reduce((sum, t) => sum + (t.depositAmount || t.amount || 0), 0);
 
   const handleLogout = async () => {
     try {
@@ -46,6 +61,44 @@ const Profile = () => {
       console.error('❌ Logout error:', err);
     }
   };
+
+  const walletItems = [
+    {
+      label: 'Ride Balance',
+      value: `Rs ${rideBalance ?? 0}`, // ✅ From topupHistory
+      icon: 'work-outline',
+    },
+    {
+      label: 'Total Deposit',
+      value: `Rs ${depositAmount ?? 0}`, // ✅ From topupHistory
+      icon: 'description',
+    },
+    {
+      label: 'Total Commission',
+      value: `Rs ${user?.wallet?.totalCommission ?? 0}`,
+      icon: 'credit-card',
+    },
+    {
+      label: 'Net Balance',
+      value: `Rs ${user?.wallet?.totalWithdraw ?? 0}`,
+      icon: 'paid',
+    },
+    {
+      label: 'Referral Bonus',
+      value: `Rs ${user?.wallet?.referralBonus ?? 0}`,
+      icon: 'card-giftcard',
+    },
+    {
+      label: 'Total No. Referral',
+      value: user?.totalReferrals ?? 0, // no Rs here
+      icon: 'group',
+    },
+    {
+      label: 'Referred By',
+      value: user?.referredBy ?? 'N/A', // no Rs here
+      icon: 'group',
+    },
+  ];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -72,53 +125,17 @@ const Profile = () => {
       <ScrollView
         style={{marginTop: 16}}
         contentContainerStyle={{paddingBottom: 20}}>
-        <View style={styles.walletGrid}>
-          {[
-            {
-              label: 'Ride Balance',
-              value: `Rs ${user?.wallet?.rideBalance ?? 0}`,
-              icon: 'work-outline',
-            },
-            {
-              label: 'Total Deposit',
-              value: `Rs ${user?.wallet?.totalDeposit ?? 0}`,
-              icon: 'description',
-            },
-            {
-              label: 'Total Investment',
-              value: `Rs ${user?.wallet?.totalInvestment ?? 0}`,
-              icon: 'check-circle-outline',
-            },
-            {
-              label: 'Total Commission',
-              value: `Rs ${user?.wallet?.totalCommission ?? 0}`,
-              icon: 'credit-card',
-            },
-            {
-              label: 'Total Withdraw',
-              value: `Rs ${user?.wallet?.totalWithdraw ?? 0}`,
-              icon: 'paid',
-            },
-            {
-              label: 'Referral Bonus',
-              value: `Rs ${user?.wallet?.referralBonus ?? 0}`,
-              icon: 'card-giftcard',
-            },
-            {
-              label: 'Total Referral',
-              value: `${user?.wallet?.totalReferral ?? 0}`,
-              icon: 'group',
-            },
-          ].map((item, index) => (
-            <View key={index} style={styles.statCard}>
-              <View style={styles.statHeader}>
-                <Icon name={item.icon} size={24} color="#6A1B9A" />
-                <Text style={styles.statValue}>{item.value}</Text>
-              </View>
-              <Text style={styles.statLabel}>{item.label}</Text>
-            </View>
-          ))}
-        </View>
+         <View style={styles.walletGrid}>
+                  {walletItems.map((item, index) => (
+                    <View key={index} style={styles.statCard}>
+                      <View style={styles.statHeader}>
+                        <Icon name={item.icon} size={24} color="#6A1B9A" />
+                        <Text style={styles.statValue}>{item.value}</Text>
+                      </View>
+                      <Text style={styles.statLabel}>{item.label}</Text>
+                    </View>
+                  ))}
+                </View>
 
         {/* Luxury Card */}
         <View style={styles.card}>

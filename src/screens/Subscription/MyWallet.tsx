@@ -7,10 +7,30 @@ import {
   ScrollView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../redux/store';
+import useTopupListener from '../../services/useTopupListener';
 
 const WalletStatusScreen = ({navigation}: any) => {
+
+    const user = useSelector((state: RootState) => state.auth.user);
+  const dispatch = useDispatch<AppDispatch>();
+    const topupHistory = useSelector(
+    (state: RootState) => state.topup.topupHistory,
+  );
+  useTopupListener(user?.uid);
+
+  // Calculate Ride Balance (sum of approved topups)
+  const rideBalance = topupHistory
+    ?.filter(t => t.status === 'approved')
+    .reduce((sum, t) => sum + (t.depositAmount || t.amount || 0), 0);
+
+  // Calculate Deposit Amount (sum of pending topups)
+  const depositAmount = topupHistory
+    ?.filter(t => t.status === 'pending')
+    .reduce((sum, t) => sum + (t.depositAmount || t.amount || 0), 0);
   // Static example data — replace these with real values from Redux or Firebase
-  const rideBalance = 12000; // PKR
+  // const rideBalance = 12000; // PKR
   const walletBalance = 3000; // PKR
   const walletStatus = 'Pending Approval'; // 'Approved' | 'Rejected'
 
@@ -41,13 +61,13 @@ const WalletStatusScreen = ({navigation}: any) => {
       {/* Ride Balance */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>🚗 Ride Balance</Text>
-        <Text style={styles.amount}>PKR {rideBalance.toLocaleString()}</Text>
+        <Text style={styles.amount}>PKR {rideBalance}</Text>
       </View>
 
       {/* Wallet Balance */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>💰 Wallet Balance</Text>
-        <Text style={styles.amount}>PKR {walletBalance.toLocaleString()}</Text>
+        <Text style={styles.amount}>PKR {depositAmount}</Text>
       </View>
 
       {/* Wallet Status */}

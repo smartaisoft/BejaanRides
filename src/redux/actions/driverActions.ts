@@ -44,14 +44,12 @@ export type DriverActionTypes =
 export const setDriverStatus = (
   status: DriverStatus,
 ): SetDriverStatusAction => {
-  console.log('Setting driver status to:', status); // ✅ Debug log
   return {
     type: SET_DRIVER_STATUS,
     payload: status,
   };
 };
 export const setCurrentRide = (ride: RideData): SetCurrentRideAction => {
-  console.log('Setting current ride:', ride); // ✅ Debug log
   return {
     type: SET_CURRENT_RIDE,
     payload: ride,

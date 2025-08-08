@@ -21,7 +21,6 @@ export interface AuthState {
   name: string;
   isLoggedIn: boolean;
   isLoading: boolean;
-  // user: UserData | null; // ✅ New field
   user: MLMUserData | null; // ✅ Use MLM version
 }
 

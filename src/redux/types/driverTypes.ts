@@ -15,10 +15,13 @@ export interface RideData {
   pickupLocation: LatLng;
   dropoffLocation: LatLng;
   riderName: string;
+  passengerName?:string;
   riderPhone: string;
   fare: number;
+  fareEstimate?:number;
   durationText?: string; // ✅ Add
   distanceText?: string; // ✅ Add
+  vehicleType: string; // ✅ Add this line
 }
 
 export interface DriverState {

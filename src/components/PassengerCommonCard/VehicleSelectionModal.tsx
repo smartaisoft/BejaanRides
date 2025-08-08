@@ -119,7 +119,7 @@ const VehicleSelectionSheet: React.FC<Props> = ({
     switch (type) {
       case 'Bike':
         return 'motorbike';
-      case 'Go (A/C)':
+      case 'Car':
         return 'car';
       case 'Prime':
         return 'car-limousine';
@@ -138,7 +138,7 @@ const VehicleSelectionSheet: React.FC<Props> = ({
 
     const {distanceText, durationText} = routeInfo;
 
-    const vehicleTypes = ['Bike', 'Go (A/C)', 'Prime', 'Mini'];
+    const vehicleTypes = ['Bike', 'Car', 'Prime', 'Mini'];
 
     return vehicleTypes.map((type, index) => {
       const fare = calculateFare(distanceText, durationText, type);

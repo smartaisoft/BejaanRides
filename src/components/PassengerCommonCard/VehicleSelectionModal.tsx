@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState, useRef} from 'react';
 import {
   Animated,
@@ -9,8 +10,10 @@ import {
   Dimensions,
   Alert,
   TextInput,
+  Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {calculateFare} from '../../utils/calculateFare';
 
 export interface VehicleOption {
   id: string;
@@ -31,12 +34,26 @@ interface Props {
     durationText: string;
   } | null;
 }
-
-const categories = ['All', 'Car', 'Bike', 'Rikhsha', 'Pickup'];
-
+const getImageForType = (type: string) => {
+  switch (type) {
+    case 'Car':
+      return require('../../../assets/images/cars.png');
+    case 'Bike':
+      return require('../../../assets/images/bike.png');
+    case 'Rikhsha':
+      return require('../../../assets/images/rikshaw.png');
+    case 'Pickup':
+      return require('../../../assets/images/pickup.png');
+    case 'delievery':
+      return require('../../../assets/images/delievery.png');
+    default:
+      return require('../../../assets/images/delievery.png'); // fallback
+  }
+};
+const categories = ['Car', 'Bike', 'Rikhsha', 'Pickup', 'delievery'];
 const categoryTypeMap: Record<string, string[]> = {
-  All: ['Bike', 'Car', 'Limousine', 'Luxury', 'ElectricCar'],
-  Car: ['Car', 'Limousine', 'Luxury', 'ElectricCar'],
+  All: ['Bike', 'Car', 'Prime', 'Mini','Go (A/C)'],
+  Car: ['Car', 'Prime', 'Mini','Go (A/C)'],
   Bike: ['Bike'],
   Rikhsha: ['Rikhsha'],
   Pickup: ['Pickup'],
@@ -81,56 +98,66 @@ const VehicleSelectionSheet: React.FC<Props> = ({
     };
   };
 
+  const getEtaFactor = (type: string) => {
+    switch (type) {
+      case 'Bike':
+        return 0.8;
+      case 'Car':
+        return 1;
+      case 'Limousine':
+        return 1.2;
+      case 'Go (A/C)':
+        return 1.1;
+      case 'Mini':
+        return 0.9;
+      default:
+        return 1;
+    }
+  };
+
+  const getIconForVehicle = (type: string) => {
+    switch (type) {
+      case 'Bike':
+        return 'motorbike';
+      case 'Go (A/C)':
+        return 'car';
+      case 'Prime':
+        return 'car-limousine';
+      case 'Mini':
+        return 'car-convertible';
+      default:
+        return 'car';
+    }
+  };
+
   const getVehicleOptions = (): VehicleOption[] => {
-    if (!routeInfo) return [];
+    if (!routeInfo) {
+      return [];
+    }
+    3287067448
 
-    const distanceKm =
-      parseFloat(routeInfo.distanceText.replace('km', '').trim()) || 0;
-    const durationMin =
-      parseInt(routeInfo.durationText.replace('min', '').trim()) || 0;
+    const {distanceText, durationText} = routeInfo;
 
-    return [
-      {
-        id: '1',
-        type: 'Bike',
-        price: `RS:${Math.round(50 + distanceKm * 20 + durationMin * 2)}`,
-        eta: `${Math.max(1, Math.floor(durationMin * 0.8))} min`,
-        distance: `${distanceKm.toFixed(1)} km`,
-        icon: 'motorbike',
-      },
-      {
-        id: '2',
-        type: 'Car',
-        price: `RS:${Math.round(100 + distanceKm * 40 + durationMin * 5)}`,
-        eta: `${Math.max(2, Math.floor(durationMin * 1))} min`,
-        distance: `${distanceKm.toFixed(1)} km`,
-        icon: 'car',
-      },
-      {
-        id: '3',
-        type: 'Limousine',
-        price: `RS:${Math.round(200 + distanceKm * 70 + durationMin * 8)}`,
-        eta: `${Math.max(4, Math.floor(durationMin * 1.2))} min`,
-        distance: `${distanceKm.toFixed(1)} km`,
-        icon: 'car-limousine',
-      },
-      {
-        id: '4',
-        type: 'Luxury',
-        price: `RS:${Math.round(250 + distanceKm * 90 + durationMin * 10)}`,
-        eta: `${Math.max(3, Math.floor(durationMin * 1.1))} min`,
-        distance: `${distanceKm.toFixed(1)} km`,
-        icon: 'car-convertible',
-      },
-      {
-        id: '5',
-        type: 'ElectricCar',
-        price: `RS:${Math.round(150 + distanceKm * 60 + durationMin * 6)}`,
-        eta: `${Math.max(2, Math.floor(durationMin * 0.9))} min`,
-        distance: `${distanceKm.toFixed(1)} km`,
-        icon: 'car-electric',
-      },
-    ];
+    const vehicleTypes = ['Bike', 'Go (A/C)', 'Prime', 'Mini'];
+
+    return vehicleTypes.map((type, index) => {
+      const fare = calculateFare(distanceText, durationText, type);
+      const durationMin =
+        parseInt(durationText.replace('min', '').trim(), 10) || 1;
+      const eta = `${Math.max(
+        1,
+        Math.floor(durationMin * getEtaFactor(type)),
+      )} min`;
+
+      return {
+        id: (index + 1).toString(),
+        type,
+        price: `RS:${fare}`,
+        eta,
+        distance: distanceText,
+        icon: getIconForVehicle(type),
+      };
+    });
   };
 
   return (
@@ -140,35 +167,42 @@ const VehicleSelectionSheet: React.FC<Props> = ({
       <View style={styles.sheet}>
         {/* Back Button */}
         <TouchableOpacity onPress={onClose} style={styles.backButton}>
-          <Icon name="arrow-left" size={28} color="#333" />
+          <Icon name="chevron-down" size={50} color="#333" />
         </TouchableOpacity>
-
-        <Text style={styles.title}>Vehicle category</Text>
-
-        {/* Categories */}
-        <FlatList
-          data={categories}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={item => item}
-          contentContainerStyle={styles.categories}
-          renderItem={({item: cat}) => (
-            <TouchableOpacity
-              style={[
-                styles.categoryButton,
-                activeCategory === cat && styles.categoryButtonActive,
-              ]}
-              onPress={() => setActiveCategory(cat)}>
-              <Text
+        <View style={{paddingHorizontal: 25}}>
+          <Text style={styles.title}>Vehicle category</Text>
+          {/* Categories */}
+          <FlatList
+            data={categories}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={item => item}
+            contentContainerStyle={styles.categories}
+            renderItem={({item: cat}) => (
+              <TouchableOpacity
                 style={[
-                  styles.categoryText,
-                  activeCategory === cat && styles.categoryTextActive,
-                ]}>
-                {cat}
-              </Text>
-            </TouchableOpacity>
-          )}
-        />
+                  styles.categoryButton,
+                  activeCategory === cat && styles.categoryButtonActive,
+                ]}
+                onPress={() => setActiveCategory(cat)}>
+                <View style={{alignItems: 'center'}}>
+                  <Image
+                    source={getImageForType(cat)}
+                    style={styles.image}
+                    resizeMode="contain"
+                  />
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      activeCategory === cat && styles.categoryTextActive,
+                    ]}>
+                    {cat}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
 
         {/* Vehicles */}
         <FlatList
@@ -214,7 +248,7 @@ const VehicleSelectionSheet: React.FC<Props> = ({
         />
 
         {/* Selected Fare Box */}
-        {/* {selectedVehicle && (
+        {selectedVehicle && (
           <View style={styles.fareBox}>
             <View style={styles.fareLeft}>
               <Icon name={selectedVehicle.icon} size={28} color="#000" />
@@ -261,7 +295,8 @@ const VehicleSelectionSheet: React.FC<Props> = ({
               ) : (
                 <>
                   <Text style={styles.fareText}>
-                    Recommended fare: {selectedVehicle.price}
+                    Recommended fare:PKR
+                    {selectedVehicle.price.replace(/^Rs[:\s]*/i, '')}
                   </Text>
                   <TouchableOpacity onPress={() => setEditingFare(true)}>
                     <Icon name="pencil" size={20} color="#333" />
@@ -270,14 +305,14 @@ const VehicleSelectionSheet: React.FC<Props> = ({
               )}
             </View>
           </View>
-        )} */}
+        )}
 
         {/* CTA */}
         <TouchableOpacity
           style={styles.requestButton}
           onPress={onRequest}
           disabled={!selectedVehicle}>
-          <Text style={styles.requestText}>Find Offers</Text>
+          <Text style={styles.requestText}>Send Request</Text>
         </TouchableOpacity>
       </View>
     </Animated.View>
@@ -293,58 +328,51 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: '#fff',
-    padding: 16,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '100%',
   },
   backButton: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    zIndex: 2,
+    alignSelf: 'center',
   },
   title: {
     fontSize: 16,
-    fontWeight: 'bold',
-    alignSelf: 'center',
-    marginBottom: 12,
+    marginBottom: 5,
   },
   categories: {
-    flexDirection: 'row',
     marginBottom: 12,
     paddingHorizontal: 4,
+    gap: 20,
+    alignItems: 'center',
+    width: '100%',
   },
   categoryButton: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    marginRight: 8,
+    justifyContent: 'center',
+    padding: 3,
+    paddingHorizontal: 6,
+    borderRadius: 5,
   },
   categoryButtonActive: {
-    backgroundColor: '#000',
+    backgroundColor: '#BCE1BB',
     borderColor: '#000',
   },
   categoryText: {
-    fontSize: 13,
+    fontSize: 10,
     color: '#333',
   },
   categoryTextActive: {
-    color: '#fff',
+    color: 'black',
   },
   vehicleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderColor: '#eee',
   },
   vehicleRowSelected: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 8,
+    backgroundColor: '#19AF18',
   },
   vehicleInfo: {
     flex: 1,
@@ -370,37 +398,49 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   fareBox: {
-    backgroundColor: '#E8F5E9',
     borderRadius: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     marginTop: 12,
+    gap: 5,
+    borderTopRightRadius: 15,
+    borderTopLeftRadius: 15,
   },
   fareLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#C2F8C2',
+    padding: 7,
+    paddingHorizontal: 10,
+    borderTopRightRadius: 10,
+    borderTopLeftRadius: 10,
   },
   fareVehicle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
+    fontSize: 15,
   },
   fareRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#C2F8C2',
+    padding: 10,
+    paddingHorizontal: 10,
+    borderBottomRightRadius: 10,
+    borderBottomLeftRadius: 10,
+    justifyContent: 'space-between',
   },
   fareText: {
     fontSize: 14,
     marginRight: 8,
   },
   requestButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 14,
-    borderRadius: 30,
-    width: '100%',
+    backgroundColor: '#25B324',
+    paddingVertical: 10,
+    borderRadius: 5,
+    width: '80%',
     alignItems: 'center',
-    marginTop: 12,
+    marginVertical: 12,
+    alignSelf: 'center',
   },
   requestText: {
     color: '#fff',
@@ -416,6 +456,10 @@ const styles = StyleSheet.create({
     width: 80,
     marginRight: 8,
     fontSize: 14,
+  },
+  image: {
+    width: 30,
+    height: 30,
   },
 });
 

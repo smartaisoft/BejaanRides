@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unstable-nested-components */
 import React, {useEffect, useState} from 'react';
 import {
   createDrawerNavigator,
@@ -20,6 +21,7 @@ import auth from '@react-native-firebase/auth';
 import HomeMapScreen from '../screens/Passenger/HomeMapScreen';
 import Profile from '../screens/Passenger/Profile';
 import InviteFriend from '../screens/Passenger/InviteFriend';
+import ProfileSettings from '../screens/Passenger/Menu/ProfileSetting';
 
 export type DrawerParamList = {
   History: undefined;
@@ -29,8 +31,9 @@ export type DrawerParamList = {
   Location: undefined;
   Payment: undefined;
   HomeMapScreen: undefined;
-  Profile:undefined;
-  InviteFriend:undefined;
+  Profile: undefined;
+  InviteFriend: undefined;
+  ProfileSetting:undefined;
 };
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
@@ -42,7 +45,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
   useEffect(() => {
     const fetchUser = async () => {
       const currentUser = auth().currentUser;
-      if (!currentUser) return;
+      if (!currentUser) {return;}
 
       const userData = await getUserByUid(currentUser.uid);
       if (userData) {
@@ -64,6 +67,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
   };
 
   return (
+    // eslint-disable-next-line react-native/no-inline-styles
     <View style={{flex: 1}}>
       <View style={styles.headerContainer}>
         <Image
@@ -90,7 +94,7 @@ const DrawerNavigator = () => {
   return (
     <Drawer.Navigator
       initialRouteName="HomeMapScreen"
-      detachInactiveScreens={false} // ✅ Important
+      detachInactiveScreens={false}
       screenOptions={{
         headerShown: false,
         drawerActiveTintColor: '#000',
@@ -153,6 +157,16 @@ const DrawerNavigator = () => {
           ),
         }}
       />
+      <Drawer.Screen
+  name="ProfileSetting"
+  component={ProfileSettings}
+  options={{
+    drawerIcon: ({color, size}) => (
+      <Icon name="account-circle" color={color} size={size} />
+    ),
+  }}
+/>
+
       <Drawer.Screen
         name="Payment"
         component={PaymentScreen}

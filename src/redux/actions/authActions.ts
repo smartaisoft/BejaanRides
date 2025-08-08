@@ -1,3 +1,4 @@
+import { MLMUserData } from '../../services/mlmUserService';
 import {
   SET_PHONE,
   SET_OTP_METHOD,
@@ -8,7 +9,6 @@ import {
   SET_LOGGED_IN,
   AuthActionTypes,
   SET_AUTH_LOADING,
-  UserData,
   SET_USER_DATA,
 } from '../types/authTypes';
 
@@ -50,8 +50,12 @@ export const setLoggedIn = (loggedIn: boolean): AuthActionTypes => ({
   type: SET_LOGGED_IN,
   payload: loggedIn,
 });
+export const logout = (): AuthActionTypes => ({
+  type: 'LOGOUT',
+});
 
-export const setUserData = (user: UserData): AuthActionTypes => ({
+
+export const setUserData = (user: Partial<MLMUserData>): AuthActionTypes => ({
   type: SET_USER_DATA,
   payload: user,
 });

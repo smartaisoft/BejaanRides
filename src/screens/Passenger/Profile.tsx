@@ -10,12 +10,40 @@ import {
 import {useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Colors from '../../themes/colors';
-import { RootStackParamList } from '../../navigation/types';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {RootStackParamList} from '../../navigation/types';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {useDispatch, useSelector} from 'react-redux';
+import {AppDispatch, RootState} from '../../redux/store';
+import auth from '@react-native-firebase/auth';
+import {
+  setLoggedIn,
+  setPhone,
+  setUserData,
+  verifyOtp,
+} from '../../redux/actions/authActions';
 
-type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'InviteFriend'>;
+type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const Profile = () => {
-const navigation = useNavigation<ProfileScreenNavigationProp>();
+  const navigation = useNavigation<RootNavigationProp>();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const dispatch = useDispatch<AppDispatch>();
+
+  const handleLogout = async () => {
+    try {
+      await auth().signOut(); // Sign out from Firebase (optional but recommended)
+      dispatch(setLoggedIn(false));
+      dispatch(setUserData({})); // clear user object
+      dispatch(setPhone(''));
+      dispatch(verifyOtp(false));
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'Home'}], // or 'Login' depending on your stack
+      });
+    } catch (err) {
+      console.error('❌ Logout error:', err);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -32,8 +60,12 @@ const navigation = useNavigation<ProfileScreenNavigationProp>();
             source={require('../../../assets/images/Avatar.png')}
             style={styles.avatar}
           />
-          <Text style={styles.headerTitle}>Passenger Name</Text>
-          <Text style={styles.cash}>Cash $250</Text>
+          <Text style={styles.headerTitle}>
+            {user?.name || 'Passenger Name'}
+          </Text>
+          <Text style={styles.cash}>
+            Cash ${user?.wallet?.rideBalance ?? 0}
+          </Text>
         </View>
       </View>
 
@@ -45,26 +77,37 @@ const navigation = useNavigation<ProfileScreenNavigationProp>();
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.item}>
-          <Icon name="notifications" size={24} color="#666" style={styles.icon} />
+          <Icon
+            name="notifications"
+            size={24}
+            color="#666"
+            style={styles.icon}
+          />
           <Text style={styles.itemText}>Notifications</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.item}>
+        <TouchableOpacity
+          style={styles.item}
+          onPress={() => navigation.navigate('Settings')}>
           <Icon name="settings" size={24} color="#666" style={styles.icon} />
           <Text style={styles.itemText}>Settings</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.item}>
+        <TouchableOpacity
+          style={styles.item}
+          onPress={() => navigation.navigate('ProfileSetting')}>
           <Icon name="person" size={24} color="#666" style={styles.icon} />
           <Text style={styles.itemText}>Profile Settings</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.item}  onPress={() => navigation.navigate('InviteFriend')}>
+        <TouchableOpacity
+          style={styles.item}
+          onPress={() => navigation.navigate('InviteFriend')}>
           <Icon name="group-add" size={24} color="#666" style={styles.icon} />
           <Text style={styles.itemText}>Invite Friends</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.item}>
+        <TouchableOpacity style={styles.item} onPress={handleLogout}>
           <Icon name="logout" size={24} color="#666" style={styles.icon} />
           <Text style={styles.itemText}>Logout</Text>
         </TouchableOpacity>

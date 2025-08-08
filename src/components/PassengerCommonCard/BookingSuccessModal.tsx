@@ -5,9 +5,10 @@ import Colors from '../../themes/colors';
 interface BookingSuccessModalProps {
   visible: boolean;
   onDone: () => void;
+  time?: any
 }
 
-const BookingSuccessModal: React.FC<BookingSuccessModalProps> = ({visible, onDone}) => {
+const BookingSuccessModal: React.FC<BookingSuccessModalProps> = ({visible, onDone, time}) => {
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
@@ -18,7 +19,7 @@ const BookingSuccessModal: React.FC<BookingSuccessModalProps> = ({visible, onDon
           />
           <Text style={styles.title}>Booking Successful</Text>
           <Text style={styles.subtitle}>
-            Your booking has been confirmed. {'\n'}Driver will pickup you in 2 minutes.
+            Your booking has been confirmed. {'\n'}Driver will pickup you in {time} minutes.
           </Text>
           <View style={styles.footer}>
             <Text style={styles.cancelText}>Cancel</Text>

@@ -1,3 +1,4 @@
+import {MLMUserData} from '../../services/mlmUserService';
 import {
   AuthState,
   AuthActionTypes,
@@ -46,7 +47,13 @@ export const authReducer = (
     case SET_AUTH_LOADING:
       return {...state, isLoading: action.payload};
     case SET_USER_DATA:
-      return {...state, user: action.payload};
+      return {
+        ...state,
+        user: state.user
+          ? {...state.user, ...action.payload}
+          : (action.payload as MLMUserData), // fallback if no user set yet
+      };
+
     default:
       return state;
   }

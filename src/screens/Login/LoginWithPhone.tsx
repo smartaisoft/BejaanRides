@@ -24,7 +24,11 @@ import {getUserByPhone} from '../../services/realTimeUserService';
 import PhoneNumberInput from '../../components/PhoneNumberInput';
 import Button from '../../components/Button';
 import Colors from '../../themes/colors';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import {Dimensions} from 'react-native';
 
+const {width} = Dimensions.get('window');
+const iconSize = Math.min(30, width * 0.08); // responsive size
 type LoginWithPhoneNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
   'PhoneLogin'
@@ -43,97 +47,69 @@ const LoginWithPhone: React.FC = () => {
     navigation.goBack();
   };
 
-  // const handlePhonePress = async (values: {phone: string}) => {
-  //   dispatch(setAuthLoading(true));
-  //   const fullPhoneNumber = values.phone;
+  const handlePhonePress = async ({phone}: {phone: string}) => {
+    dispatch(setAuthLoading(true));
+    const fullPhoneNumber = phone;
 
-  //   try {
-  //     // 🔹 Check if the phone number exists in Firestore
-  //     const user = await getUserByPhone(fullPhoneNumber);
+    try {
+      const user = await getUserByPhone(fullPhoneNumber);
+      const isNewUser = !user;
 
-  //     if (user) {
-  //       console.log('✅ Phone number exists in Firestore.');
-  //     } else {
-  //       console.log('✅ Phone number NOT found in Firestore.');
-  //     }
+      console.log(
+        `📱 Phone number ${isNewUser ? 'NOT ' : ''}found in Firestore.`,
+      );
 
-  //     // 🔹 Send OTP
-  //     const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
+      const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
+      console.log('✅ OTP sent successfully.', confirmation);
 
-  //     // 🔹 Save phone to Redux
-  //     dispatch(setPhone(fullPhoneNumber));
+      dispatch(setPhone(fullPhoneNumber));
 
-  //     // 🔹 Navigate to OTP screen
-  //     navigation.navigate('Otp', {
-  //       method: 'SMS',
-  //       confirmation,
-  //       isNewUser: !user,
-  //     });
-  //   } catch (error) {
-  //     console.error('❌ Failed to send OTP:', error);
-  //   } finally {
-  //     dispatch(setAuthLoading(false));
-  //   }
-  // };
+      navigation.navigate('Otp', {
+        method: 'SMS',
+        confirmation,
+        isNewUser,
+      });
+    } catch (error: any) {
+      let message = 'Something went wrong while sending OTP.';
+      let title = 'OTP Error';
 
-const handlePhonePress = async ({ phone }: { phone: string }) => {
-  dispatch(setAuthLoading(true));
-  const fullPhoneNumber = phone;
+      switch (error.code) {
+        case 'auth/invalid-phone-number':
+          message =
+            'Invalid phone number format. Please use correct country code and format.';
+          break;
+        case 'auth/missing-phone-number':
+          message = 'Phone number is missing. Please enter it.';
+          break;
+        case 'auth/too-many-requests':
+          message =
+            'Too many attempts. Please wait a few minutes and try again.';
+          break;
+        case 'auth/network-request-failed':
+          message = 'Network error. Check your internet connection.';
+          break;
+        case 'auth/app-not-authorized':
+          message =
+            'App is not authorized for Firebase Phone Auth.\nPlease ensure the SHA-1 from Play Console is added in Firebase and google-services.json is updated.';
+          break;
+        case 'auth/quota-exceeded':
+          message =
+            'SMS quota for the project exceeded. Please try again later.';
+          break;
+        default:
+          message += `\n\nCode: ${error.code}`;
+          break;
+      }
 
-  try {
-    const user = await getUserByPhone(fullPhoneNumber);
-    const isNewUser = !user;
-
-    console.log(
-      `📱 Phone number ${isNewUser ? 'NOT ' : ''}found in Firestore.`,
-    );
-
-    const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
-    console.log('✅ OTP sent successfully.', confirmation);
-
-    dispatch(setPhone(fullPhoneNumber));
-
-    navigation.navigate('Otp', {
-      method: 'SMS',
-      confirmation,
-      isNewUser,
-    });
-  } catch (error: any) {
-    let message = 'Something went wrong while sending OTP.';
-    let title = 'OTP Error';
-
-    switch (error.code) {
-      case 'auth/invalid-phone-number':
-        message = 'Invalid phone number format. Please use correct country code and format.';
-        break;
-      case 'auth/missing-phone-number':
-        message = 'Phone number is missing. Please enter it.';
-        break;
-      case 'auth/too-many-requests':
-        message = 'Too many attempts. Please wait a few minutes and try again.';
-        break;
-      case 'auth/network-request-failed':
-        message = 'Network error. Check your internet connection.';
-        break;
-      case 'auth/app-not-authorized':
-        message = 'App is not authorized for Firebase Phone Auth.\nPlease ensure the SHA-1 from Play Console is added in Firebase and google-services.json is updated.';
-        break;
-      case 'auth/quota-exceeded':
-        message = 'SMS quota for the project exceeded. Please try again later.';
-        break;
-      default:
-        message += `\n\nCode: ${error.code}`;
-        break;
+      Alert.alert(title, message);
+      console.warn(
+        `❌ Firebase OTP error [${error.code}]:`,
+        error?.message || error,
+      );
+    } finally {
+      dispatch(setAuthLoading(false));
     }
-
-    Alert.alert(title, message);
-    console.warn(`❌ Firebase OTP error [${error.code}]:`, error?.message || error);
-  } finally {
-    dispatch(setAuthLoading(false));
-  }
-};
-
-
+  };
 
   return (
     <KeyboardAvoidingView
@@ -142,8 +118,8 @@ const handlePhonePress = async ({ phone }: { phone: string }) => {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.innerContainer}>
           {/* Back Button */}
-          <TouchableOpacity onPress={handleGoBack}>
-            <Text style={styles.goBackText}>{'<'}</Text>
+          <TouchableOpacity onPress={handleGoBack} style={styles.goBackButton}>
+            <Icon name="arrow-back" size={iconSize} color="#333" />
           </TouchableOpacity>
 
           {/* Title */}
@@ -194,9 +170,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
     paddingHorizontal: 20,
   },
+  goBackButton: {
+    padding: 5,
+    position: 'absolute',
+    top: 40,
+    zIndex: 10,
+    backgroundColor: '#fff',
+    borderRadius: 30,
+    elevation: 3,
+  },
+
   innerContainer: {
     flex: 1,
-    paddingTop: 50,
+    paddingTop: 100,
   },
   goBackText: {
     color: '#333',

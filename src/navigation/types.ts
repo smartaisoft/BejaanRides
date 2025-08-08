@@ -23,3 +23,13 @@ export type RootStackParamList = {
   DriverProfile: undefined;
   BottomTabs: undefined;
 };
+export type BottomTabParamList = {
+  DriverMap: undefined;
+  DriverServices: undefined;
+  DriverProfile: undefined;
+  PassengerHome: undefined;
+  PassengerDashboard: undefined; // formerly PassengerHomes
+  PassengerPickRide: undefined; // formerly PassengerHome
+  PassengerServices: undefined;
+  PassengerProfile: undefined;
+};

@@ -177,7 +177,7 @@ const DriverProfile = () => {
               color="#6A1B9A"
               style={styles.icon}
             />
-            <Text style={styles.itemText}>Subscriptions</Text>
+            <Text style={styles.itemText}>MemberShip</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

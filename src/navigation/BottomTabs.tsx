@@ -1,6 +1,8 @@
 import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
+import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
+
 import {useSelector} from 'react-redux';
 import {RootState} from '../redux/store';
 
@@ -15,6 +17,9 @@ import Profile from '../screens/Passenger/Profile';
 // Shared Screens
 import Subscriptions from '../screens/Subscription/Subscriptions';
 import Colors from '../themes/colors';
+import PassengerHomeScreen from '../screens/Passenger/PassengerHomeScreen';
+import DriverHomeScreen from '../screens/Driver/DriverHomeScreen';
+import WalletStatusScreen from '../screens/Subscription/MyWallet';
 
 const Tab = createBottomTabNavigator();
 
@@ -40,16 +45,6 @@ const BottomTabs = () => {
       }}>
       {role === 'driver' ? (
         <>
-         {/* <Tab.Screen
-            name="DriverHomeScreen"
-            component={DriverHomeScreen}
-            options={{
-              tabBarIcon: ({color, size}) => (
-                <Icon name="home" color={color} size={size} />
-              ),
-              title: 'Home',
-            }}
-          /> */}
           <Tab.Screen
             name="DriverMap"
             component={DriverMapScreen}
@@ -60,7 +55,27 @@ const BottomTabs = () => {
               title: 'Pick Ride',
             }}
           />
-         
+          <Tab.Screen
+            name="DriverHomeScreen"
+            component={DriverHomeScreen}
+            options={{
+              tabBarIcon: ({color, size}) => (
+                <Icon name="home" color={color} size={size} />
+              ),
+              title: 'Dashbord',
+            }}
+          />
+           <Tab.Screen
+            name="WalletStatusScreen"
+            component={WalletStatusScreen}
+            options={{
+              tabBarIcon: ({color, size}) => (
+                <MaterialIcon name="account-balance-wallet" color={color} size={size} />
+              ),
+              title: 'Wallet',
+            }}
+          />
+
           <Tab.Screen
             name="DriverServices"
             component={Subscriptions}
@@ -85,15 +100,36 @@ const BottomTabs = () => {
       ) : (
         <>
           <Tab.Screen
-            name="PassengerHome"
+            name="PassengerPickRide"
             component={HomeMapScreen}
+            options={{
+              tabBarIcon: ({color, size}) => (
+                <Icon name="car" color={color} size={size} />
+              ),
+              title: 'Pick Ride',
+            }}
+          />
+          <Tab.Screen
+            name="PassengerDashboard"
+            component={PassengerHomeScreen}
             options={{
               tabBarIcon: ({color, size}) => (
                 <Icon name="home-outline" color={color} size={size} />
               ),
-              title: 'Home',
+              title: 'Dashbord',
             }}
           />
+          <Tab.Screen
+            name="WalletStatusScreen"
+            component={WalletStatusScreen}
+            options={{
+              tabBarIcon: ({color, size}) => (
+                <MaterialIcon name="account-balance-wallet" color={color} size={size} />
+              ),
+              title: 'Wallet',
+            }}
+          />
+
           <Tab.Screen
             name="PassengerServices"
             component={Subscriptions}

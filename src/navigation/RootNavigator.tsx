@@ -9,7 +9,7 @@ import {setVehicleDetails} from '../redux/actions/vehicleActions';
 import AuthStack from './AuthNavigator';
 import DriverStack from './DriverStack';
 import PassengerStack from './PassengerStack';
-import DriverBottomTabs from './BottomTabs'; // 👈 import the bottom tabs
+import DriverBottomTabs from './BottomTabs';
 
 import {getVehicleInfo} from '../services/vehicleService';
 import Colors from '../themes/colors';
@@ -67,7 +67,7 @@ const RootNavigator: React.FC = () => {
     }
 
     if (role === 'passenger') {
-      return <PassengerStack />;
+      return <PassengerStack initialRouteName="PassengerMain" />;
     }
 
     if (role === 'driver') {
@@ -75,18 +75,19 @@ const RootNavigator: React.FC = () => {
         return <LoadingScreen />;
       }
 
-      // return hasVehicleInfo ? (
-      //   <DriverBottomTabs /> // ✅ show bottom tabs when vehicle info exists
-      // ) : (
-      //   <DriverStack initialRouteName="ChooseVehicleScreen" />
-      // );
-      return (
-        <DriverStack
-          initialRouteName={
-            hasVehicleInfo ? 'DriverMapScreen' : 'ChooseVehicleScreen'
-          }
-        />
+      return hasVehicleInfo ? (
+        <DriverStack initialRouteName="DriverMain" />
+      ) : (
+        // ✅ show bottom tabs when vehicle info exists
+        <DriverStack initialRouteName="ChooseVehicleScreen" />
       );
+      // return (
+      //   <DriverStack
+      //     initialRouteName={
+      //       hasVehicleInfo ? 'DriverMapScreen' : 'ChooseVehicleScreen'
+      //     }
+      //   />
+      // );
     }
 
     return <LoadingScreen />;

@@ -11,6 +11,7 @@ import InviteFriend from '../screens/Passenger/InviteFriend';
 import Topup from '../screens/Subscription/Topup';
 import Investment from '../screens/Subscription/Investment';
 import SubscriptionPlansScreen from '../screens/Subscription/SubscriptionPlan';
+import BottomTabs from './BottomTabs';
 
 export type DriverStackParamList = {
   DriverPersonalInfo: undefined;
@@ -24,6 +25,7 @@ export type DriverStackParamList = {
   Subscriptions: undefined;
   SubscriptionPlansScreen: undefined;
   Investment: {planTitle: string; planPrice: string};
+  DriverMain:undefined;
 };
 
 const Stack = createStackNavigator<DriverStackParamList>();
@@ -36,6 +38,8 @@ const DriverStack: React.FC<Props> = ({initialRouteName}) => (
   <Stack.Navigator
     initialRouteName={initialRouteName || 'DriverPersonalInfo'}
     screenOptions={{headerShown: false}}>
+      <Stack.Screen name="DriverMain" component={BottomTabs} />
+
     <Stack.Screen name="DriverPersonalInfo" component={DriverPersonalInfo} />
     <Stack.Screen name="ChooseVehicleScreen" component={ChooseVehicleScreen} />
     <Stack.Screen name="VehicleInfoScreen" component={VehicleInfoScreen} />

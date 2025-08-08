@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import {useNavigation} from '@react-navigation/native';
+import {CompositeNavigationProp, useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import React from 'react';
 import {
@@ -10,12 +10,18 @@ import {
   ScrollView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { RootStackParamList } from '../../navigation/types';
+import { BottomTabParamList, RootStackParamList } from '../../navigation/types';
+import { DriverStackParamList } from '../../navigation/DriverStack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 
 type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type NavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<BottomTabParamList, 'DriverServices'>,
+  NativeStackNavigationProp<DriverStackParamList>
+>;
 
 const SubscriptionScreen = () => {
-  const navigation = useNavigation<RootNavigationProp>();
+  const navigation = useNavigation<NavigationProp>();
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -44,9 +50,9 @@ const SubscriptionScreen = () => {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Subscription</Text>
+        <Text style={styles.cardTitle}>MemberShip</Text>
         <Text style={styles.cardDescription}>
-          Join our monthly subscription to become part of the MLM network.
+          Join our monthly membership to become part of the MLM network.
           You’ll get access to exclusive rewards and commission-based earnings.
         </Text>
         <Text style={styles.cardTip}>
@@ -55,7 +61,7 @@ const SubscriptionScreen = () => {
         <TouchableOpacity
           style={[styles.button, styles.subscriptionButton]}
           onPress={() => navigation.navigate('SubscriptionPlansScreen')}>
-          <Text style={styles.buttonText}>Subscribe Now</Text>
+          <Text style={styles.buttonText}>Become Member</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

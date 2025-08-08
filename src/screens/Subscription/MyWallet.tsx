@@ -66,7 +66,7 @@ const WalletStatusScreen = ({navigation}: any) => {
 
       {/* Wallet Balance */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>💰 Wallet Balance</Text>
+        <Text style={styles.cardTitle}>💰 TopUp</Text>
         <Text style={styles.amount}>PKR {depositAmount}</Text>
       </View>
 
@@ -77,7 +77,7 @@ const WalletStatusScreen = ({navigation}: any) => {
           {walletStatus}
         </Text>
         <Text style={styles.statusHint}>
-          * Wallet amount will be added to your ride balance once approved by admin.
+          * TopUp will be added to your ride balance once approved by admin.
         </Text>
       </View>
     </ScrollView>

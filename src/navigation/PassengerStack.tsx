@@ -13,6 +13,7 @@ import SubscriptionPlansScreen from '../screens/Subscription/SubscriptionPlan';
 import Topup from '../screens/Subscription/Topup';
 import Subscriptions from '../screens/Subscription/Subscriptions';
 import Investment from '../screens/Subscription/Investment';
+import BottomTabs from './BottomTabs';
 
 export type PassengerStackParamList = {
   PassengerHome: undefined;
@@ -30,12 +31,15 @@ export type PassengerStackParamList = {
   Subscriptions: undefined;
   SubscriptionPlansScreen: undefined;
   Investment: {planTitle: string; planPrice: string}; // ✅ add this
+  PassengerMain: undefined;
 };
 
 const Stack = createStackNavigator<PassengerStackParamList>();
 
 const PassengerStack = () => (
   <Stack.Navigator screenOptions={{headerShown: false}}>
+    <Stack.Screen name="PassengerMain" component={BottomTabs} />
+
     <Stack.Screen name="HomeMapScreen" component={HomeMapScreen} />
     <Stack.Screen name="Settings" component={SettingsScreen} />
     <Stack.Screen name="ProfileSetting" component={ProfileSettings} />

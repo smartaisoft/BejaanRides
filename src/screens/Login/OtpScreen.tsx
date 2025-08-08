@@ -27,6 +27,7 @@ import Colors from '../../themes/colors';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {Dimensions} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const {width} = Dimensions.get('window');
 const iconSize = Math.min(30, width * 0.08);
@@ -94,6 +95,42 @@ const OTPScreen = () => {
       dispatch(setAuthLoading(false));
     }
   };
+
+  // const verifyOtp = async (code: string) => {
+  //   dispatch(setAuthLoading(true));
+  //   try {
+  //     const res = await axios.post(
+  //       'https://34cd45cf6dd4.ngrok-free.app/api/auth/verify-otp',
+  //       {phone, otp: code},
+  //     );
+
+  //     if (res.data?.success) {
+  //       console.log('✅ OTP verified successfully');
+  //       await AsyncStorage.setItem('@isPhoneVerified', 'true');
+
+  //       if (isNewUser) {
+  //         navigation.navigate('Role');
+  //       } else {
+  //         const userData = await getUserByUid(res.data?.userId); // adapt if your API returns UID
+  //         if (userData) {
+  //           dispatch(setUserData(userData));
+  //           dispatch(setRole(userData.role));
+  //         }
+  //         dispatch(setLoggedIn(true));
+  //       }
+  //     } else {
+  //       setOtpError(res.data?.message || 'Invalid OTP.');
+  //     }
+  //   } catch (error: any) {
+  //     console.error(
+  //       '❌ OTP verification failed:',
+  //       error?.response?.data || error.message,
+  //     );
+  //     setOtpError('Something went wrong. Try again.');
+  //   } finally {
+  //     dispatch(setAuthLoading(false));
+  //   }
+  // };
 
   const handleOtpChange = (text: string) => {
     setOtpInput(text);

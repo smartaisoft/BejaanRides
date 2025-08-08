@@ -26,6 +26,7 @@ import Button from '../../components/Button';
 import Colors from '../../themes/colors';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {Dimensions} from 'react-native';
+import axios from 'axios';
 
 const {width} = Dimensions.get('window');
 const iconSize = Math.min(30, width * 0.08); // responsive size
@@ -110,6 +111,38 @@ const LoginWithPhone: React.FC = () => {
       dispatch(setAuthLoading(false));
     }
   };
+
+  // const handlePhonePress = async ({phone}: {phone: string}) => {
+  //   dispatch(setAuthLoading(true));
+  //   try {
+  //     const fullPhoneNumber = phone;
+
+  //     // ✅ Send OTP via your API
+  //     const res = await axios.post(
+  //       'https://8c2dc95a9d14.ngrok-free.app/api/auth/send-otp',
+  //       {phone: fullPhoneNumber},
+  //     );
+
+  //     if (res.data?.success) {
+  //       console.log('✅ OTP sent successfully.',res.data);
+  //       dispatch(setPhone(fullPhoneNumber));
+
+  //       navigation.navigate('Otp', {
+  //         isNewUser: !(await getUserByPhone(fullPhoneNumber)),
+  //       });
+  //     } else {
+  //       Alert.alert('Error', res.data?.message || 'Failed to send OTP.');
+  //     }
+  //   } catch (error: any) {
+  //     console.error(
+  //       '❌ Send OTP error:',
+  //       error?.response?.data || error.message,
+  //     );
+  //     Alert.alert('Error', 'Something went wrong while sending OTP.');
+  //   } finally {
+  //     dispatch(setAuthLoading(false));
+  //   }
+  // };
 
   return (
     <KeyboardAvoidingView

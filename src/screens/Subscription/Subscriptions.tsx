@@ -52,8 +52,8 @@ const SubscriptionScreen = () => {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>MemberShip</Text>
         <Text style={styles.cardDescription}>
-          Join our monthly membership to become part of the MLM network.
-          You’ll get access to exclusive rewards and commission-based earnings.
+          Join our membership to become part of the Salam Rides.
+          You’ll get access to exclusive rewards.
         </Text>
         <Text style={styles.cardTip}>
           💡 Perfect if you want to earn by referring riders and drivers.

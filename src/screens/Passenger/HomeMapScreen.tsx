@@ -969,7 +969,7 @@ const styles = StyleSheet.create({
     padding: 8,
     zIndex: 999,
   },
-  locateButton: {position: 'absolute', top: 380, right: 10},
+  locateButton: {position: 'absolute', top: 350, right: 10},
   locateIcon: {width: 24, height: 24, tintColor: Colors.primary},
   markerWrapper: {
     alignItems: 'center',

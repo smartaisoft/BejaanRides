@@ -31,7 +31,7 @@ const Profile = () => {
   const navigation = useNavigation<RootNavigationProp>();
   const user = useSelector((state: RootState) => state.auth.user);
   const dispatch = useDispatch<AppDispatch>();
-    const topupHistory = useSelector(
+  const topupHistory = useSelector(
     (state: RootState) => state.topup.topupHistory,
   );
   useTopupListener(user?.uid);
@@ -61,16 +61,29 @@ const Profile = () => {
       console.error('❌ Logout error:', err);
     }
   };
-
-  const walletItems = [
+  const topupItems = [
     {
       label: 'Ride Balance',
-      value: `Rs ${rideBalance ?? 0}`, // ✅ From topupHistory
+      value: `Rs ${rideBalance ?? 0}`,
       icon: 'work-outline',
     },
     {
       label: 'Total Deposit',
-      value: `Rs ${depositAmount ?? 0}`, // ✅ From topupHistory
+      value: `Rs ${depositAmount ?? 0}`,
+      icon: 'description',
+    },
+  ];
+
+  // --- Membership (all wallet fields) ---
+  const membershipItems = [
+    {
+      label: 'Ride Balance',
+      value: `Rs ${rideBalance ?? 0}`,
+      icon: 'work-outline',
+    },
+    {
+      label: 'Total Deposit',
+      value: `Rs ${depositAmount ?? 0}`,
       icon: 'description',
     },
     {
@@ -90,12 +103,12 @@ const Profile = () => {
     },
     {
       label: 'Total No. Referral',
-      value: user?.totalReferrals ?? 0, // no Rs here
+      value: user?.totalReferrals ?? 0,
       icon: 'group',
     },
     {
       label: 'Referred By',
-      value: user?.referredBy ?? 'N/A', // no Rs here
+      value: user?.referredBy ?? 'N/A',
       icon: 'group',
     },
   ];
@@ -125,17 +138,43 @@ const Profile = () => {
       <ScrollView
         style={{marginTop: 16}}
         contentContainerStyle={{paddingBottom: 20}}>
-         <View style={styles.walletGrid}>
-                  {walletItems.map((item, index) => (
-                    <View key={index} style={styles.statCard}>
-                      <View style={styles.statHeader}>
-                        <Icon name={item.icon} size={24} color="#6A1B9A" />
-                        <Text style={styles.statValue}>{item.value}</Text>
-                      </View>
-                      <Text style={styles.statLabel}>{item.label}</Text>
-                    </View>
-                  ))}
+        {/* Topup Section */}
+        <View>
+          {/* Topup Section */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Topup</Text>
+          </View>
+          <View style={styles.walletGrid}>
+            {topupItems.map((item, index) => (
+              <View key={index} style={styles.statCard}>
+                <View style={styles.statHeader}>
+                  <Icon name={item.icon} size={24} color="#6A1B9A" />
+                  <Text style={styles.statValue}>{item.value}</Text>
                 </View>
+                <Text style={styles.statLabel}>{item.label}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Membership Section */}
+        <View>
+          {/* Membership Section */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Membership</Text>
+          </View>
+          <View style={styles.walletGrid}>
+            {membershipItems.map((item, index) => (
+              <View key={index} style={styles.statCard}>
+                <View style={styles.statHeader}>
+                  <Icon name={item.icon} size={24} color="#6A1B9A" />
+                  <Text style={styles.statValue}>{item.value}</Text>
+                </View>
+                <Text style={styles.statLabel}>{item.label}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
 
         {/* Luxury Card */}
         <View style={styles.card}>
@@ -222,6 +261,22 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  sectionHeader: {
+    marginTop: 20,
+    marginBottom: 8,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#4A148C', // matches your purple accent
+    borderBottomWidth: 2,
+    borderBottomColor: '#6A1B9A',
+    paddingBottom: 4,
   },
 
   cash: {
